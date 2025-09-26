@@ -1,6 +1,6 @@
 import React from "react";
 import "../components-css/login.css";
-import bgImage from "../assets/bg2.jpg";
+import bgImage from "../assets/bg3.jpg";
 function Login() {
   return (
     <div className="login-container">
