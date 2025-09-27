@@ -1,144 +1,129 @@
 import React, { useState, useEffect } from "react";
+import Particles from "react-tsparticles";
+import { loadSlim } from "tsparticles-slim";
 import { useNavigate } from "react-router-dom";
+import { adminAPI } from "../api";
+import { HoverEffect } from "../ui/card-hover-effect";
 
 const EventCards = () => {
+  const particlesInit = React.useCallback(async (engine) => {
+    await loadSlim(engine);
+  }, []);
+
+  const particlesOptions = {
+    background: {
+      color: {
+        value: "linear-gradient(135deg, #FF9800 0%, #FFD600 100%)",
+      },
+    },
+    fpsLimit: 120,
+    interactivity: {
+      events: {
+        onClick: { enable: true, mode: "push" },
+        onHover: { enable: true, mode: "repulse" },
+        resize: true,
+      },
+      modes: {
+        push: { quantity: 4 },
+        repulse: { distance: 200, duration: 0.4 },
+      },
+    },
+    particles: {
+      color: { value: "#ffffff" },
+      links: { color: "#ffffff", distance: 150, enable: true, opacity: 0.2, width: 1 },
+      move: { direction: "none", enable: true, outModes: { default: "bounce" }, random: false, speed: 1, straight: false },
+      number: { density: { enable: true, area: 800 }, value: 80 },
+      opacity: { value: 0.3 },
+      shape: { type: "circle" },
+      size: { value: { min: 1, max: 3 } },
+    },
+    detectRetina: true,
+  };
   const navigate = useNavigate();
 
-  // Load cards from localStorage
-  const [cards, setCards] = useState(() => {
-    const stored = localStorage.getItem("eventCards");
-    return stored ? JSON.parse(stored) : [];
-  });
-
-  const [eventName, setEventName] = useState("");
-  const [clubName, setClubName] = useState("");
-  const [eventDate, setEventDate] = useState("");
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    localStorage.setItem("eventCards", JSON.stringify(cards));
-  }, [cards]);
-
-  const addCard = () => {
-    if (!eventName || !clubName || !eventDate) return;
-
-    const newCard = {
-      id: Date.now(),
-      eventName,
-      clubName,
-      eventDate,
+    const fetchEvents = async () => {
+      try {
+        const response = await adminAPI.getEvents();
+        setEvents(response.data);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
     };
+    fetchEvents();
+  }, []);
 
-    setCards([...cards, newCard]);
-    setEventName("");
-    setClubName("");
-    setEventDate("");
-  };
+  const filteredEvents = events.filter(
+    (event) =>
+      event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event.association_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  // Filter and sort cards by date
-  let filteredCards = cards
-    .filter(
-      (card) =>
-        card.eventName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        card.clubName.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .sort((a, b) => new Date(a.eventDate) - new Date(b.eventDate));
+  const eventItems = filteredEvents.map((event) => ({
+    title: event.name,
+    about: event.about,
+    description: [
+      `Association: ${event.association_name}`,
+      `Day: ${event.form.two_days === "No" || event.form.two_days === "no" ? event.form.day : "Both days"}`,
+      `Convenors: ${event.details.convenor1.name}, ${event.details.convenor2.name}`,
+    ],
+    onClick: () => navigate(`/info-deep/${event._id}`, { state: event }),
+  }));
 
   return (
-    <div style={{ padding: "30px", fontFamily: "Arial, sans-serif" }}>
-      {/* Header with Add Card Inputs and Search */}
-      <h2>ADD EVENT</h2><br></br>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: "15px",
-          marginBottom: "20px",
-        }}
-      >
-        {/* Left side: Inputs */}
-        <div style={{ display: "flex", gap: "15px", flexWrap: "wrap" }}>
-          <input
-            value={eventName}
-            onChange={(e) => setEventName(e.target.value)}
-            placeholder="Event Name"
-            style={inputStyle}
-          />
-          <input
-            value={clubName}
-            onChange={(e) => setClubName(e.target.value)}
-            placeholder="Club Name"
-            style={inputStyle}
-          />
-          <input
-            type="date"
-            value={eventDate}
-            onChange={(e) => setEventDate(e.target.value)}
-            style={inputStyle}
-          />
-          <button onClick={addCard} style={buttonStyle}>
-            Add Card
-          </button>
-        </div>
-
-        {/* Right side: Search */}
-        <input
-          type="search"
-          placeholder="Search Clubs/Events"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          style={{ ...inputStyle, width: "250px", marginLeft: "auto" }}
-        />
-      </div>
-
-      {/* Display Cards */}
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "15px" }}>
-        {filteredCards.map((card) => (
-          <div
-            key={card.id}
-            style={cardStyle}
-            onClick={() => navigate(`/info-deep/${card.id}`, { state: card })}
-            onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.03)")}
-            onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
-          >
-            <h4 style={{ margin: "0 0 5px 0" }}>{card.eventName}</h4>
-            <p style={{ margin: "0 0 5px 0" }}>Club: {card.clubName}</p>
-            <p style={{ margin: 0 }}>Date: {card.eventDate}</p>
+  <div className="min-h-screen relative flex flex-col items-center justify-start bg-gradient-to-br from-accent-orange via-accent-yellow to-yellow-400 overflow-hidden">
+      {/* Particles Background */}
+      <Particles
+        id="tsparticles"
+        init={particlesInit}
+        options={particlesOptions}
+        className="absolute inset-0 z-0"
+      />
+      <div className="relative z-10 w-full max-w-4xl px-6">
+        <div className="w-full flex flex-col gap-4 mb-5">
+          {/* Search/Filter Controls - full width, below navbar, not centered */}
+          <div className="w-full py-2">
+            <input
+              type="search"
+              placeholder="Search Events/Associations"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full p-3 px-4 rounded-lg border border-gray-300 shadow-sm outline-none focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
+            />
           </div>
-        ))}
+        </div>
+        {loading && (
+          <div className="text-center py-12 text-white">
+            <p className="text-lg">Loading events...</p>
+          </div>
+        )}
+        {error && (
+          <div className="text-center py-12 text-red-300">
+            <p className="text-lg">Error loading events: {error}</p>
+          </div>
+        )}
+        {!loading && !error && (
+          <HoverEffect items={eventItems} />
+        )}
+        {!loading && !error && filteredEvents.length === 0 && (
+          <div className="text-center py-12 text-gray-500">
+            <p className="text-lg">No events found</p>
+            <p className="text-sm">Try adjusting your search term</p>
+          </div>
+        )}
+        <div className="text-center mt-8 text-white/70 text-sm">
+          <p>&copy; 2025 ERM Forms. All rights reserved.</p>
+        </div>
       </div>
     </div>
   );
-};
-
-// Styles
-const inputStyle = {
-  padding: "12px 15px",
-  borderRadius: "8px",
-  border: "1px solid #ccc",
-  boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-  outline: "none",
-};
-
-const buttonStyle = {
-  padding: "12px 25px",
-  borderRadius: "8px",
-  border: "none",
-  backgroundColor: "#007bff",
-  color: "#fff",
-  cursor: "pointer",
-  boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-};
-
-const cardStyle = {
-  border: "1px solid #ccc",
-  borderRadius: "8px",
-  padding: "15px",
-  width: "200px",
-  boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-  cursor: "pointer",
-  transition: "transform 0.2s",
 };
 
 export default EventCards;
