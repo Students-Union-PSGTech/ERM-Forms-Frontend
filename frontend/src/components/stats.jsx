@@ -75,7 +75,7 @@ function Stats() {
         className="absolute inset-0 z-0"
       />
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8 pb-16 sm:pb-8">
+      <div className="elative z-10 w-full max-w-6xl mx-auto px-4 pt-24 sm:pt-8">
         <div className="text-center mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 flex items-center justify-center gap-2 sm:gap-3">
             Item Statistics
@@ -147,7 +147,7 @@ function Stats() {
 
               {/* Responsive Table Wrapper */}
               <div className="w-full overflow-x-auto">
-                <table className="w-full text-left border-collapse min-w-[600px] sm:min-w-0">
+                <table className="w-full text-left border-collapse min-w-[300px] sm:min-w-0">
                   <thead className="bg-gray-50/80">
                     <tr>
                       <th className="px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap sticky left-0 bg-gray-50/80 z-20 border-r border-gray-200">

@@ -140,7 +140,7 @@ function Login() {
               </svg>
             </div>
             <h2 className="text-2xl font-semibold text-white mb-1">Welcome Back</h2>
-            <p className="text-white/80 text-sm">Sign in to your admin account</p>
+            <p className="text-white/80 text-sm">Log in to your admin account</p>
           </div>
 
           {/* Form Section */}
@@ -183,19 +183,7 @@ function Login() {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                   />
-                  <button
-                    type="button"
-                    className="absolute inset-y-0 right-0 pr-4 flex items-center bg-accent-orange"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    <svg className="h-5 w-5 text-white hover:text-grey transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      {showPassword ? (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L8.464 8.464 M18.036 3.464l-14.572 14.572" style={{stroke: 'currentColor'}} />
-                      ) : (
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" style={{stroke: 'currentColor'}} />
-                      )}
-                    </svg>
-                  </button>
+
                 </div>
               </div>
 

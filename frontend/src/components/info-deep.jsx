@@ -149,7 +149,7 @@ const InfoDeep = () => {
         options={particlesOptions}
         className="absolute inset-0 z-0"
       />
-      <div className="relative z-10 w-full max-w-6xl px-4 sm:px-6 py-4 sm:py-8">
+      <div className="relative z-10 w-full max-w-6xl px-4 sm:px-6 pt-16 sm:pt-8">
         <button 
           onClick={() => navigate(-1)}
           className="mb-4 sm:mb-5 px-3 sm:px-4 py-2 bg-white/80 text-gray-700 rounded-lg hover:bg-white transition-colors duration-200 flex items-center gap-2 text-sm sm:text-base"

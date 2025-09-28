@@ -167,7 +167,7 @@ function Add() {
         className="absolute inset-0 z-0"
       />
 
-      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 py-8">
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 pt-24 sm:pt-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Association Management</h1>
           <p className="text-white/80">Manage associations, create new ones, and update credentials</p>
