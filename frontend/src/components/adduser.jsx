@@ -174,56 +174,6 @@ function Add() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* Create Association Form */}
-          <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
-            <div className="bg-gradient-to-r from-accent-orange to-accent-yellow px-6 py-4">
-              <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                <Plus className="w-5 h-5" />
-                Create Association
-              </h2>
-            </div>
-            <div className="p-6">
-              <form onSubmit={handleCreate} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
-                  <input
-                    type="text"
-                    placeholder="Enter username"
-                    className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-accent-orange focus:border-accent-orange transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500"
-                    value={formData.username}
-                    onChange={(e) => setFormData({...formData, username: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                  <input
-                    type="password"
-                    placeholder="Create password"
-                    className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-accent-orange focus:border-accent-orange transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500"
-                    value={formData.password}
-                    onChange={(e) => setFormData({...formData, password: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Association Name</label>
-                  <input
-                    type="text"
-                    placeholder="Enter association name"
-                    className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-accent-orange focus:border-accent-orange transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500"
-                    value={formData.association_name}
-                    onChange={(e) => setFormData({...formData, association_name: e.target.value})}
-                  />
-                </div>
-                <button 
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-accent-orange to-accent-yellow text-white py-3 px-4 rounded-xl font-semibold text-lg shadow-lg hover:from-orange-500 hover:to-yellow-500 focus:ring-4 focus:ring-accent-yellow disabled:opacity-50 disabled:cursor-not-allowed transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  Create Association
-                </button>
-              </form>
-            </div>
-          </div>
-
           {/* Associations List */}
           <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
             <div className="bg-gradient-to-r from-accent-orange to-accent-yellow px-6 py-4">
@@ -301,9 +251,57 @@ function Add() {
               )}
             </div>
           </div>
-        </div>
 
-        {/* Edit Modal */}
+          {/* Create Association Form */}
+          <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+            <div className="bg-gradient-to-r from-accent-orange to-accent-yellow px-6 py-4">
+              <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+                <Plus className="w-5 h-5" />
+                Create Association
+              </h2>
+            </div>
+            <div className="p-6">
+              <form onSubmit={handleCreate} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                  <input
+                    type="text"
+                    placeholder="Enter username"
+                    className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-accent-orange focus:border-accent-orange transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500"
+                    value={formData.username}
+                    onChange={(e) => setFormData({...formData, username: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                  <input
+                    type="password"
+                    placeholder="Create password"
+                    className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-accent-orange focus:border-accent-orange transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500"
+                    value={formData.password}
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Association Name</label>
+                  <input
+                    type="text"
+                    placeholder="Enter association name"
+                    className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-accent-orange focus:border-accent-orange transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500"
+                    value={formData.association_name}
+                    onChange={(e) => setFormData({...formData, association_name: e.target.value})}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-accent-orange to-accent-yellow text-white py-3 px-4 rounded-xl font-semibold text-lg shadow-lg hover:from-orange-500 hover:to-yellow-500 focus:ring-4 focus:ring-accent-yellow disabled:opacity-50 disabled:cursor-not-allowed transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  Create Association
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>        {/* Edit Modal */}
         {showEditModal && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 max-w-md w-full">

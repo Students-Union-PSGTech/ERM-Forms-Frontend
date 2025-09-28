@@ -167,48 +167,6 @@ function Items() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* Create Item Form */}
-          <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
-            <div className="bg-gradient-to-r from-accent-orange to-accent-yellow px-6 py-4">
-              <h2 className="text-xl font-semibold text-white flex items-center gap-2">
-                <Plus className="w-5 h-5" />
-                Create Item
-              </h2>
-            </div>
-            <div className="p-6">
-              <form onSubmit={handleCreate} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
-                  <input
-                    type="text"
-                    placeholder="Enter item name"
-                    className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-accent-orange focus:border-accent-orange transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500"
-                    value={formData.item_name}
-                    onChange={(e) => setFormData({...formData, item_name: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Price per Unit (₹)</label>
-                  <input
-                    type="number"
-                    placeholder="Enter price"
-                    min="0"
-                    step="0.01"
-                    className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-accent-orange focus:border-accent-orange transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500"
-                    value={formData.price_per_unit}
-                    onChange={(e) => setFormData({...formData, price_per_unit: e.target.value})}
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-accent-orange to-accent-yellow text-white py-3 px-4 rounded-xl font-semibold text-lg shadow-lg hover:from-orange-500 hover:to-yellow-500 focus:ring-4 focus:ring-accent-yellow disabled:opacity-50 disabled:cursor-not-allowed transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  Create Item
-                </button>
-              </form>
-            </div>
-          </div>
-
           {/* Items List */}
           <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
             <div className="bg-gradient-to-r from-accent-orange to-accent-yellow px-6 py-4">
@@ -282,6 +240,48 @@ function Items() {
                   ))}
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Create Item Form */}
+          <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+            <div className="bg-gradient-to-r from-accent-orange to-accent-yellow px-6 py-4">
+              <h2 className="text-xl font-semibold text-white flex items-center gap-2">
+                <Plus className="w-5 h-5" />
+                Create Item
+              </h2>
+            </div>
+            <div className="p-6">
+              <form onSubmit={handleCreate} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Item Name</label>
+                  <input
+                    type="text"
+                    placeholder="Enter item name"
+                    className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-accent-orange focus:border-accent-orange transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500"
+                    value={formData.item_name}
+                    onChange={(e) => setFormData({...formData, item_name: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Price per Unit (₹)</label>
+                  <input
+                    type="number"
+                    placeholder="Enter price"
+                    min="0"
+                    step="0.01"
+                    className="w-full pl-4 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-accent-orange focus:border-accent-orange transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500"
+                    value={formData.price_per_unit}
+                    onChange={(e) => setFormData({...formData, price_per_unit: e.target.value})}
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="w-full bg-gradient-to-r from-accent-orange to-accent-yellow text-white py-3 px-4 rounded-xl font-semibold text-lg shadow-lg hover:from-orange-500 hover:to-yellow-500 focus:ring-4 focus:ring-accent-yellow disabled:opacity-50 disabled:cursor-not-allowed transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  Create Item
+                </button>
+              </form>
             </div>
           </div>
         </div>

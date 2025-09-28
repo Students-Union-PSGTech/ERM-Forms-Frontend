@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import Particles from "react-tsparticles";
 import { loadSlim } from "tsparticles-slim";
 import { useLocation, useNavigate } from "react-router-dom";
+import { adminAPI } from "../api";
+import { FileText, Download, X, Eye } from "lucide-react";
 
 const InfoDeep = () => {
   const particlesInit = React.useCallback(async (engine) => {
@@ -40,6 +42,82 @@ const InfoDeep = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const event = location.state;
+
+  const [pdfUrl, setPdfUrl] = useState(null);
+  const [showPdfViewer, setShowPdfViewer] = useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState(null);
+
+  // Detect if device is mobile
+  const isMobile = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+           window.innerWidth <= 768;
+  };
+
+  const handleViewPDF = async () => {
+    if (!event?.event_id) {
+      setPdfError("Event ID not found");
+      return;
+    }
+
+    try {
+      setPdfLoading(true);
+      setPdfError(null);
+
+      const response = await adminAPI.getEventPDF(event.event_id);
+
+      // Create a blob URL for the PDF
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+
+      if (isMobile()) {
+        // On mobile, open PDF in new tab
+        window.open(url, '_blank');
+        // Clean up the blob URL after a delay
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } else {
+        // On desktop, show in modal
+        setPdfUrl(url);
+        setShowPdfViewer(true);
+      }
+    } catch (err) {
+      setPdfError(err.response?.data?.message || err.message || "Failed to load PDF");
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!event?.event_id) {
+      setPdfError("Event ID not found");
+      return;
+    }
+
+    try {
+      const response = await adminAPI.getEventPDF(event.event_id);
+
+      // Create download link
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `event_${event.event_id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setPdfError(err.response?.data?.message || err.message || "Failed to download PDF");
+    }
+  };
+
+  const closePdfViewer = () => {
+    setShowPdfViewer(false);
+    if (pdfUrl) {
+      URL.revokeObjectURL(pdfUrl);
+      setPdfUrl(null);
+    }
+  };
 
   if (!event) {
     return (
@@ -82,6 +160,41 @@ const InfoDeep = () => {
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-accent-orange mb-2">{event.name}</h1>
           <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-3 sm:mb-4">{event.tagline}</p>
           <p className="text-sm sm:text-base lg:text-lg text-gray-700 mb-4 sm:mb-6">{event.about}</p>
+
+          {/* PDF Actions */}
+          <div className="flex flex-wrap gap-3 mb-6">
+            <button
+              onClick={handleViewPDF}
+              disabled={pdfLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-accent-orange to-accent-yellow text-white rounded-lg hover:from-orange-500 hover:to-yellow-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {pdfLoading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <Eye className="w-4 h-4" />
+              )}
+              {pdfLoading ? 'Loading PDF...' : (isMobile() ? 'Open PDF' : 'View PDF')}
+            </button>
+            <button
+              onClick={handleDownloadPDF}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-all duration-200"
+            >
+              <Download className="w-4 h-4" />
+              Download PDF
+            </button>
+          </div>
+
+          {isMobile() && (
+            <p className="text-sm text-gray-600 mb-4">
+              📱 On mobile devices, PDFs will open in a new tab for better viewing experience.
+            </p>
+          )}
+
+          {pdfError && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+              {pdfError}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
             <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
@@ -166,6 +279,52 @@ const InfoDeep = () => {
             </div>
           </div>
         </div>
+
+        {/* PDF Viewer Modal */}
+        {showPdfViewer && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 w-full max-w-6xl h-[90vh] flex flex-col">
+              <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                  <FileText className="w-5 h-5" />
+                  Event PDF - {event.name}
+                </h2>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleDownloadPDF}
+                    className="flex items-center gap-2 px-4 py-2 bg-accent-orange text-white rounded-lg hover:bg-accent-yellow transition-colors"
+                  >
+                    <Download className="w-4 h-4" />
+                    Download
+                  </button>
+                  <button
+                    onClick={closePdfViewer}
+                    className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="w-6 h-6" />
+                  </button>
+                </div>
+              </div>
+              <div className="flex-1 p-6">
+                {pdfUrl ? (
+                  <iframe
+                    src={pdfUrl}
+                    className="w-full h-full border rounded-lg"
+                    title="Event PDF"
+                    frameBorder="0"
+                    allowFullScreen
+                    style={{ minHeight: '500px' }}
+                  />
+                ) : (
+                  <div className="flex items-center justify-center h-full">
+                    <p className="text-gray-500">Loading PDF...</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="text-center mt-6 sm:mt-8 text-white/70 text-xs sm:text-sm">
           <p>&copy; 2025 ERM Forms. All rights reserved.</p>
         </div>

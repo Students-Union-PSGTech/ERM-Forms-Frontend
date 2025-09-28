@@ -75,29 +75,27 @@ function Stats() {
         className="absolute inset-0 z-0"
       />
 
-      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 py-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2 flex items-center justify-center gap-3">
-            <BarChart3 className="w-8 h-8" />
+      <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8 pb-16 sm:pb-8">
+        <div className="text-center mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 flex items-center justify-center gap-2 sm:gap-3">
             Item Statistics
           </h1>
-          <p className="text-white/80">Comprehensive overview of item data and pricing</p>
-        </div>
+       </div>
 
         {loading && (
-          <div className="text-center py-12">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-            <p className="text-white mt-4">Loading statistics...</p>
+          <div className="text-center py-8 sm:py-12">
+            <div className="inline-block animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-white"></div>
+            <p className="text-white mt-2 sm:mt-4 text-sm sm:text-base">Loading statistics...</p>
           </div>
         )}
 
         {error && (
-          <div className="text-center py-12">
-            <div className="bg-red-500/20 backdrop-blur-lg rounded-xl p-6 border border-red-500/30 max-w-md mx-auto">
-              <p className="text-red-100">❌ Error: {error}</p>
+          <div className="text-center py-8 sm:py-12">
+            <div className="bg-red-500/20 backdrop-blur-lg rounded-xl p-4 sm:p-6 border border-red-500/30 max-w-md mx-auto">
+              <p className="text-red-100 text-sm sm:text-base">❌ Error: {error}</p>
               <button
                 onClick={fetchStats}
-                className="mt-4 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
+                className="mt-3 sm:mt-4 bg-red-500 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm sm:text-base"
               >
                 Retry
               </button>
@@ -106,83 +104,79 @@ function Stats() {
         )}
 
         {!loading && !error && stats && (
-          <div className="space-y-8">
+          <div className="space-y-6 sm:space-y-8">
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 p-6">
-                <div className="flex items-center gap-4">
-                  <div className="bg-accent-orange/20 p-3 rounded-xl">
-                    <Package className="w-8 h-8 text-accent-orange" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Total Items</p>
-                    <p className="text-2xl font-bold text-gray-800">{stats.total_items_count?.toLocaleString()}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="bg-white/95 backdrop-blur-lg rounded-2xl sm:rounded-3xl shadow-2xl border border-white/20 p-4 sm:p-6">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm text-gray-600">Total Items</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-800 truncate">{stats.total_items_count?.toLocaleString()}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 p-6">
-                <div className="flex items-center gap-4">
-                  <div className="bg-accent-yellow/20 p-3 rounded-xl">
-                    <DollarSign className="w-8 h-8 text-accent-yellow" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Total Value</p>
-                    <p className="text-2xl font-bold text-gray-800">₹{stats.total_price?.toLocaleString()}</p>
+              <div className="bg-white/95 backdrop-blur-lg rounded-2xl sm:rounded-3xl shadow-2xl border border-white/20 p-4 sm:p-6">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm text-gray-600">Total Value</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-800 truncate">₹{stats.total_price?.toLocaleString()}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 p-6">
-                <div className="flex items-center gap-4">
-                  <div className="bg-green-500/20 p-3 rounded-xl">
-                    <TrendingUp className="w-8 h-8 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Unique Items</p>
-                    <p className="text-2xl font-bold text-gray-800">{stats.items?.length || 0}</p>
+              <div className="bg-white/95 backdrop-blur-lg rounded-2xl sm:rounded-3xl shadow-2xl border border-white/20 p-4 sm:p-6 sm:col-span-2 lg:col-span-1">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm text-gray-600">Unique Items</p>
+                    <p className="text-xl sm:text-2xl font-bold text-gray-800 truncate">{stats.items?.length || 0}</p>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Items Table */}
-            <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
-              <div className="bg-gradient-to-r from-accent-orange to-accent-yellow px-6 py-4">
-                <h2 className="text-xl font-semibold text-white">Item Breakdown</h2>
+            <div className="bg-white/95 backdrop-blur-lg rounded-2xl sm:rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+              <div className="bg-gradient-to-r from-accent-orange to-accent-yellow px-4 sm:px-6 py-3 sm:py-4">
+                <h2 className="text-lg sm:text-xl font-semibold text-white">Item Breakdown</h2>
+                <p className="text-xs text-white/80 mt-1 sm:hidden">← Swipe to scroll horizontally →</p>
               </div>
 
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50">
+              {/* Responsive Table Wrapper */}
+              <div className="w-full overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[600px] sm:min-w-0">
+                  <thead className="bg-gray-50/80">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap sticky left-0 bg-gray-50/80 z-20 border-r border-gray-200">
                         Item Name
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         Quantity
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         Unit Price
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th className="px-3 sm:px-6 py-2 sm:py-3 text-xs sm:text-sm font-medium text-gray-500 uppercase tracking-wider whitespace-nowrap">
                         Total Value
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200">
                     {stats.items?.map((item, index) => (
-                      <tr key={index} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <tr key={index} className="bg-white hover:bg-gray-50 transition-colors duration-150">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium text-gray-900 break-words max-w-[150px] sm:max-w-none sticky left-0 z-10 border-r border-gray-200">
                           {item.item_name}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-500 whitespace-nowrap">
                           {item.count?.toLocaleString()}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-500 whitespace-nowrap">
                           ₹{(item.total_price / item.count)?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-accent-orange">
+                        <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold text-accent-orange whitespace-nowrap">
                           ₹{item.total_price?.toLocaleString()}
                         </td>
                       </tr>
@@ -192,15 +186,15 @@ function Stats() {
               </div>
 
               {(!stats.items || stats.items.length === 0) && (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No items data available</p>
+                <div className="text-center py-6 sm:py-8">
+                  <p className="text-gray-500 text-sm sm:text-base">No items data available</p>
                 </div>
               )}
             </div>
           </div>
         )}
 
-        <div className="text-center mt-8 text-white/70 text-sm">
+        <div className="text-center mt-6 sm:mt-8 text-white/70 text-xs sm:text-sm">
           <p>&copy; 2025 ERM Forms. All rights reserved.</p>
         </div>
       </div>
