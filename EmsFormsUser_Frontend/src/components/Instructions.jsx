@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from "styled-components";
 
 const slideDown = keyframes`
@@ -255,101 +256,102 @@ const CheckboxContainer = styled.div`
   }
 `;
 
-const Instructions = ({ onAgree }) => {
-  const [agreed, setAgreed] = useState(false);
-  const [closing, setClosing] = useState(false);
+const Instructions = () => {
+    const navigate = useNavigate();
+    const [agreed, setAgreed] = useState(false);
+    const [closing, setClosing] = useState(false);
 
-  const handleAgree = () => {
-    if (agreed) {
-      setClosing(true);
-      setTimeout(() => {
-        if (onAgree) onAgree();
-      }, 500);
-    }
-  };
+    const handleAgree = () => {
+        if (agreed) {
+            setClosing(true);
+            setTimeout(() => {
+                navigate('/create-event/preview');
+            }, 500);
+        }
+    };
 
-  return (
-    <Overlay closing={closing}>
-      <InstructionsContainer>
-        <Header>
-          <h1>Instructions to be Read Before Filling the Form</h1>
-          <p>Please read all instructions carefully before proceeding</p>
-        </Header>
-        
-        <Content>
-          <ImportantBox>
-            <h3>Important:</h3>
-            <ul>
-              <li>If two different events are to be conducted, then fill the above form for each event separately and submit it.</li>
-              <li>If the same event continues on both the days (i.e., Preliminary round on the first day and final round on the second day), then fill the needed requirements in the same form.</li>
-            </ul>
-          </ImportantBox>
-          
-          <InstructionsSection>
-            <h2>Instructions:</h2>
-            <ul>
-              <li>Not all the events and workshops submitted will be approved.</li>
-              <li>Maximum of two events, one workshop, one paper presentation can be proposed.</li>
-              <li>Events and workshops should be innovative or based on the trending new technologies relating to the respective stream.</li>
-              <li>Judges must be present throughout the duration of the event.</li>
-              <li>No cash prize, memento, or any other form of prizes should be given by clubs/associations to the event winners.</li>
-              <li>Memento for the external chief guest will be provided by the Students Union if filled in the items required table.</li>
-              <li>Certificates to the winners, runners, convenors, and volunteers of each event will be provided by the Students Union.</li>
-              <li>If any materials are required prior to the day of the event, please mention "Required in advance" near that material in the "Item Name" column.</li>
-              <li>Halls will be allotted based on availability.</li>
-              <li>The projector will not be provided by the Students Union. Use the projector available in the hall.</li>
-              <li>Winner and runner details should be submitted within one hour from the end of the event.</li>
-              <li>HDMI cables/VGA converter will not be provided.</li>
-              <li>Take enough copies of the form for your reference.</li>
-              <li>Further changes are not accepted.</li>
-              <li>Submit it to the point of contact allotted to your club/association.</li>
-              <li>For more details, contact your respective point of contact.</li>
-            </ul>
-          </InstructionsSection>
-          
-          <CheckboxContainer>
-            <input 
-              type="checkbox" 
-              id="agree" 
-              checked={agreed}
-              onChange={(e) => setAgreed(e.target.checked)}
-            />
-            <label htmlFor="agree">I agree to the terms and conditions</label>
-          </CheckboxContainer>
-          
-          {!agreed && (
-            <div style={{
-              padding: '1rem',
-              background: '#fef2f2',
-              border: '1px solid #fecaca',
-              borderRadius: '8px',
-              color: '#991b1b',
-              textAlign: 'center',
-              fontSize: '0.9rem',
-              fontWeight: '500'
-            }}>
-              You must agree to the terms and conditions to proceed with the form.
-            </div>
-          )}
-          
-          <ContactInfo>
-            <p>For any clarifications, feel free to <EmailLink href="mailto:studentsunion@psgtech.ac.in">Contact the Students Union</EmailLink>.</p>
-          </ContactInfo>
-        </Content>
-        
-        <ButtonGroup>
-          {agreed && (
-            <Button 
-              primary 
-              onClick={handleAgree}
-            >
-              Proceed
-            </Button>
-          )}
-        </ButtonGroup>
-      </InstructionsContainer>
-    </Overlay>
-  );
+    return (
+        <Overlay closing={closing}>
+            <InstructionsContainer>
+                <Header>
+                    <h1>Instructions to be Read Before Filling the Form</h1>
+                    <p>Please read all instructions carefully before proceeding</p>
+                </Header>
+                
+                <Content>
+                    <ImportantBox>
+                        <h3>Important:</h3>
+                        <ul>
+                            <li>If two different events are to be conducted, then fill the above form for each event separately and submit it.</li>
+                            <li>If the same event continues on both the days (i.e., Preliminary round on the first day and final round on the second day), then fill the needed requirements in the same form.</li>
+                        </ul>
+                    </ImportantBox>
+                    
+                    <InstructionsSection>
+                        <h2>Instructions:</h2>
+                        <ul>
+                            <li>Not all the events and workshops submitted will be approved.</li>
+                            <li>Maximum of two events, one workshop, one paper presentation can be proposed.</li>
+                            <li>Events and workshops should be innovative or based on the trending new technologies relating to the respective stream.</li>
+                            <li>Judges must be present throughout the duration of the event.</li>
+                            <li>No cash prize, memento, or any other form of prizes should be given by clubs/associations to the event winners.</li>
+                            <li>Memento for the external chief guest will be provided by the Students Union if filled in the items required table.</li>
+                            <li>Certificates to the winners, runners, convenors, and volunteers of each event will be provided by the Students Union.</li>
+                            <li>If any materials are required prior to the day of the event, please mention "Required in advance" near that material in the "Item Name" column.</li>
+                            <li>Halls will be allotted based on availability.</li>
+                            <li>The projector will not be provided by the Students Union. Use the projector available in the hall.</li>
+                            <li>Winner and runner details should be submitted within one hour from the end of the event.</li>
+                            <li>HDMI cables/VGA converter will not be provided.</li>
+                            <li>Take enough copies of the form for your reference.</li>
+                            <li>Further changes are not accepted.</li>
+                            <li>Submit it to the point of contact allotted to your club/association.</li>
+                            <li>For more details, contact your respective point of contact.</li>
+                        </ul>
+                    </InstructionsSection>
+                    
+                    <CheckboxContainer>
+                        <input 
+                          type="checkbox" 
+                          id="agree" 
+                          checked={agreed}
+                          onChange={(e) => setAgreed(e.target.checked)}
+                        />
+                        <label htmlFor="agree">I agree to the terms and conditions</label>
+                    </CheckboxContainer>
+                    
+                    {!agreed && (
+                        <div style={{
+                          padding: '1rem',
+                          background: '#fef2f2',
+                          border: '1px solid #fecaca',
+                          borderRadius: '8px',
+                          color: '#991b1b',
+                          textAlign: 'center',
+                          fontSize: '0.9rem',
+                          fontWeight: '500'
+                        }}>
+                          You must agree to the terms and conditions to proceed with the form.
+                        </div>
+                    )}
+                    
+                    <ContactInfo>
+                      <p>For any clarifications, feel free to <EmailLink href="mailto:studentsunion@psgtech.ac.in">Contact the Students Union</EmailLink>.</p>
+                    </ContactInfo>
+                </Content>
+                
+                <ButtonGroup>
+                  {agreed && (
+                    <Button 
+                      primary 
+                      onClick={handleAgree}
+                    >
+                      Proceed
+                    </Button>
+                  )}
+                </ButtonGroup>
+            </InstructionsContainer>
+        </Overlay>
+    );
 };
 
 export default Instructions;

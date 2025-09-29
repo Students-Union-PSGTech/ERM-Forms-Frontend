@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useOutletContext } from 'react-router-dom';
 import { GlobalStyles } from './GlobalStyles';
-import NavBar from './components/NavBar';
 import EventDetails from './components/EventDetails';
 import EventPreview from './components/EventPreview';
 import ItemsPage from './components/ItemsPage';
@@ -10,6 +9,7 @@ import ReviewSubmit from './components/ReviewSubmit';
 import Instructions from './components/Instructions';
 import HomePage from './components/HomePage';
 import Login from './components/Login';
+import CreateEventLayout from './components/CreateEventLayout';
 import './App.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -25,38 +25,13 @@ function ProtectedRoute({ children }) {
   return isAuthenticated ? children : <Navigate to="/login" />;
 }
 
-// Component to handle the form flow
-function FormFlow() {
-  const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    description: {}, items: [], rounds: []
-  });
-  const [instructionsAgreed, setInstructionsAgreed] = useState(false);
+// Wrapper components to pass context to elements
+const EventPreviewWrapper = () => { const { formData, setFormData } = useOutletContext(); return <EventPreview formData={formData} setFormData={setFormData} />; };
+const EventDetailsWrapper = () => { const { formData, setFormData } = useOutletContext(); return <EventDetails formData={formData} setFormData={setFormData} />; };
+const ItemsPageWrapper = () => { const { formData, setFormData } = useOutletContext(); return <ItemsPage formData={formData} setFormData={setFormData} />; };
+const RoundsPageWrapper = () => { const { formData, setFormData } = useOutletContext(); return <RoundsPage formData={formData} setFormData={setFormData} />; };
+const ReviewSubmitWrapper = () => { const { formData } = useOutletContext(); return <ReviewSubmit formData={formData} />; };
 
-  const handleInstructionsAgree = () => {
-    setInstructionsAgreed(true);
-    // 3. Add explicit navigation to the first step of the form
-    navigate('/create-event/preview'); 
-  };
-
-  if (!instructionsAgreed) {
-    return <Instructions onAgree={handleInstructionsAgree} />;
-  }
-
-  return (
-    <>
-      <NavBar />
-      <Routes>
-        <Route path="/preview" element={<EventPreview formData={formData} setFormData={setFormData} />} />
-        <Route path="/details" element={<EventDetails formData={formData} setFormData={setFormData} />} />
-        <Route path="/items" element={<ItemsPage formData={formData} setFormData={setFormData} />} />
-        <Route path="/rounds" element={<RoundsPage formData={formData} setFormData={setFormData} />} />
-        <Route path="/review" element={<ReviewSubmit formData={formData} />} />
-        
-      </Routes>
-    </>
-  );
-}
 
 function App() {
   return (
@@ -72,11 +47,19 @@ function App() {
             </ProtectedRoute>
           } />
           
-          <Route path="/create-event/*" element={
+          <Route path="/create-event" element={
             <ProtectedRoute>
-              <FormFlow />
+              <CreateEventLayout />
             </ProtectedRoute>
-          } />
+          }>
+            <Route index element={<Navigate to="instructions" />} />
+            <Route path="instructions" element={<Instructions />} />
+            <Route path="preview" element={<EventPreviewWrapper />} />
+            <Route path="details" element={<EventDetailsWrapper />} />
+            <Route path="items" element={<ItemsPageWrapper />} />
+            <Route path="rounds" element={<RoundsPageWrapper />} />
+            <Route path="review" element={<ReviewSubmitWrapper />} />
+          </Route>
           
           <Route path="/" element={<Navigate to="/home" />} />
           <Route path="*" element={<Navigate to="/home" />} />
