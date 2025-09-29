@@ -10,6 +10,7 @@ import Instructions from './components/Instructions';
 import HomePage from './components/HomePage';
 import Login from './components/Login';
 import CreateEventLayout from './components/CreateEventLayout';
+import ViewEvents from './components/ViewEvents'; // NEW
 import './App.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
@@ -44,6 +45,13 @@ function App() {
           <Route path="/home" element={
             <ProtectedRoute>
               <HomePage />
+            </ProtectedRoute>
+          } />
+          
+          {/* View events route (was missing, clicking button bounced to /home via catch-all) */}
+          <Route path="/view-events" element={
+            <ProtectedRoute>
+              <ViewEvents />
             </ProtectedRoute>
           } />
           

@@ -383,116 +383,126 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
 
   // Load data from global state on mount
   useEffect(() => {
-    // Check if all required previous steps are completed (both compulsory)
-    if (!globalFormData?.eventPreview?.eventName || !globalFormData?.eventDetails?.numberOfRounds) {
-      // Redirect to appropriate missing page
-      if (!globalFormData?.eventPreview?.eventName) {
-        navigate('/');
-      } else {
-        navigate('/details');
-      }
+    // If details missing, route back to complete prerequisites
+    if (!globalFormData?.eventDetails?.numberOfRounds) {
+      navigate('/create-event/details');
       return;
     }
 
-    // Load event overview data
-    if (globalFormData && globalFormData.eventOverview) {
+    // Load overview
+    if (globalFormData?.eventOverview) {
       setEventOverview(globalFormData.eventOverview);
     }
 
-    // Initialize rounds based on number of rounds from Event Details
-    if (globalFormData && globalFormData.rounds && globalFormData.rounds.length > 0) {
+    // Load rounds if already present
+    if (Array.isArray(globalFormData?.rounds) && globalFormData.rounds.length > 0) {
       setRounds(globalFormData.rounds);
-    } else if (globalFormData?.eventDetails?.numberOfRounds) {
-      const numberOfRounds = parseInt(globalFormData.eventDetails.numberOfRounds);
-      const initialRounds = [];
-      for (let i = 1; i <= numberOfRounds; i++) {
-        initialRounds.push({
-          name: `Round ${i}`,
-          description: "",
-          rules: [],
-          participants: 0
-        });
-      }
-      setRounds(initialRounds);
+      return;
     }
-  }, [globalFormData, navigate]);
 
-  const handleChange = (index, key, value) => {
-    const newRounds = [...rounds];
-    newRounds[index][key] = value;
-    setRounds(newRounds);
-  };
-
-  const handleEventOverviewChange = (key, value) => {
-    setEventOverview(prev => ({
-      ...prev,
-      [key]: value
-    }));
-  };
-
-  const addRule = (roundIndex) => {
-    const rule = newRule[roundIndex];
-    if (rule && rule.trim()) {
-      const newRounds = [...rounds];
-      newRounds[roundIndex].rules.push(rule.trim());
-      setRounds(newRounds);
-      setNewRule(prev => ({...prev, [roundIndex]: ''}));
-    }
-  };
-
-  const removeRule = (roundIndex, ruleIndex) => {
-    const newRounds = [...rounds];
-    newRounds[roundIndex].rules.splice(ruleIndex, 1);
-    setRounds(newRounds);
-  };
-
-  const updateParticipants = (roundIndex, change) => {
-    const newRounds = [...rounds];
-    const newCount = Math.max(0, newRounds[roundIndex].participants + change);
-    newRounds[roundIndex].participants = newCount;
-    setRounds(newRounds);
-  };
-
-  const handleParticipantInputChange = (roundIndex, value) => {
-    const newRounds = [...rounds];
-    const numValue = parseInt(value) || 0;
-    newRounds[roundIndex].participants = Math.max(0, numValue);
-    setRounds(newRounds);
-  };
-
-  const addRound = () => {
-    const newRoundNumber = rounds.length + 1;
-    setRounds([...rounds, {
-      name: `Round ${newRoundNumber}`,
+    // Initialize rounds if not present yet
+    const count = parseInt(globalFormData.eventDetails.numberOfRounds) || 0;
+    const initial = Array.from({ length: count }, (_, i) => ({
+      name: `Round ${i + 1}`,
       description: "",
       rules: [],
       participants: 0
-    }]);
+    }));
+    setRounds(initial);
+  }, [globalFormData, navigate]);
+
+  // Auto-sync local edits into global formData so navbar navigation also preserves state
+  
+
+  const handleChange = (index, key, value) => {
+    setRounds(prev => {
+      const copy = [...prev];
+      if (!copy[index]) return prev;
+      copy[index] = { ...copy[index], [key]: value };
+      return copy;
+    });
+  };
+
+  const addRule = (roundIndex) => {
+    const rule = (newRule[roundIndex] || "").trim();
+    if (!rule) return;
+    setRounds(prev => {
+      const copy = [...prev];
+      copy[roundIndex] = { ...copy[roundIndex], rules: [...(copy[roundIndex].rules || []), rule] };
+      return copy;
+    });
+    setNewRule(prev => ({ ...prev, [roundIndex]: "" }));
+  };
+
+  const removeRule = (roundIndex, ruleIndex) => {
+    setRounds(prev => {
+      const copy = [...prev];
+      copy[roundIndex] = {
+        ...copy[roundIndex],
+        rules: (copy[roundIndex].rules || []).filter((_, i) => i !== ruleIndex)
+      };
+      return copy;
+    });
+  };
+
+  // NEW: handlers that were missing
+  const handleEventOverviewChange = (key, value) => {
+    setEventOverview(prev => ({ ...prev, [key]: value }));
+  };
+
+  const addRound = () => {
+    setRounds(prev => [
+      ...prev,
+      {
+        name: `Round ${prev.length + 1}`,
+        description: "",
+        rules: [],
+        participants: 0
+      }
+    ]);
   };
 
   const removeRound = (index) => {
-    if (rounds.length > 1) {
-      setRounds(rounds.filter((_, i) => i !== index));
-    }
+    setRounds(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = () => {
-    const validRounds = rounds.filter(round => round.name.trim() && round.description.trim());
-    
-    // Update global form data
-    if (setGlobalFormData) {
-      setGlobalFormData(prev => ({
-        ...prev,
-        rounds: validRounds,
-        eventOverview: eventOverview
-      }));
-    }
-    
-    console.log("Rounds submitted:", validRounds);
-    console.log("Event overview submitted:", eventOverview);
-    
-    // Navigate to review page
-    navigate('/review');
+  const updateParticipants = (index, delta) => {
+    setRounds(prev => {
+      const copy = [...prev];
+      if (!copy[index]) return prev;
+      const current = Number(copy[index].participants) || 0;
+      copy[index] = { ...copy[index], participants: Math.max(0, current + delta) };
+      return copy;
+    });
+  };
+
+  const handleParticipantInputChange = (index, value) => {
+    const num = parseInt(value, 10);
+    setRounds(prev => {
+      const copy = [...prev];
+      if (!copy[index]) return prev;
+      copy[index] = { ...copy[index], participants: isNaN(num) ? 0 : Math.max(0, num) };
+      return copy;
+    });
+  };
+
+  const onSaveAndContinue = () => {
+    setGlobalFormData(prev => ({
+      ...prev,
+      eventOverview,
+      rounds
+    }));
+    navigate('/create-event/review');
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setGlobalFormData(prev => ({
+      ...prev,
+      eventOverview,
+      rounds
+    }));
+    navigate('/create-event/review');
   };
 
   return (
@@ -596,8 +606,9 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
                       placeholder="Enter a rule (e.g., No internet, Time limit 30 mins)..."
                       value={newRule[i] || ''}
                       onChange={(e) => setNewRule(prev => ({...prev, [i]: e.target.value}))}
-                      onKeyPress={(e) => {
+                      onKeyDown={(e) => {
                         if (e.key === 'Enter') {
+                          e.preventDefault();
                           addRule(i);
                         }
                       }}

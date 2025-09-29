@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 import styled from "styled-components";
 
 const PageWrapper = styled.div`
@@ -260,6 +260,7 @@ const Button = styled.button`
 
 const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData }) => {
   const navigate = useNavigate();
+  const ctx = useOutletContext?.(); // if you rely on outlet context inside too
   const [formData, setFormData] = useState({
     // Event Name
     eventName: '',
@@ -396,7 +397,12 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
     console.log('Event preview submitted:', formData);
     
     // Navigate to event details page
-    navigate('/details');
+    navigate('/create-event/details'); // CHANGED from navigate('/details')
+  };
+
+  const onSaveAndContinue = () => {
+    // persist any local edits into setFormData(...) first
+    navigate('/create-event/details'); // absolute path prevents falling into catch-all
   };
 
   return (

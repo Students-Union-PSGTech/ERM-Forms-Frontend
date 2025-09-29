@@ -3,7 +3,7 @@ import { NavLink } from 'react-router-dom';
 import styled from 'styled-components';
 
 const Nav = styled.nav`
-    background: #d97706; /* A shade of orange */
+    background: #d97706;
     color: white;
     padding: 1rem;
     display: flex;
@@ -18,13 +18,14 @@ const StyledNavLink = styled(NavLink)`
     border-radius: 4px;
 
     &.active {
-        background: #b45309; /* A darker shade of orange for active link */
+        background: #b45309;
     }
 `;
 
 const NavBar = () => {
     return (
         <Nav>
+            {/* Use absolute nested routes to avoid mis-resolution */}
             <StyledNavLink to="/create-event/preview">Event Preview</StyledNavLink>
             <StyledNavLink to="/create-event/details">Event Details</StyledNavLink>
             <StyledNavLink to="/create-event/items">Items</StyledNavLink>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from 'react-router-dom';
 import styled from "styled-components";
 
 const PageWrapper = styled.div`
@@ -248,9 +248,9 @@ const Button = styled.button`
   `}
 `;
 
-const EventDetails = ({ formData: globalFormData, setFormData: setGlobalFormData }) => {
+export default function EventDetails({ formData: globalFormData, setFormData: setGlobalFormData }) {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
+  const [details, setDetails] = useState({
     // Day Preference
     dayPreferred: '', // 'day1', 'day2', 'twoDays'
     
@@ -293,8 +293,8 @@ const EventDetails = ({ formData: globalFormData, setFormData: setGlobalFormData
 
   // Load data from global state on mount
   useEffect(() => {
-    if (globalFormData && globalFormData.eventDetails) {
-      setFormData(globalFormData.eventDetails);
+    if (globalFormData?.eventDetails) {
+      setDetails(globalFormData.eventDetails);
     }
     
     // Check if Event Preview is completed (compulsory)
@@ -305,7 +305,7 @@ const EventDetails = ({ formData: globalFormData, setFormData: setGlobalFormData
   }, [globalFormData, navigate]);
 
   const handleChange = (field, value) => {
-    setFormData(prev => ({
+    setDetails(prev => ({
       ...prev,
       [field]: value
     }));
@@ -322,62 +322,71 @@ const EventDetails = ({ formData: globalFormData, setFormData: setGlobalFormData
     const newErrors = {};
     
     // Day preferred validation
-    if (!formData.dayPreferred) newErrors.dayPreferred = 'Please select day preference';
+    if (!details.dayPreferred) newErrors.dayPreferred = 'Please select day preference';
     
     // Number of rounds validation
-    if (!formData.numberOfRounds.trim()) newErrors.numberOfRounds = 'Number of rounds is required';
-    if (formData.numberOfRounds && parseInt(formData.numberOfRounds) < 1) {
+    if (!details.numberOfRounds.trim()) newErrors.numberOfRounds = 'Number of rounds is required';
+    if (details.numberOfRounds && parseInt(details.numberOfRounds) < 1) {
       newErrors.numberOfRounds = 'Number of rounds must be at least 1';
     }
     
     // Expected participants validation
-    if (!formData.expectedParticipants.trim()) newErrors.expectedParticipants = 'Expected number of participants is required';
-    if (formData.expectedParticipants && parseInt(formData.expectedParticipants) < 1) {
+    if (!details.expectedParticipants.trim()) newErrors.expectedParticipants = 'Expected number of participants is required';
+    if (details.expectedParticipants && parseInt(details.expectedParticipants) < 1) {
       newErrors.expectedParticipants = 'Expected participants must be at least 1';
     }
     
     // Duration validation
-    if (!formData.duration.trim()) newErrors.duration = 'Duration is required';
+    if (!details.duration.trim()) newErrors.duration = 'Duration is required';
     
     // Event type validation
-    if (!formData.eventType) newErrors.eventType = 'Please select event type';
+    if (!details.eventType) newErrors.eventType = 'Please select event type';
     
     // Team size validation (only if team event)
-    if (formData.eventType === 'team') {
-      if (!formData.minTeamSize.trim()) newErrors.minTeamSize = 'Minimum team size is required';
-      if (!formData.maxTeamSize.trim()) newErrors.maxTeamSize = 'Maximum team size is required';
-      if (formData.minTeamSize && formData.maxTeamSize) {
-        const min = parseInt(formData.minTeamSize);
-        const max = parseInt(formData.maxTeamSize);
+    if (details.eventType === 'team') {
+      if (!details.minTeamSize.trim()) newErrors.minTeamSize = 'Minimum team size is required';
+      if (!details.maxTeamSize.trim()) newErrors.maxTeamSize = 'Maximum team size is required';
+      if (details.minTeamSize && details.maxTeamSize) {
+        const min = parseInt(details.minTeamSize);
+        const max = parseInt(details.maxTeamSize);
         if (min > max) newErrors.maxTeamSize = 'Maximum size must be greater than minimum';
         if (min < 2) newErrors.minTeamSize = 'Team must have at least 2 members';
       }
     }
     
     // Halls required validation
-    if (!formData.hallsRequired.trim()) newErrors.hallsRequired = 'Number of halls required is required';
-    if (formData.hallsRequired && parseInt(formData.hallsRequired) < 1) {
+    if (!details.hallsRequired.trim()) newErrors.hallsRequired = 'Number of halls required is required';
+    if (details.hallsRequired && parseInt(details.hallsRequired) < 1) {
       newErrors.hallsRequired = 'At least 1 hall is required';
     }
     
     // Preferred halls validation
-    if (!formData.preferredHalls.trim()) newErrors.preferredHalls = 'Preferred halls is required';
+    if (!details.preferredHalls.trim()) newErrors.preferredHalls = 'Preferred halls is required';
     
     // Reason for halls validation
-    if (!formData.reasonForHalls.trim()) newErrors.reasonForHalls = 'Reason for hall selection is required';
+    if (!details.reasonForHalls.trim()) newErrors.reasonForHalls = 'Reason for hall selection is required';
     
     // Slot validation
-    if (!formData.slot) newErrors.slot = 'Please select a slot';
+    if (!details.slot) newErrors.slot = 'Please select a slot';
     
     // Extension box validation
-    if (!formData.extensionBox.trim()) newErrors.extensionBox = 'Extension box details are required';
+    if (!details.extensionBox.trim()) newErrors.extensionBox = 'Extension box details are required';
     
     // Reason for extension validation
-    if (!formData.reasonForExtension.trim()) newErrors.reasonForExtension = 'Reason for extension is required';
+    if (!details.reasonForExtension.trim()) newErrors.reasonForExtension = 'Reason for extension is required';
 
     return newErrors;
   };
 
+  const onSaveAndContinue = () => {
+    setGlobalFormData(prev => ({
+      ...prev,
+      eventDetails: details
+    }));
+    navigate('/create-event/items'); // absolute path
+  };
+
+  // If you submit a form, ensure submit handler uses the same:
   const handleSubmit = (e) => {
     e.preventDefault();
     const validationErrors = validateForm();
@@ -386,18 +395,11 @@ const EventDetails = ({ formData: globalFormData, setFormData: setGlobalFormData
       return;
     }
     
-    // Update global form data
-    if (setGlobalFormData) {
-      setGlobalFormData(prev => ({
-        ...prev,
-        eventDetails: formData
-      }));
-    }
-    
-    console.log('Event details submitted:', formData);
-    
-    // Navigate to items page
-    navigate('/items');
+    setGlobalFormData(prev => ({
+      ...prev,
+      eventDetails: details
+    }));
+    navigate('/create-event/items'); // absolute path
   };
 
   return (
@@ -416,32 +418,32 @@ const EventDetails = ({ formData: globalFormData, setFormData: setGlobalFormData
             <FormGroup className="full-width">
               <Label>Day Preferred *</Label>
               <RadioGroup>
-                <RadioOption className={formData.dayPreferred === 'day1' ? 'selected' : ''}>
+                <RadioOption className={details.dayPreferred === 'day1' ? 'selected' : ''}>
                   <input 
                     type="radio" 
                     name="dayPreferred" 
                     value="day1"
-                    checked={formData.dayPreferred === 'day1'}
+                    checked={details.dayPreferred === 'day1'}
                     onChange={(e) => handleChange('dayPreferred', e.target.value)}
                   />
                   Day 1
                 </RadioOption>
-                <RadioOption className={formData.dayPreferred === 'day2' ? 'selected' : ''}>
+                <RadioOption className={details.dayPreferred === 'day2' ? 'selected' : ''}>
                   <input 
                     type="radio" 
                     name="dayPreferred" 
                     value="day2"
-                    checked={formData.dayPreferred === 'day2'}
+                    checked={details.dayPreferred === 'day2'}
                     onChange={(e) => handleChange('dayPreferred', e.target.value)}
                   />
                   Day 2
                 </RadioOption>
-                <RadioOption className={formData.dayPreferred === 'twoDays' ? 'selected' : ''}>
+                <RadioOption className={details.dayPreferred === 'twoDays' ? 'selected' : ''}>
                   <input 
                     type="radio" 
                     name="dayPreferred" 
                     value="twoDays"
-                    checked={formData.dayPreferred === 'twoDays'}
+                    checked={details.dayPreferred === 'twoDays'}
                     onChange={(e) => handleChange('dayPreferred', e.target.value)}
                   />
                   Two Days
@@ -457,7 +459,7 @@ const EventDetails = ({ formData: globalFormData, setFormData: setGlobalFormData
                 type="number" 
                 min="1"
                 placeholder="e.g., 3"
-                value={formData.numberOfRounds}
+                value={details.numberOfRounds}
                 onChange={(e) => handleChange('numberOfRounds', e.target.value)}
                 className={errors.numberOfRounds ? 'error' : ''}
               />
@@ -471,7 +473,7 @@ const EventDetails = ({ formData: globalFormData, setFormData: setGlobalFormData
                 type="number" 
                 min="1"
                 placeholder="e.g., 50"
-                value={formData.expectedParticipants}
+                value={details.expectedParticipants}
                 onChange={(e) => handleChange('expectedParticipants', e.target.value)}
                 className={errors.expectedParticipants ? 'error' : ''}
               />
@@ -484,7 +486,7 @@ const EventDetails = ({ formData: globalFormData, setFormData: setGlobalFormData
               <Input 
                 type="text" 
                 placeholder="e.g., 2 hours, 3 hours, 1 day"
-                value={formData.duration}
+                value={details.duration}
                 onChange={(e) => handleChange('duration', e.target.value)}
                 className={errors.duration ? 'error' : ''}
               />
@@ -495,22 +497,22 @@ const EventDetails = ({ formData: globalFormData, setFormData: setGlobalFormData
             <FormGroup className="full-width">
               <Label>Event Type *</Label>
               <RadioGroup>
-                <RadioOption className={formData.eventType === 'individual' ? 'selected' : ''}>
+                <RadioOption className={details.eventType === 'individual' ? 'selected' : ''}>
                   <input 
                     type="radio" 
                     name="eventType" 
                     value="individual"
-                    checked={formData.eventType === 'individual'}
+                    checked={details.eventType === 'individual'}
                     onChange={(e) => handleChange('eventType', e.target.value)}
                   />
                   Individual
                 </RadioOption>
-                <RadioOption className={formData.eventType === 'team' ? 'selected' : ''}>
+                <RadioOption className={details.eventType === 'team' ? 'selected' : ''}>
                   <input 
                     type="radio" 
                     name="eventType" 
                     value="team"
-                    checked={formData.eventType === 'team'}
+                    checked={details.eventType === 'team'}
                     onChange={(e) => handleChange('eventType', e.target.value)}
                   />
                   Team
@@ -520,7 +522,7 @@ const EventDetails = ({ formData: globalFormData, setFormData: setGlobalFormData
             </FormGroup>
             
             {/* Team Size (conditional) */}
-            {formData.eventType === 'team' && (
+            {details.eventType === 'team' && (
               <>
                 <FormGroup>
                   <Label>Min Team Size *</Label>
@@ -528,7 +530,7 @@ const EventDetails = ({ formData: globalFormData, setFormData: setGlobalFormData
                     type="number" 
                     min="2"
                     placeholder="e.g., 2"
-                    value={formData.minTeamSize}
+                    value={details.minTeamSize}
                     onChange={(e) => handleChange('minTeamSize', e.target.value)}
                     className={errors.minTeamSize ? 'error' : ''}
                   />
@@ -541,7 +543,7 @@ const EventDetails = ({ formData: globalFormData, setFormData: setGlobalFormData
                     type="number" 
                     min="2"
                     placeholder="e.g., 5"
-                    value={formData.maxTeamSize}
+                    value={details.maxTeamSize}
                     onChange={(e) => handleChange('maxTeamSize', e.target.value)}
                     className={errors.maxTeamSize ? 'error' : ''}
                   />
@@ -557,7 +559,7 @@ const EventDetails = ({ formData: globalFormData, setFormData: setGlobalFormData
                 type="number" 
                 min="1"
                 placeholder="e.g., 2"
-                value={formData.hallsRequired}
+                value={details.hallsRequired}
                 onChange={(e) => handleChange('hallsRequired', e.target.value)}
                 className={errors.hallsRequired ? 'error' : ''}
               />
@@ -570,7 +572,7 @@ const EventDetails = ({ formData: globalFormData, setFormData: setGlobalFormData
               <Input 
                 type="text" 
                 placeholder="e.g., Main Auditorium, Hall A"
-                value={formData.preferredHalls}
+                value={details.preferredHalls}
                 onChange={(e) => handleChange('preferredHalls', e.target.value)}
                 className={errors.preferredHalls ? 'error' : ''}
               />
@@ -582,7 +584,7 @@ const EventDetails = ({ formData: globalFormData, setFormData: setGlobalFormData
               <Label>Reason for Hall Selection *</Label>
               <TextArea 
                 placeholder="Explain why you selected these halls..."
-                value={formData.reasonForHalls}
+                value={details.reasonForHalls}
                 onChange={(e) => handleChange('reasonForHalls', e.target.value)}
                 className={errors.reasonForHalls ? 'error' : ''}
               />
@@ -593,32 +595,32 @@ const EventDetails = ({ formData: globalFormData, setFormData: setGlobalFormData
             <FormGroup className="full-width">
               <Label>Select Slot *</Label>
               <RadioGroup>
-                <RadioOption className={formData.slot === 'slot1' ? 'selected' : ''}>
+                <RadioOption className={details.slot === 'slot1' ? 'selected' : ''}>
                   <input 
                     type="radio" 
                     name="slot" 
                     value="slot1"
-                    checked={formData.slot === 'slot1'}
+                    checked={details.slot === 'slot1'}
                     onChange={(e) => handleChange('slot', e.target.value)}
                   />
                   Slot 1 (9:30 AM - 12:30 PM)
                 </RadioOption>
-                <RadioOption className={formData.slot === 'slot2' ? 'selected' : ''}>
+                <RadioOption className={details.slot === 'slot2' ? 'selected' : ''}>
                   <input 
                     type="radio" 
                     name="slot" 
                     value="slot2"
-                    checked={formData.slot === 'slot2'}
+                    checked={details.slot === 'slot2'}
                     onChange={(e) => handleChange('slot', e.target.value)}
                   />
                   Slot 2 (1:30 PM - 4:30 PM)
                 </RadioOption>
-                <RadioOption className={formData.slot === 'fullDay' ? 'selected' : ''}>
+                <RadioOption className={details.slot === 'fullDay' ? 'selected' : ''}>
                   <input 
                     type="radio" 
                     name="slot" 
                     value="fullDay"
-                    checked={formData.slot === 'fullDay'}
+                    checked={details.slot === 'fullDay'}
                     onChange={(e) => handleChange('slot', e.target.value)}
                   />
                   Full Day
@@ -632,7 +634,7 @@ const EventDetails = ({ formData: globalFormData, setFormData: setGlobalFormData
               <Label>Extension Box *</Label>
               <TextArea 
                 placeholder="List any extension requirements (equipment, power, etc.)..."
-                value={formData.extensionBox}
+                value={details.extensionBox}
                 onChange={(e) => handleChange('extensionBox', e.target.value)}
                 className={errors.extensionBox ? 'error' : ''}
               />
@@ -644,7 +646,7 @@ const EventDetails = ({ formData: globalFormData, setFormData: setGlobalFormData
               <Label>Reason for Extension Boxes *</Label>
               <TextArea 
                 placeholder="Explain why you need these extensions..."
-                value={formData.reasonForExtension}
+                value={details.reasonForExtension}
                 onChange={(e) => handleChange('reasonForExtension', e.target.value)}
                 className={errors.reasonForExtension ? 'error' : ''}
               />
@@ -654,7 +656,7 @@ const EventDetails = ({ formData: globalFormData, setFormData: setGlobalFormData
           
           <ButtonGroup>
             <Button type="button" onClick={() => {
-              setFormData({
+              setDetails({
                 dayPreferred: '',
                 numberOfRounds: '',
                 expectedParticipants: '',
@@ -678,5 +680,3 @@ const EventDetails = ({ formData: globalFormData, setFormData: setGlobalFormData
     </PageWrapper>
   );
 };
-
-export default EventDetails;

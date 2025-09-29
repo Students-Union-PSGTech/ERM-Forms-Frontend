@@ -310,8 +310,7 @@ const TotalSummary = styled.div`
 `;
 
 export default function ReviewSubmit({ formData = {} }) {
-  const user = useAuth();
-  const canEdit = user?.isAuthenticated && user.role === "club_member";
+  const { isAuthenticated, user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -327,28 +326,80 @@ export default function ReviewSubmit({ formData = {} }) {
   const totalParticipants = rounds?.reduce((sum, round) => sum + (round.participants || 0), 0) || 0;
 
   async function submitForm() {
-    if (!canEdit) {
-      alert("Only club members can submit the form.");
-      return;
-    }
-    
     setIsSubmitting(true);
     setError(null);
-    console.log("Submitting form:", formData);
+
+    // Deconstruct the formData state from your app
+    const { eventPreview, eventDetails, items, rounds, eventOverview } = formData;
+
+    // 1. Assemble the `eventData` object for the backend
+    const eventData = {
+        name: eventPreview?.eventName,
+        tagline: eventOverview?.oneLineDescription,
+        about: eventOverview?.aboutTheEvent,
+        round_count: eventDetails?.numberOfRounds
+    };
     
+    // 2. Assemble the `eventDetailsData` object for the backend
+    const eventDetailsData = {
+        secretary1: eventPreview?.secretary1,
+        secretary2: eventPreview?.secretary2,
+        convenor1: eventPreview?.convenor1,
+        convenor2: eventPreview?.convenor2,
+        volunteer1: eventPreview?.volunteer1,
+        volunteer2: eventPreview?.volunteer2,
+        faculty_advisor: eventPreview?.facultyAdvisor, // Use snake_case to match original schema
+        judge: eventPreview?.judge
+    };
+
+    // 3. Assemble the `itemsData` array for the backend
+    const itemsData = items?.map(item => ({
+        ...item,
+        // Ensure total_price is calculated if your backend expects it
+        total_price: item.quantity * item.price_per_unit
+    })) || [];
+
+    // 4. Assemble the `eventFormData` object for the backend
+    const eventFormData = {
+        day: eventDetails?.dayPreferred,
+        two_days: eventDetails?.dayPreferred === 'twoDays' ? 'true' : 'false',
+        rounds: eventDetails?.numberOfRounds,
+        participants: eventDetails?.expectedParticipants,
+        duration: eventDetails?.duration,
+        participant_type: eventDetails?.eventType,
+        team_min: eventDetails?.minTeamSize,
+        team_max: eventDetails?.maxTeamSize,
+        halls_required: eventDetails?.hallsRequired,
+        preferred_halls: eventDetails?.preferredHalls,
+        hall_reason: eventDetails?.reasonForHalls,
+        slot: eventDetails?.slot,
+        extension_boxes: eventDetails?.extensionBox,
+        extension_reason: eventDetails?.reasonForExtension
+    };
+
+    // Combine all parts into the final payload
+    const finalPayload = {
+        eventData,
+        eventDetailsData,
+        itemsData,
+        eventFormData,
+        // The `rounds` data seems to be missing from your Postman example.
+        // If your backend needs it, you can add it like this:
+        // roundsData: rounds 
+    };
+
+    console.log("Submitting final payload:", finalPayload);
+
     try {
-      // Submit form data to the server
-      await createEvent(formData);
-      
-      // Navigate to success page or home
-      navigate('/home', { state: { success: true, message: 'Event created successfully!' }});
+        await createEvent(finalPayload);
+        navigate('/home', { state: { success: true, message: 'Event created successfully!' } });
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to submit form. Please try again.');
-      console.error('Submission error:', err);
+        setError(err.response?.data?.message || 'Failed to submit form. Please try again.');
+        console.error('Submission error:', err);
     } finally {
-      setIsSubmitting(false);
+        setIsSubmitting(false);
     }
-  }
+}
 
   return (
     <PageWrapper>
@@ -623,13 +674,7 @@ export default function ReviewSubmit({ formData = {} }) {
 
         {/* Submit Section */}
         <ActionSection>
-          <PermissionBanner allowed={canEdit}>
-            <span className="text">
-              {canEdit 
-                ? 'You have permission to submit this event form.' 
-                : 'Only club members can submit event forms. Please contact an admin for access.'}
-            </span>
-          </PermissionBanner>
+          
 
           {error && (
             <div className="error-message">
@@ -647,7 +692,6 @@ export default function ReviewSubmit({ formData = {} }) {
             </button>
             <SubmitButton 
               onClick={submitForm} 
-              disabled={!canEdit || isSubmitting}
             >
               {isSubmitting ? 'Submitting...' : 'Submit Event Form'}
             </SubmitButton>

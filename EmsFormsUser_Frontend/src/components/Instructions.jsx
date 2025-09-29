@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import styled, { keyframes } from "styled-components";
 
 const slideDown = keyframes`
@@ -258,11 +258,13 @@ const CheckboxContainer = styled.div`
 
 const Instructions = () => {
     const navigate = useNavigate();
+    const { setAgreedToInstructions } = useOutletContext() || {};
     const [agreed, setAgreed] = useState(false);
     const [closing, setClosing] = useState(false);
 
     const handleAgree = () => {
         if (agreed) {
+            setAgreedToInstructions?.(true); // persist agreement for guard
             setClosing(true);
             setTimeout(() => {
                 navigate('/create-event/preview');

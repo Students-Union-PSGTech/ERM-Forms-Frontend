@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from "styled-components";
 
 const PageWrapper = styled.div`
@@ -243,26 +243,26 @@ const EmptyState = styled.div`
   }
 `;
 
-const ItemsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }) => {
+export default function ItemsPage({ formData: globalFormData, setFormData: setGlobalFormData }) {
   const navigate = useNavigate();
-  const [items, setItems] = useState([{item_name: "", quantity: 0, price_per_unit: 0, total_price: 0}]);
 
-  // Load data from global state on mount
+  // Local editable copy of items
+  const [items, setItems] = useState(() => Array.isArray(globalFormData?.items) ? globalFormData.items : []);
+
+  // Load from global on mount (in case of reload)
   useEffect(() => {
-    if (globalFormData && globalFormData.items && globalFormData.items.length > 0) {
+    if (Array.isArray(globalFormData?.items)) {
       setItems(globalFormData.items);
     }
-    
-    // Check if both Event Preview and Event Details are completed (both compulsory)
-    if (!globalFormData?.eventPreview?.eventName || !globalFormData?.eventDetails?.dayPreferred) {
-      // Redirect to appropriate missing page
-      if (!globalFormData?.eventPreview?.eventName) {
-        navigate('/');
-      } else {
-        navigate('/details');
-      }
-    }
-  }, [globalFormData, navigate]);
+  }, [globalFormData]);
+
+  // Auto-sync local edits into global so navbar navigation preserves state
+  useEffect(() => {
+    setGlobalFormData(prev => ({
+      ...prev,
+      items: items || []
+    }));
+  }, [items, setGlobalFormData]);
 
   const handleChange = (index, key, value) => {
     const newItems = [...items];
@@ -290,21 +290,22 @@ const ItemsPage = ({ formData: globalFormData, setFormData: setGlobalFormData })
   
   const total = items.reduce((sum, item) => sum + item.total_price, 0);
 
-  const handleSubmit = () => {
-    const validItems = items.filter(item => item.item_name.trim() && item.price_per_unit > 0 && item.quantity > 0);
-    
-    // Update global form data
-    if (setGlobalFormData) {
-      setGlobalFormData(prev => ({
-        ...prev,
-        items: validItems
-      }));
-    }
-    
-    console.log("Items submitted:", validItems);
-    
-    // Navigate to rounds page
-    navigate('/rounds');
+  const onSaveAndContinue = () => {
+    // Ensure persisted, then navigate
+    setGlobalFormData(prev => ({
+      ...prev,
+      items: items || []
+    }));
+    navigate('/create-event/rounds');
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setGlobalFormData(prev => ({
+      ...prev,
+      items: items || []
+    }));
+    navigate('/create-event/rounds');
   };
 
   return (
@@ -388,5 +389,3 @@ const ItemsPage = ({ formData: globalFormData, setFormData: setGlobalFormData })
     </PageWrapper>
   );
 };
-
-export default ItemsPage;
