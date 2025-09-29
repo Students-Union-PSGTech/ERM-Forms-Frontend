@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useNavigate, Navigate } from 'react-router-dom';
 import { GlobalStyles } from './GlobalStyles';
 import NavBar from './components/NavBar';
 import EventDetails from './components/EventDetails';
@@ -27,18 +27,19 @@ function ProtectedRoute({ children }) {
 
 // Component to handle the form flow
 function FormFlow() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     description: {}, items: [], rounds: []
   });
-  const [showInstructions, setShowInstructions] = useState(true);
   const [instructionsAgreed, setInstructionsAgreed] = useState(false);
 
   const handleInstructionsAgree = () => {
-    setShowInstructions(false);
     setInstructionsAgreed(true);
+    // 3. Add explicit navigation to the first step of the form
+    navigate('/create-event/preview'); 
   };
 
-  if (showInstructions) {
+  if (!instructionsAgreed) {
     return <Instructions onAgree={handleInstructionsAgree} />;
   }
 
@@ -51,7 +52,7 @@ function FormFlow() {
         <Route path="/items" element={<ItemsPage formData={formData} setFormData={setFormData} />} />
         <Route path="/rounds" element={<RoundsPage formData={formData} setFormData={setFormData} />} />
         <Route path="/review" element={<ReviewSubmit formData={formData} />} />
-        <Route path="/" element={<Navigate to="/preview" />} />
+        
       </Routes>
     </>
   );
@@ -67,7 +68,6 @@ function App() {
           
           <Route path="/home" element={
             <ProtectedRoute>
-              <NavBar />
               <HomePage />
             </ProtectedRoute>
           } />

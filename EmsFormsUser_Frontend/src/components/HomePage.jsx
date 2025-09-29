@@ -1,7 +1,10 @@
 import React from "react";
 import "../components_css/HomePage.css";
+import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="home-container">
       {/* Enhanced Background Elements */}
@@ -21,16 +24,16 @@ const HomePage = () => {
           </div>
 
           <div className="buttons-section">
-            <button 
+            <button
               className="action-button create-button"
-              onClick={() => window.location.href = '/create-event'}
+              onClick={() => navigate('/create-event')} // 3. Use navigate instead of window.location
             >
               Create Event
             </button>
             
-            <button 
+            <button
               className="action-button view-button"
-              onClick={() => window.location.href = '/view-events'}
+              onClick={() => navigate('/view-events')} // Also update this one
             >
               View Events
             </button>
