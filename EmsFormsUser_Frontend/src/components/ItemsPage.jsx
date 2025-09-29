@@ -293,7 +293,10 @@ export default function ItemsPage({ formData: globalFormData, setFormData: setGl
     }
   };
   
-  const total = items.reduce((sum, item) => sum + item.total_price, 0);
+  const total = items.reduce((sum, item) => {
+    const itemTotal = (item.price_per_unit || 0) * (item.quantity || 0);
+    return sum + itemTotal;
+}, 0);
 
   const onSaveAndContinue = () => {
     // Ensure persisted, then navigate
@@ -361,7 +364,9 @@ export default function ItemsPage({ formData: globalFormData, setFormData: setGl
                       onChange={e => handleItemChange(i, "quantity", e.target.value)}
                     />
                   </Td>
-                  <TotalCell>₹{item.total_price.toLocaleString()}</TotalCell>
+                  <TotalCell>
+    ₹{( (item.price_per_unit || 0) * (item.quantity || 0) ).toLocaleString()}
+</TotalCell>
                   <Td>
                     <ActionButton 
                       delete 

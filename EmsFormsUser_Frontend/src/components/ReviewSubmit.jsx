@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import styled from "styled-components";
 import { useAuth } from "../context/AuthContext";
-import { useNavigate } from "react-router-dom";
 import { createEvent } from "../api/api";
 
 const PageWrapper = styled.div`
@@ -309,11 +309,11 @@ const TotalSummary = styled.div`
   }
 `;
 
-export default function ReviewSubmit({ formData = {} }) {
+const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
   const { isAuthenticated, user } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
   // Extract data from different sections
   const eventPreview = formData.eventPreview || {};
@@ -333,11 +333,16 @@ export default function ReviewSubmit({ formData = {} }) {
     designation: p.designation || ''
   });
 
-  async function submitForm() {
-    setIsSubmitting(true);
-    setError(null);
+  const handleSubmit = async (e) => {
+    e?.preventDefault?.();
+
+    // Ask for confirmation
+    const ok = window.confirm('Are you sure you want to submit this event?');
+    if (!ok) return;
 
     try {
+      setSubmitting(true);
+
       const {
         eventPreview = {},
         eventDetails = {},
@@ -410,12 +415,13 @@ export default function ReviewSubmit({ formData = {} }) {
 
       console.log("Submitting final payload:", payload);
       await createEvent(payload);
+      sessionStorage.removeItem("createEventFormData");
       navigate('/home', { state: { success: true, message: 'Event created successfully!' } });
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to submit form. Please try again.');
       console.error('Submission error:', err);
     } finally {
-      setIsSubmitting(false);
+      setSubmitting(false);
     }
   }
 
@@ -704,19 +710,21 @@ export default function ReviewSubmit({ formData = {} }) {
             <button
               className="back-button"
               onClick={() => navigate('/create-event/rounds')}
-              disabled={isSubmitting}
+              disabled={submitting}
             >
               Back
             </button>
             <SubmitButton 
-              onClick={submitForm}
-              disabled={isSubmitting}
+              onClick={handleSubmit}
+              disabled={submitting}
             >
-              {isSubmitting ? 'Submitting...' : 'Submit Event Form'}
+              {submitting ? 'Submitting...' : 'Submit Event Form'}
             </SubmitButton>
           </div>
         </ActionSection>
       </Container>
     </PageWrapper>
   );
-}
+};
+
+export default ReviewSubmit;
