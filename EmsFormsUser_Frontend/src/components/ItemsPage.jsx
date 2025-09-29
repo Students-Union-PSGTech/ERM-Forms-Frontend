@@ -264,23 +264,28 @@ export default function ItemsPage({ formData: globalFormData, setFormData: setGl
     }));
   }, [items, setGlobalFormData]);
 
-  const handleChange = (index, key, value) => {
-    const newItems = [...items];
-    if (key === "item_name") {
-      newItems[index][key] = value;
-    } else {
-      const numValue = Number(value) || 0;
-      newItems[index][key] = numValue;
-      
-      // Auto-calculate total_price when quantity or price_per_unit changes
-      if (key === "quantity" || key === "price_per_unit") {
-        newItems[index].total_price = newItems[index].quantity * newItems[index].price_per_unit;
-      }
-    }
-    setItems(newItems);
+  const toNumber = v => (v === '' || v === null || v === undefined ? '' : Number(v));
+
+  const handleItemChange = (index, field, value) => {
+    setGlobalFormData(prev => {
+      const list = Array.isArray(prev.items) ? [...prev.items] : [];
+      const current = { ...(list[index] || {}) };
+
+      if (field === 'item_name') current.item_name = String(value);
+      if (field === 'price_per_unit') current.price_per_unit = toNumber(value);
+      if (field === 'quantity') current.quantity = toNumber(value);
+
+      list[index] = current;
+      return { ...prev, items: list };
+    });
   };
 
-  const addItem = () => setItems([...items, {item_name: "", quantity: 0, price_per_unit: 0, total_price: 0}]);
+  const addItem = () => {
+    setGlobalFormData(prev => ({
+      ...prev,
+      items: [ ...(prev.items || []), { item_name: '', price_per_unit: '', quantity: '' } ]
+    }));
+  };
   
   const deleteItem = (index) => {
     if (items.length > 1) {
@@ -334,7 +339,7 @@ export default function ItemsPage({ formData: globalFormData, setFormData: setGl
                     <Input 
                       placeholder="Enter item name..."
                       value={item.item_name} 
-                      onChange={e => handleChange(i, "item_name", e.target.value)}
+                      onChange={e => handleItemChange(i, "item_name", e.target.value)}
                     />
                   </Td>
                   <Td>
@@ -344,7 +349,7 @@ export default function ItemsPage({ formData: globalFormData, setFormData: setGl
                       min="0"
                       step="0.01"
                       value={item.price_per_unit || ''} 
-                      onChange={e => handleChange(i, "price_per_unit", e.target.value)}
+                      onChange={e => handleItemChange(i, "price_per_unit", e.target.value)}
                     />
                   </Td>
                   <Td>
@@ -353,7 +358,7 @@ export default function ItemsPage({ formData: globalFormData, setFormData: setGl
                       placeholder="0"
                       min="0"
                       value={item.quantity || ''} 
-                      onChange={e => handleChange(i, "quantity", e.target.value)}
+                      onChange={e => handleItemChange(i, "quantity", e.target.value)}
                     />
                   </Td>
                   <TotalCell>₹{item.total_price.toLocaleString()}</TotalCell>

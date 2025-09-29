@@ -372,6 +372,15 @@ const ActionButton = styled.button`
   `}
 `;
 
+const parseRules = v => {
+  if (Array.isArray(v)) return v.filter(Boolean).map(s => String(s).trim()).filter(Boolean);
+  // If using textarea, split by newline or semicolon
+  return String(v || '')
+    .split(/\r?\n|;/)
+    .map(s => s.trim())
+    .filter(Boolean);
+};
+
 const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }) => {
   const navigate = useNavigate();
   const [rounds, setRounds] = useState([]);
@@ -483,6 +492,21 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
       if (!copy[index]) return prev;
       copy[index] = { ...copy[index], participants: isNaN(num) ? 0 : Math.max(0, num) };
       return copy;
+    });
+  };
+
+  const handleRoundChange = (index, field, value) => {
+    setFormData(prev => {
+      const list = Array.isArray(prev.rounds) ? [...prev.rounds] : [];
+      const current = { ...(list[index] || {}) };
+
+      if (field === 'name') current.name = String(value);
+      if (field === 'description') current.description = String(value);
+      if (field === 'rules') current.rules = parseRules(value);
+      if (field === 'participants') current.participants = value === '' ? '' : Number(value);
+
+      list[index] = current;
+      return { ...prev, rounds: list };
     });
   };
 

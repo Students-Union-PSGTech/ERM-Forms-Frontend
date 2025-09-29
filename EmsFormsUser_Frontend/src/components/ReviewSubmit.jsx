@@ -325,81 +325,99 @@ export default function ReviewSubmit({ formData = {} }) {
   const totalCost = items?.reduce((sum, item) => sum + (item.price_per_unit * item.quantity), 0) || 0;
   const totalParticipants = rounds?.reduce((sum, round) => sum + (round.participants || 0), 0) || 0;
 
+  // Helper to map frontend person fields to backend schema (snake_case)
+  const toPerson = (p = {}) => ({
+    name: p.name || '',
+    roll_number: p.rollNumber || p.roll_number || '',
+    mobile: p.mobile || p.contact || '',
+    designation: p.designation || ''
+  });
+
   async function submitForm() {
     setIsSubmitting(true);
     setError(null);
 
-    // Deconstruct the formData state from your app
-    const { eventPreview, eventDetails, items, rounds, eventOverview } = formData;
-
-    // 1. Assemble the `eventData` object for the backend
-    const eventData = {
-        name: eventPreview?.eventName,
-        tagline: eventOverview?.oneLineDescription,
-        about: eventOverview?.aboutTheEvent,
-        round_count: eventDetails?.numberOfRounds
-    };
-    
-    // 2. Assemble the `eventDetailsData` object for the backend
-    const eventDetailsData = {
-        secretary1: eventPreview?.secretary1,
-        secretary2: eventPreview?.secretary2,
-        convenor1: eventPreview?.convenor1,
-        convenor2: eventPreview?.convenor2,
-        volunteer1: eventPreview?.volunteer1,
-        volunteer2: eventPreview?.volunteer2,
-        faculty_advisor: eventPreview?.facultyAdvisor, // Use snake_case to match original schema
-        judge: eventPreview?.judge
-    };
-
-    // 3. Assemble the `itemsData` array for the backend
-    const itemsData = items?.map(item => ({
-        ...item,
-        // Ensure total_price is calculated if your backend expects it
-        total_price: item.quantity * item.price_per_unit
-    })) || [];
-
-    // 4. Assemble the `eventFormData` object for the backend
-    const eventFormData = {
-        day: eventDetails?.dayPreferred,
-        two_days: eventDetails?.dayPreferred === 'twoDays' ? 'true' : 'false',
-        rounds: eventDetails?.numberOfRounds,
-        participants: eventDetails?.expectedParticipants,
-        duration: eventDetails?.duration,
-        participant_type: eventDetails?.eventType,
-        team_min: eventDetails?.minTeamSize,
-        team_max: eventDetails?.maxTeamSize,
-        halls_required: eventDetails?.hallsRequired,
-        preferred_halls: eventDetails?.preferredHalls,
-        hall_reason: eventDetails?.reasonForHalls,
-        slot: eventDetails?.slot,
-        extension_boxes: eventDetails?.extensionBox,
-        extension_reason: eventDetails?.reasonForExtension
-    };
-
-    // Combine all parts into the final payload
-    const finalPayload = {
-        eventData,
-        eventDetailsData,
-        itemsData,
-        eventFormData,
-        // The `rounds` data seems to be missing from your Postman example.
-        // If your backend needs it, you can add it like this:
-        // roundsData: rounds 
-    };
-
-    console.log("Submitting final payload:", finalPayload);
-
     try {
-        await createEvent(finalPayload);
-        navigate('/home', { state: { success: true, message: 'Event created successfully!' } });
+      const {
+        eventPreview = {},
+        eventDetails = {},
+        items = [],
+        rounds = [],
+        eventOverview = {}
+      } = formData || {};
+
+      const payload = {
+        // Core event fields
+        name: eventPreview?.eventName?.trim() || '',
+        tagline: eventOverview?.oneLineDescription?.trim() || '',
+        about: eventOverview?.aboutTheEvent?.trim() || '',
+        round_count: Number(eventDetails?.numberOfRounds) || Number(rounds?.length) || 0,
+
+        // Rounds (backend expects name, description, rules only)
+        rounds: (rounds || []).map(r => ({
+          name: r?.name || '',
+          description: r?.description || '',
+          rules: Array.isArray(r?.rules) ? r.rules.filter(Boolean) : []
+        })),
+
+        // Event details (people) with snake_case keys
+        details: {
+          secretary1: toPerson(eventPreview?.secretary1),
+          secretary2: toPerson(eventPreview?.secretary2),
+          convenor1: toPerson(eventPreview?.convenor1),
+          convenor2: toPerson(eventPreview?.convenor2),
+          volunteer1: toPerson(eventPreview?.volunteer1),
+          volunteer2: toPerson(eventPreview?.volunteer2),
+          faculty_advisor: toPerson(eventPreview?.facultyAdvisor),
+          judge: toPerson(eventPreview?.judge)
+        },
+
+        // Items with required total_price and numeric fields
+        items: (items || [])
+          .filter(it => (it?.item_name || '').trim())
+          .map(it => {
+            const quantity = Number(it.quantity) || 0;
+            const price = Number(it.price_per_unit) || 0;
+            return {
+              item_name: String(it.item_name).trim(),
+              quantity,
+              price_per_unit: price,
+              total_price: quantity * price
+            };
+          }),
+
+        // Form section (all strings per schema)
+        form: {
+          day: eventDetails?.dayPreferred || '',
+          two_days: eventDetails?.dayPreferred === 'twoDays' ? 'true' : 'false',
+          rounds: eventDetails?.numberOfRounds != null ? String(eventDetails.numberOfRounds) : '',
+          participants: eventDetails?.expectedParticipants != null ? String(eventDetails.expectedParticipants) : '',
+          duration: eventDetails?.duration != null ? String(eventDetails.duration) : '',
+          participant_type: eventDetails?.eventType || '',
+          team_min: eventDetails?.minTeamSize != null ? String(eventDetails.minTeamSize) : '',
+          team_max: eventDetails?.maxTeamSize != null ? String(eventDetails.maxTeamSize) : '',
+          halls_required: eventDetails?.hallsRequired != null ? String(eventDetails.hallsRequired) : '',
+          preferred_halls: eventDetails?.preferredHalls || '',
+          hall_reason: eventDetails?.reasonForHalls || '',
+          slot: eventDetails?.slot || '',
+          extension_boxes: eventDetails?.extensionBox != null ? String(eventDetails.extensionBox) : '',
+          extension_reason: eventDetails?.reasonForExtension || ''
+        }
+      };
+
+      // Optional: include association_name if available from auth
+      if (user?.association_name) payload.association_name = user.association_name;
+
+      console.log("Submitting final payload:", payload);
+      await createEvent(payload);
+      navigate('/home', { state: { success: true, message: 'Event created successfully!' } });
     } catch (err) {
-        setError(err.response?.data?.message || 'Failed to submit form. Please try again.');
-        console.error('Submission error:', err);
+      setError(err.response?.data?.message || 'Failed to submit form. Please try again.');
+      console.error('Submission error:', err);
     } finally {
-        setIsSubmitting(false);
+      setIsSubmitting(false);
     }
-}
+  }
 
   return (
     <PageWrapper>
@@ -691,7 +709,8 @@ export default function ReviewSubmit({ formData = {} }) {
               Back
             </button>
             <SubmitButton 
-              onClick={submitForm} 
+              onClick={submitForm}
+              disabled={isSubmitting}
             >
               {isSubmitting ? 'Submitting...' : 'Submit Event Form'}
             </SubmitButton>

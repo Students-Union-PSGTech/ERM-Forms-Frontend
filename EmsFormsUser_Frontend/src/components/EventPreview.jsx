@@ -325,6 +325,30 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
     }
   };
 
+  // Ensure setFormData is available via props/context
+  const normalizePerson = (p = {}) => ({
+    name: p.name || '',
+    rollNumber: p.rollNumber || p.roll_number || p.roll || '',
+    mobile: p.mobile || p.contact || '',
+    designation: p.designation || ''
+  });
+
+  const handlePersonChange = (roleKey, field, value) => {
+    // field should be one of: 'name' | 'rollNumber' | 'mobile' | 'designation'
+    setFormData(prev => {
+      const ep = prev.eventPreview || {};
+      const person = normalizePerson(ep[roleKey] || {});
+      const updated = { ...person, [field]: value };
+      return {
+        ...prev,
+        eventPreview: {
+          ...ep,
+          [roleKey]: updated
+        }
+      };
+    });
+  };
+
   const validateForm = () => {
     const newErrors = {};
     
