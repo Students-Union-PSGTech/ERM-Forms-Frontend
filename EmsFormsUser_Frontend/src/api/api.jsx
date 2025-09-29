@@ -26,4 +26,4 @@ export const listEvents = async () => {
 // Update an existing event by id
 export const patchEvent = (id, data) => API.put(`/api/events/${id}`, data);
 
-export default API;
+export { API };

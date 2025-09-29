@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { createEvent } from "../api/api";
 
 const PageWrapper = styled.div`
   min-height: calc(100vh - 80px);
@@ -311,6 +313,8 @@ export default function ReviewSubmit({ formData = {} }) {
   const user = useAuth();
   const canEdit = user?.isAuthenticated && user.role === "club_member";
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
+  const navigate = useNavigate();
 
   // Extract data from different sections
   const eventPreview = formData.eventPreview || {};
@@ -322,20 +326,28 @@ export default function ReviewSubmit({ formData = {} }) {
   const totalCost = items?.reduce((sum, item) => sum + (item.price_per_unit * item.quantity), 0) || 0;
   const totalParticipants = rounds?.reduce((sum, round) => sum + (round.participants || 0), 0) || 0;
 
-  function submitForm() {
+  async function submitForm() {
     if (!canEdit) {
       alert("Only club members can submit the form.");
       return;
     }
     
     setIsSubmitting(true);
+    setError(null);
     console.log("Submitting form:", formData);
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      // Submit form data to the server
+      await createEvent(formData);
+      
+      // Navigate to success page or home
+      navigate('/home', { state: { success: true, message: 'Event created successfully!' }});
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to submit form. Please try again.');
+      console.error('Submission error:', err);
+    } finally {
       setIsSubmitting(false);
-      alert("Event form submitted successfully! Your event is now under review.");
-    }, 2000);
+    }
   }
 
   return (
@@ -619,12 +631,27 @@ export default function ReviewSubmit({ formData = {} }) {
             </span>
           </PermissionBanner>
 
-          <SubmitButton 
-            onClick={submitForm} 
-            disabled={!canEdit || isSubmitting}
-          >
-            {isSubmitting ? 'Submitting...' : 'Submit Event Form'}
-          </SubmitButton>
+          {error && (
+            <div className="error-message">
+              {error}
+            </div>
+          )}
+
+          <div className="button-container">
+            <button
+              className="back-button"
+              onClick={() => navigate('/create-event/rounds')}
+              disabled={isSubmitting}
+            >
+              Back
+            </button>
+            <SubmitButton 
+              onClick={submitForm} 
+              disabled={!canEdit || isSubmitting}
+            >
+              {isSubmitting ? 'Submitting...' : 'Submit Event Form'}
+            </SubmitButton>
+          </div>
         </ActionSection>
       </Container>
     </PageWrapper>

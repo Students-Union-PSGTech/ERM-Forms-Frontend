@@ -1,11 +1,16 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import "../components_css/Login.css";
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
-    email: "",
+    username: "",
     password: ""
   });
+  const [loginError, setLoginError] = useState("");
+  const { login, loading, error } = useAuth();
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({
@@ -14,10 +19,21 @@ const LoginPage = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Login attempt:", formData);  // (----------Remove This-----------)
-    // Add login logic here
+    setLoginError("");
+    
+    if (!formData.username || !formData.password) {
+      setLoginError("Please enter both username and password");
+      return;
+    }
+
+    const success = await login(formData.username, formData.password);
+    if (success) {
+      navigate("/home");
+    } else {
+      setLoginError(error || "Invalid credentials");
+    }
   };
 
   return (
@@ -66,16 +82,16 @@ const LoginPage = () => {
             
             <form onSubmit={handleSubmit} className="login-form">
               <div className="input-group">
-                <label htmlFor="email">
+                <label htmlFor="username">
                   <span className="label-icon"></span>
-                  Email Address
+                  Username
                 </label>
                 <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  placeholder="Email"
-                  value={formData.email}
+                  type="text"
+                  id="username"
+                  name="username"
+                  placeholder="Enter your username"
+                  value={formData.username}
                   onChange={handleChange}
                   required
                 />
@@ -90,20 +106,22 @@ const LoginPage = () => {
                   type="password"
                   id="password"
                   name="password"
-                  placeholder="Password"
+                  placeholder="Enter your password"
                   value={formData.password}
                   onChange={handleChange}
                   required
                 />
               </div>
 
+              {loginError && <div className="error-message">{loginError}</div>}
+
               {/*<div className="form-options">
                 <a href="#" className="forgot-link">Forgot Password?</a>
               </div>*/}
 
-              <button type="submit" className="login-btn">
+              <button type="submit" className="login-btn" disabled={loading}>
                 <span className="btn-sparkle"></span>
-                Sign In
+                {loading ? "Logging in..." : "Sign In"}
                 <span className="btn-arrow">→</span>
               </button>
             </form>
