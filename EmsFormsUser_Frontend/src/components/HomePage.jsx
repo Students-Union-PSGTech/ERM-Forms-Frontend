@@ -33,7 +33,7 @@ const HomePage = () => {
             
             <button
               className="action-button view-button"
-              onClick={() => navigate('/view-events')} // Also update this one
+              onClick={() => navigate('/my-events')} // Also update this one
             >
               View Events
             </button>
