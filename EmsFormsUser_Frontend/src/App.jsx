@@ -10,10 +10,11 @@ import Instructions from './components/Instructions';
 import HomePage from './components/HomePage';
 import Login from './components/Login';
 import CreateEventLayout from './components/CreateEventLayout';
+import UpdateEventController from './components/UpdateEventController';
 import ViewEvents from './components/ViewEvents';
 import './App.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
-
+import EditView from './components/EditView';
 // Wrapper component for protected routes
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
@@ -49,6 +50,8 @@ function App() {
           } />
           
           <Route path="/my-events" element={<ViewEvents />} />
+          <Route path="/edit" element={<EditView />} />
+          <Route path="/edit/:id" element={<UpdateEventController />} />
           
           <Route path="/create-event" element={
             <ProtectedRoute>

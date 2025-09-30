@@ -37,6 +37,12 @@ const HomePage = () => {
             >
               View Events
             </button>
+            <button
+              className="action-button view-button"
+              onClick={() => navigate('/edit')} // Also update this one
+            >
+              Edit Events
+            </button>
           </div>
         </div>
       </main>
