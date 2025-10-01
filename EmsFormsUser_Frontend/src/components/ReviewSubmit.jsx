@@ -707,13 +707,13 @@ const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
           )}
 
           <div className="button-container">
-            <button
+            {/*<button
               className="back-button"
               onClick={() => navigate('/create-event/rounds')}
               disabled={submitting}
             >
               Back
-            </button>
+            </button>*/}
             <SubmitButton 
               onClick={handleSubmit}
               disabled={submitting}
