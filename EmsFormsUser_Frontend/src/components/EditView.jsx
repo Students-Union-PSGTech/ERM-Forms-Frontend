@@ -16,7 +16,23 @@ const PageWrapper = styled.div`
 const Container = styled.div`
   max-width: 1000px;
   margin: 0 auto;
+  background: white;
+  border-radius: 16px;
+  box-shadow: var(--shadow-medium);
+  overflow: hidden;
+  position: relative;  /* key for absolute positioning */
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: var(--gradient-fire);
+  }
 `;
+
 
 const Header = styled.header`
   text-align: center;
@@ -277,6 +293,25 @@ const PreviewCard = styled.div`
     text-overflow: ellipsis;
   }
 `;
+const BackButton = styled.button`
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: #b45309;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background 0.2s ease;
+  z-index: 10;
+
+  &:hover {
+    background: #92400e;
+  }
+`;
 
 // =====================================================================
 // Helper Component for displaying a person's details
@@ -461,39 +496,42 @@ export default function EditView() {
 
   return (
     <PageWrapper>
-      <Container>
-        <Header>
-          <h1>Edit Events</h1>
-          <p>Click on the Events to edit that particular event</p>
-        </Header>
+  <Container>
+    <BackButton onClick={() => navigate(-1)}>← Back</BackButton>
 
-        <SearchBar>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search events by name or description..."
-          />
-          <span>{filteredEvents.length} event(s) found</span>
-        </SearchBar>
+    <Header>
+      <h1>Edit Events</h1>
+      <p>Click on the Events to edit that particular event</p>
+    </Header>
 
-        {filteredEvents.length > 0 ? (
-          <EventsGrid>
-            {filteredEvents.map(event => (
-              <PreviewCard key={event._id} onClick={e => {
-                    e.stopPropagation();
-                    navigate(`/edit/${event._id}`);
-                  }}>
-                
-                <h2>{event.name || 'Untitled Event'}</h2>
-                <p>{event.about || 'No description provided.'}</p>
-              </PreviewCard>
-            ))}
-          </EventsGrid>
-        ) : (
-          <p>No events found.</p>
-        )}
-      </Container>
-  {/* Removed modal for edit navigation */}
-    </PageWrapper>
+    <SearchBar>
+      <input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Search events by name or description..."
+      />
+      <span>{filteredEvents.length} event(s) found</span>
+    </SearchBar>
+
+    {filteredEvents.length > 0 ? (
+      <EventsGrid>
+        {filteredEvents.map(event => (
+          <PreviewCard
+            key={event._id}
+            onClick={e => {
+              e.stopPropagation();
+              navigate(`/edit/${event._id}`);
+            }}
+          >
+            <h2>{event.name || 'Untitled Event'}</h2>
+            <p>{event.about || 'No description provided.'}</p>
+          </PreviewCard>
+        ))}
+      </EventsGrid>
+    ) : (
+      <p>No events found.</p>
+    )}
+  </Container>
+</PageWrapper>
   );
 }

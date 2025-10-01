@@ -25,7 +25,7 @@
   align-items: center;
   justify-content: center;
   position: relative;
-  background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+  background: transparent;  /* Removed dark blue gradient */
   overflow: hidden;
 }
 
@@ -63,7 +63,10 @@
   opacity: 0.4;
   background-blend-mode: overlay;
 }
-
+.home-container::before,
+.home-container::after {
+  content: none; /* remove extra patterns */
+}
 .particles {
   position: absolute;
   top: 0;

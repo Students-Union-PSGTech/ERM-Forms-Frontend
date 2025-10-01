@@ -46,6 +46,7 @@ const LoginPage = () => {
       </div>
       
       <div className="login-content">
+
         <div className="login-left">
           <div className="brand-section">
             <div className="logo-glow">
@@ -57,6 +58,7 @@ const LoginPage = () => {
             </div>
             <h1 className="event-title">IGNITE THE INFINITE</h1>
             <p className="event-subtitle">INTRAMS 2025 - Club Portal</p>
+
             
             <div className="color-strip">
               <div className="color-block color-1"></div>
