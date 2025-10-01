@@ -40,13 +40,9 @@ const BackButton = styled.button`
         background: #92400e;
     }
 `;
-
 const NavBar = () => {
-    const navigate = useNavigate();
-
     return (
         <Nav>
-            
             <StyledNavLink to="/create-event/preview">Event Preview</StyledNavLink>
             <StyledNavLink to="/create-event/details">Event Details</StyledNavLink>
             <StyledNavLink to="/create-event/items">Items</StyledNavLink>
