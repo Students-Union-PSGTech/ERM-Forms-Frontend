@@ -4,33 +4,49 @@ import { useAuth } from "../context/AuthContext";
 import "../components_css/Login.css";
 
 const LoginPage = () => {
-  const [formData, setFormData] = useState({ username: "", password: "" });
+  const [formData, setFormData] = useState({
+    username: "",
+    password: ""
+  });
   const [loginError, setLoginError] = useState("");
   const { login, loading, error } = useAuth();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoginError("");
-
+    
     if (!formData.username || !formData.password) {
       setLoginError("Please enter both username and password");
       return;
     }
 
     const success = await login(formData.username, formData.password);
-    if (success) navigate("/home");
-    else setLoginError(error || "Invalid credentials");
+    if (success) {
+      navigate("/home");
+    } else {
+      setLoginError(error || "Invalid credentials");
+    }
   };
 
   return (
     <div className="login-container">
+      <div className="login-background">
+        <div className="gradient-orbs orb-1"></div>
+        <div className="gradient-orbs orb-2"></div>
+        <div className="gradient-orbs orb-3"></div>
+        <div className="gradient-orbs orb-4"></div>
+      </div>
+      
       <div className="login-content">
-        {/* Left Section */}
+
         <div className="login-left">
           <div className="brand-section">
             <div className="logo-glow">
@@ -43,6 +59,7 @@ const LoginPage = () => {
             <h1 className="event-title">IGNITE THE INFINITE</h1>
             <p className="event-subtitle">INTRAMS 2025 - Club Portal</p>
 
+            
             <div className="color-strip">
               <div className="color-block color-1"></div>
               <div className="color-block color-2"></div>
@@ -53,12 +70,10 @@ const LoginPage = () => {
           </div>
         </div>
 
-        {/* Divider */}
         <div className="login-divider">
           <div className="divider-line"></div>
         </div>
 
-        {/* Right Section */}
         <div className="login-right">
           <div className="login-card">
             <div className="card-header">
@@ -66,10 +81,13 @@ const LoginPage = () => {
                 <h2 className="login-heading">Club Login</h2>
               </div>
             </div>
-
+            
             <form onSubmit={handleSubmit} className="login-form">
               <div className="input-group">
-                <label htmlFor="username">Username</label>
+                <label htmlFor="username">
+                  <span className="label-icon"></span>
+                  Username
+                </label>
                 <input
                   type="text"
                   id="username"
@@ -82,7 +100,10 @@ const LoginPage = () => {
               </div>
 
               <div className="input-group">
-                <label htmlFor="password">Password</label>
+                <label htmlFor="password">
+                  <span className="label-icon"></span>
+                  Password
+                </label>
                 <input
                   type="password"
                   id="password"
@@ -96,8 +117,14 @@ const LoginPage = () => {
 
               {loginError && <div className="error-message">{loginError}</div>}
 
+              {/*<div className="form-options">
+                <a href="#" className="forgot-link">Forgot Password?</a>
+              </div>*/}
+
               <button type="submit" className="login-btn" disabled={loading}>
-                {loading ? "Logging in..." : "Sign In"} → 
+                <span className="btn-sparkle"></span>
+                {loading ? "Logging in..." : "Sign In"}
+                <span className="btn-arrow">→</span>
               </button>
             </form>
           </div>

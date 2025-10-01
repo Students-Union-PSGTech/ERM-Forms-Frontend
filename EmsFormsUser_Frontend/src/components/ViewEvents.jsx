@@ -16,6 +16,7 @@ const PageWrapper = styled.div`
 const Container = styled.div`
   max-width: 1000px;
   margin: 0 auto;
+<<<<<<< HEAD
   background: white;
   border-radius: 16px;
   box-shadow: var(--shadow-medium);
@@ -32,6 +33,10 @@ const Container = styled.div`
     background: var(--gradient-fire);
   }
 `;
+=======
+`;
+
+>>>>>>> 479336372bf4306f32b8a996507348af701c3e0e
 const Header = styled.header`
   text-align: center;
   margin-bottom: 2.5rem;
@@ -291,6 +296,7 @@ const PreviewCard = styled.div`
     text-overflow: ellipsis;
   }
 `;
+<<<<<<< HEAD
 const BackButton = styled.button`
   position: absolute;
   top: 1rem;
@@ -311,6 +317,8 @@ const BackButton = styled.button`
   }
 `;
 
+=======
+>>>>>>> 479336372bf4306f32b8a996507348af701c3e0e
 
 // =====================================================================
 // Helper Component for displaying a person's details
@@ -495,9 +503,12 @@ export default function ViewEvents() {
   return (
     <PageWrapper>
       <Container>
+<<<<<<< HEAD
         {/* Back button at the top */}
         <BackButton onClick={() => navigate(-1)}>← Back</BackButton>
 
+=======
+>>>>>>> 479336372bf4306f32b8a996507348af701c3e0e
         <Header>
           <h1>My Submitted Events</h1>
           <p>A detailed overview of all your event submissions.</p>
@@ -515,12 +526,18 @@ export default function ViewEvents() {
         {filteredEvents.length > 0 ? (
           <EventsGrid>
             {filteredEvents.map(event => (
+<<<<<<< HEAD
               <PreviewCard
                 key={event._id}
                 onClick={() => setSelectedEvent(event)}
               >
                 <h2>{event.name || "Untitled Event"}</h2>
                 <p>{event.about || "No description provided."}</p>
+=======
+              <PreviewCard key={event._id} onClick={() => setSelectedEvent(event)}>
+                <h2>{event.name || 'Untitled Event'}</h2>
+                <p>{event.about || 'No description provided.'}</p>
+>>>>>>> 479336372bf4306f32b8a996507348af701c3e0e
               </PreviewCard>
             ))}
           </EventsGrid>
@@ -528,6 +545,7 @@ export default function ViewEvents() {
           <p>No events found.</p>
         )}
       </Container>
+<<<<<<< HEAD
 
       <EventDetailModal
         event={selectedEvent}
@@ -536,3 +554,9 @@ export default function ViewEvents() {
     </PageWrapper>
   );
 };
+=======
+      <EventDetailModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
+    </PageWrapper>
+  );
+}
+>>>>>>> 479336372bf4306f32b8a996507348af701c3e0e

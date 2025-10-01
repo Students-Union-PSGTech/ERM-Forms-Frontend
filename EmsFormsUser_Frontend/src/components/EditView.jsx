@@ -16,6 +16,7 @@ const PageWrapper = styled.div`
 const Container = styled.div`
   max-width: 1000px;
   margin: 0 auto;
+<<<<<<< HEAD
   background: white;
   border-radius: 16px;
   box-shadow: var(--shadow-medium);
@@ -34,6 +35,10 @@ const Container = styled.div`
 `;
 
 
+=======
+`;
+
+>>>>>>> 479336372bf4306f32b8a996507348af701c3e0e
 const Header = styled.header`
   text-align: center;
   margin-bottom: 2.5rem;
