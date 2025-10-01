@@ -28,11 +28,15 @@ const LoginPage = () => {
       return;
     }
 
-    const success = await login(formData.username, formData.password);
-    if (success) {
-      navigate("/home");
-    } else {
-      setLoginError(error || "Invalid credentials");
+    try {
+      const success = await login(formData.username, formData.password);
+      if (success) {
+        navigate("/home");
+      } else {
+        setLoginError(error || "Invalid credentials");
+      }
+    } catch (err) {
+      setLoginError("An error occurred during login. Please try again.");
     }
   };
 
