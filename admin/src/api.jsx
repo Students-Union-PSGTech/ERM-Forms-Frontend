@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Get backend URL from environment variables
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL;
+const BACKEND_URL = 'https://erm-forms-backend.onrender.com';
 
 // Create axios instance with base URL
 const API = axios.create({
