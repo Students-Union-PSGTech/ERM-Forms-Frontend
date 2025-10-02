@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { listEvents } from '../api/api';
+import { listEvents, getEventPDF } from '../api/api';
 import styled from 'styled-components';
 
 // =====================================================================
@@ -340,6 +340,37 @@ const PersonDetail = ({ title, person }) => (
 const EventDetailModal = ({ event, onClose }) => {
   if (!event) return null;
 
+  const handleViewPDF = async () => {
+    if (!event?.event_id) return;
+    try {
+      const res = await getEventPDF(event.event_id);
+      const file = new Blob([res.data], { type: 'application/pdf' });
+      const fileURL = URL.createObjectURL(file);
+      window.open(fileURL, '_blank');
+    } catch (err) {
+      alert('Failed to load PDF');
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!event?.event_id) return;
+    try {
+      const res = await getEventPDF(event.event_id);
+      const file = new Blob([res.data], { type: 'application/pdf' });
+      const fileURL = URL.createObjectURL(file);
+
+      const link = document.createElement('a');
+      link.href = fileURL;
+      link.download = `${event.name || 'event'}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(fileURL);
+    } catch (err) {
+      alert('Failed to download PDF');
+    }
+  };
+
   return (
     <ModalOverlay onClick={onClose}>
       <ModalContent onClick={(e) => e.stopPropagation()}>
@@ -348,6 +379,42 @@ const EventDetailModal = ({ event, onClose }) => {
           <h2>{event.name || 'Untitled Event'}</h2>
           <p>{event.tagline || 'No tagline provided'}</p>
         </EventHeader>
+
+        <div style={{   display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  margin: '1rem 2rem 0 2rem' }}>
+          <button
+            type="button"
+            style={{
+              background: '#d97706',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              padding: '0.5rem 1.25rem',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+            onClick={handleViewPDF}
+          >
+            View PDF
+          </button>
+          <button
+            type="button"
+            style={{
+              background: '#2563eb',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              padding: '0.5rem 1.25rem',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+            onClick={handleDownloadPDF}
+          >
+            Download PDF
+          </button>
+        </div>
 
         <Section>
           <SectionTitle>About</SectionTitle>

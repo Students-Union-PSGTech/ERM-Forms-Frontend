@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import "../components_css/Login.css";
+import intramsLogo from '../assets/intrams_logo.jpg';
 
 const LoginPage = () => {
   const [formData, setFormData] = useState({
@@ -55,7 +56,7 @@ const LoginPage = () => {
           <div className="brand-section">
             <div className="logo-glow">
               <img
-                src="/intro_logo.png"
+                src={intramsLogo}
                 alt="INTRAMS 2K25"
                 className="event-logo"
               />
