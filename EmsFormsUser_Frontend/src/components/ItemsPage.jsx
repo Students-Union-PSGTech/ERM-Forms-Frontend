@@ -362,7 +362,7 @@ export default function ItemsPage({ formData: globalFormData, setFormData: setGl
       
       <Container>
         <Header>
-          <BackButton onClick={() => navigate("/home")}>← Back</BackButton>
+          {/*<BackButton onClick={() => navigate("/home")}>← Back</BackButton>*/}
           <h2>Items Management</h2>
           <p>Add and manage items for your event</p>
         </Header>
