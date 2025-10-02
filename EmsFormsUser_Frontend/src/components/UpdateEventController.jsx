@@ -17,8 +17,8 @@ export default function UpdateEventController() {
       setLoading(true);
       try {
         const res = await getEvent(id);
-        console.log('Fetched event data:', res.data);
-        setFormData(res.data.event);
+
+        setFormData(res.data.data);
         setLoading(false);
       } catch (err) {
         setError('Failed to load event data');

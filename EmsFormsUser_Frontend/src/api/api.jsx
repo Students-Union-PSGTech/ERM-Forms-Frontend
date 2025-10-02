@@ -33,5 +33,6 @@ export const getItems = () => API.get('/api/items');
 
 // Update an existing event by id
 export const updateEvent = (id, data) => API.put(`/api/events/${id}`, data);
-
+export const requestEditAccess = (body) =>
+  API.post('/api/events/request-edit', body);
 export { API };
