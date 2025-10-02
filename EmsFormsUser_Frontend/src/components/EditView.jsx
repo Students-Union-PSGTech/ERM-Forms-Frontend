@@ -21,7 +21,7 @@ const Container = styled.div`
   box-shadow: var(--shadow-medium);
   overflow: hidden;
   position: relative;  /* key for absolute positioning */
-  
+  padding: 50px; 
   &::before {
     content: '';
     position: absolute;
@@ -495,7 +495,7 @@ export default function EditView() {
   if (err) return <PageWrapper><Container>Error: {err}</Container></PageWrapper>;
 
   return (
-    <PageWrapper>
+    <div>
   <Container>
     <BackButton onClick={() => navigate(-1)}>← Back</BackButton>
 
@@ -532,6 +532,6 @@ export default function EditView() {
       <p>No events found.</p>
     )}
   </Container>
-</PageWrapper>
+</div>
   );
 }
