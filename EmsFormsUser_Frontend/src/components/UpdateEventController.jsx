@@ -268,9 +268,53 @@ export default function UpdateEventController() {
           {formData.form && (
             <>
               <label style={labelStyle}>Day</label>
-              <input type="text" value={formData.form.day || ''} onChange={e => setFormData(prev => ({ ...prev, form: { ...prev.form, day: e.target.value } }))} style={inputStyle} />
-              <label style={labelStyle}>Two Days</label>
-              <input type="text" value={formData.form.two_days || ''} onChange={e => setFormData(prev => ({ ...prev, form: { ...prev.form, two_days: e.target.value } }))} style={inputStyle} />
+              <div style={{ display: 'flex', gap: '2rem', marginBottom: '1rem' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input
+                    type="radio"
+                    name="day"
+                    value="Day 1"
+                    checked={formData.form.day === 'day1'}
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        form: { ...prev.form, day: e.target.value }
+                      }))
+                    }
+                  />
+                  Day 1
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input
+                    type="radio"
+                    name="day"
+                    value="Day 2"
+                    checked={formData.form.day === 'day2'}
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        form: { ...prev.form, day: e.target.value }
+                      }))
+                    }
+                  />
+                  Day 2
+                </label>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <input
+                    type="radio"
+                    name="day"
+                    value="Two Days"
+                    checked={formData.form.day === 'twoDays'}
+                    onChange={e =>
+                      setFormData(prev => ({
+                        ...prev,
+                        form: { ...prev.form, day: e.target.value }
+                      }))
+                    }
+                  />
+                  Two Days
+                </label>
+              </div>
               <label style={labelStyle}>Rounds</label>
               <input type="text" value={formData.form.rounds || ''} onChange={e => setFormData(prev => ({ ...prev, form: { ...prev.form, rounds: e.target.value } }))} style={inputStyle} />
               <label style={labelStyle}>Participants</label>
