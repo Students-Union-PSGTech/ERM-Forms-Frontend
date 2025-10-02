@@ -20,10 +20,17 @@ export const createEvent = async (payload) => {
 // List events for the logged-in association
 export const listEvents = async () => {
   const res = await API.get('/api/events');
+  console.log(res)
   return res.data;
 };
 
+
+// Get a single event by id
+export const getEvent = (id) => API.get(`/api/events/${id}`);
+
+export const getItems = () => API.get('/api/items');
+
 // Update an existing event by id
-export const patchEvent = (id, data) => API.put(`/api/events/${id}`, data);
+export const updateEvent = (id, data) => API.put(`/api/events/${id}`, data);
 
 export { API };

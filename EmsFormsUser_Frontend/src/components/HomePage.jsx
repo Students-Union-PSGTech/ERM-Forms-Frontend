@@ -1,12 +1,20 @@
 import React from "react";
 import "../components_css/HomePage.css";
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const HomePage = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
 
   return (
     <div className="home-container">
+      <button className="logout-button" onClick={handleLogout}>Logout</button>
       {/* Enhanced Background Elements */}
       <div className="particles">
         <div className="particle"></div>
@@ -36,6 +44,12 @@ const HomePage = () => {
               onClick={() => navigate('/my-events')} // Also update this one
             >
               View Events
+            </button>
+            <button
+              className="action-button view-button"
+              onClick={() => navigate('/edit')}
+            >
+              Edit Events
             </button>
           </div>
         </div>

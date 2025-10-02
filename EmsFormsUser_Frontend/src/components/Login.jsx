@@ -28,11 +28,15 @@ const LoginPage = () => {
       return;
     }
 
-    const success = await login(formData.username, formData.password);
-    if (success) {
-      navigate("/home");
-    } else {
-      setLoginError(error || "Invalid credentials");
+    try {
+      const success = await login(formData.username, formData.password);
+      if (success) {
+        navigate("/home");
+      } else {
+        setLoginError(error || "Invalid credentials");
+      }
+    } catch (err) {
+      setLoginError("An error occurred during login. Please try again.");
     }
   };
 
@@ -46,6 +50,7 @@ const LoginPage = () => {
       </div>
       
       <div className="login-content">
+
         <div className="login-left">
           <div className="brand-section">
             <div className="logo-glow">
@@ -57,6 +62,7 @@ const LoginPage = () => {
             </div>
             <h1 className="event-title">IGNITE THE INFINITE</h1>
             <p className="event-subtitle">INTRAMS 2025 - Club Portal</p>
+
             
             <div className="color-strip">
               <div className="color-block color-1"></div>

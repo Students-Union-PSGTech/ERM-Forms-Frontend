@@ -10,20 +10,31 @@ import Instructions from './components/Instructions';
 import HomePage from './components/HomePage';
 import Login from './components/Login';
 import CreateEventLayout from './components/CreateEventLayout';
+import UpdateEventController from './components/UpdateEventController';
 import ViewEvents from './components/ViewEvents';
 import './App.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
-
+import EditView from './components/EditView';
 // Wrapper component for protected routes
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
   
-  // Show loading indicator while checking authentication
-  if (loading) {
-    return <div className="loading">Checking authentication...</div>;
+  if (!isAuthenticated && !loading) {
+    return <Navigate to="/login" replace />;
   }
   
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  return children;
+}
+
+// Wrapper component for public routes (like login)
+function PublicRoute({ children }) {
+  const { isAuthenticated, loading } = useAuth();
+  
+  if (isAuthenticated) {
+    return <Navigate to="/home" replace />;
+  }
+  
+  return children;
 }
 
 // Wrapper components to pass context to elements
@@ -40,22 +51,23 @@ function App() {
       <GlobalStyles />
       <Router>
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route 
+            path="/login" 
+            element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            } 
+          />
+          <Route element={<ProtectedRoute><HomePage /></ProtectedRoute>} path="/home" />
           
-          <Route path="/home" element={
-            <ProtectedRoute>
-              <HomePage />
-            </ProtectedRoute>
-          } />
+          <Route element={<ProtectedRoute><ViewEvents /></ProtectedRoute>} path="/my-events" />
+          <Route element={<ProtectedRoute><EditView /></ProtectedRoute>} path="/edit" />
+          <Route element={<ProtectedRoute><UpdateEventController /></ProtectedRoute>} path="/edit/:id" />
           
-          <Route path="/my-events" element={<ViewEvents />} />
-          
-          <Route path="/create-event" element={
-            <ProtectedRoute>
-              <CreateEventLayout />
-            </ProtectedRoute>
-          }>
-            <Route index element={<Navigate to="instructions" />} />
+          <Route element={<ProtectedRoute><CreateEventLayout /></ProtectedRoute>} path="/create-event">
+            <Route index element={<Instructions />} />
             <Route path="instructions" element={<Instructions />} />
             <Route path="preview" element={<EventPreviewWrapper />} />
             <Route path="details" element={<EventDetailsWrapper />} />
@@ -64,8 +76,7 @@ function App() {
             <Route path="review" element={<ReviewSubmitWrapper />} />
           </Route>
           
-          <Route path="/" element={<Navigate to="/home" />} />
-          <Route path="*" element={<Navigate to="/home" />} />
+          <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
       </Router>
     </AuthProvider>

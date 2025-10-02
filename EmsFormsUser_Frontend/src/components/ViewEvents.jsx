@@ -16,8 +16,22 @@ const PageWrapper = styled.div`
 const Container = styled.div`
   max-width: 1000px;
   margin: 0 auto;
+  background: white;
+  border-radius: 16px;
+  box-shadow: var(--shadow-medium);
+  overflow: hidden;
+  position: relative;  /* important: so the back button can anchor here */
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: var(--gradient-fire);
+  }
 `;
-
 const Header = styled.header`
   text-align: center;
   margin-bottom: 2.5rem;
@@ -277,6 +291,25 @@ const PreviewCard = styled.div`
     text-overflow: ellipsis;
   }
 `;
+const BackButton = styled.button`
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: #b45309;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background 0.2s ease;
+  z-index: 10;
+
+  &:hover {
+    background: #92400e;
+  }
+`;
 
 // =====================================================================
 // Helper Component for displaying a person's details
@@ -461,6 +494,9 @@ export default function ViewEvents() {
   return (
     <PageWrapper>
       <Container>
+        {/* Back button at the top */}
+        <BackButton onClick={() => navigate(-1)}>← Back</BackButton>
+
         <Header>
           <h1>My Submitted Events</h1>
           <p>A detailed overview of all your event submissions.</p>
@@ -488,6 +524,7 @@ export default function ViewEvents() {
           <p>No events found.</p>
         )}
       </Container>
+
       <EventDetailModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
     </PageWrapper>
   );

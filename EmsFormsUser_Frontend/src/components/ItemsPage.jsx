@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import styled from "styled-components";
-
+import { getItems } from '../api/api';
 const PageWrapper = styled.div`
   min-height: calc(100vh - 80px);
   padding: 2rem;
@@ -16,6 +17,7 @@ const Container = styled.div`
 const Header = styled.div`
   text-align: center;
   margin-bottom: 2rem;
+  position: relative; /* for absolute positioning of back button inside */
   
   h2 {
     font-size: 2.25rem;
@@ -27,6 +29,7 @@ const Header = styled.div`
     font-size: 1.1rem;
   }
 `;
+
 
 const TableContainer = styled.div`
   background: white;
@@ -242,12 +245,50 @@ const EmptyState = styled.div`
     color: var(--text-primary);
   }
 `;
+const BackButton = styled.button`
+  position: absolute;   /* key: absolute inside Header */
+  top: 1rem;            /* distance from top of white box */
+  left: 1rem;           /* distance from left of white box */
+  
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #6b7280, #374151);
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: linear-gradient(135deg, #4b5563, #1f2937);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+`;
+
+
+
 
 export default function ItemsPage({ formData: globalFormData, setFormData: setGlobalFormData }) {
   const navigate = useNavigate();
-
-  // Local editable copy of items
   const [items, setItems] = useState(() => Array.isArray(globalFormData?.items) ? globalFormData.items : []);
+  const [availableItems, setAvailableItems] = useState([]);
+  const [loadingItems, setLoadingItems] = useState(true);
+
+  // Fetch available items from backend
+  useEffect(() => {
+    async function fetchItems() {
+      setLoadingItems(true);
+      try {
+        const res = await getItems();
+        setAvailableItems(res.data.data || []);
+      } catch (err) {
+        setAvailableItems([]);
+      }
+      setLoadingItems(false);
+    }
+    fetchItems();
+  }, []);
 
   // Load from global on mount (in case of reload)
   useEffect(() => {
@@ -267,36 +308,36 @@ export default function ItemsPage({ formData: globalFormData, setFormData: setGl
   const toNumber = v => (v === '' || v === null || v === undefined ? '' : Number(v));
 
   const handleItemChange = (index, field, value) => {
-    setGlobalFormData(prev => {
-      const list = Array.isArray(prev.items) ? [...prev.items] : [];
+    setItems(prev => {
+      const list = Array.isArray(prev) ? [...prev] : [];
       const current = { ...(list[index] || {}) };
-
-      if (field === 'item_name') current.item_name = String(value);
-      if (field === 'price_per_unit') current.price_per_unit = toNumber(value);
+      if (field === 'item_name') {
+        const selected = availableItems.find(item => item._id === value);
+        current.item_name = selected?.item_name || '';
+        current.price_per_unit = selected?.price_per_unit || '';
+        console.log(selected);
+        current.item_id = value;
+      }
       if (field === 'quantity') current.quantity = toNumber(value);
-
       list[index] = current;
-      return { ...prev, items: list };
+      return list;
     });
   };
 
   const addItem = () => {
-    setGlobalFormData(prev => ({
-      ...prev,
-      items: [ ...(prev.items || []), { item_name: '', price_per_unit: '', quantity: '' } ]
-    }));
+    setItems(prev => ([...(prev || []), { item_id: '', item_name: '', price_per_unit: '', quantity: '' }]));
   };
-  
+
   const deleteItem = (index) => {
     if (items.length > 1) {
       setItems(items.filter((_, i) => i !== index));
     }
   };
-  
+
   const total = items.reduce((sum, item) => {
     const itemTotal = (item.price_per_unit || 0) * (item.quantity || 0);
     return sum + itemTotal;
-}, 0);
+  }, 0);
 
   const onSaveAndContinue = () => {
     // Ensure persisted, then navigate
@@ -318,8 +359,10 @@ export default function ItemsPage({ formData: globalFormData, setFormData: setGl
 
   return (
     <PageWrapper>
+      
       <Container>
         <Header>
+          {/*<BackButton onClick={() => navigate("/home")}>← Back</BackButton>*/}
           <h2>Items Management</h2>
           <p>Add and manage items for your event</p>
         </Header>
@@ -339,37 +382,41 @@ export default function ItemsPage({ formData: globalFormData, setFormData: setGl
               {items.map((item, i) => (
                 <ItemRow key={i}>
                   <Td>
-                    <Input 
-                      placeholder="Enter item name..."
-                      value={item.item_name} 
-                      onChange={e => handleItemChange(i, "item_name", e.target.value)}
+                    <select
+                      value={item.item_id || ''}
+                      onChange={e => handleItemChange(i, 'item_name', e.target.value)}
+                      style={{ width: '100%', padding: '0.75rem', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fafafa', fontSize: '0.9rem' }}
+                      disabled={loadingItems}
+                    >
+                      <option value="">Select item...</option>
+                      {availableItems.map(opt => (
+                        <option key={opt._id} value={opt._id}>{opt.item_name}</option>
+                      ))}
+                    </select>
+                  </Td>
+                  <Td>
+                    <Input
+                      type="number"
+                      value={item.price_per_unit || '0'}
+                      disabled
+                      style={{ background: '#f3f4f6', color: '#6b7280' }}
                     />
                   </Td>
                   <Td>
-                    <Input 
-                      type="number" 
+                    <Input
+                      type="number"
                       placeholder="0"
                       min="0"
-                      step="0.01"
-                      value={item.price_per_unit || ''} 
-                      onChange={e => handleItemChange(i, "price_per_unit", e.target.value)}
-                    />
-                  </Td>
-                  <Td>
-                    <Input 
-                      type="number" 
-                      placeholder="0"
-                      min="0"
-                      value={item.quantity || ''} 
-                      onChange={e => handleItemChange(i, "quantity", e.target.value)}
+                      value={item.quantity || ''}
+                      onChange={e => handleItemChange(i, 'quantity', e.target.value)}
                     />
                   </Td>
                   <TotalCell>
-    ₹{( (item.price_per_unit || 0) * (item.quantity || 0) ).toLocaleString()}
-</TotalCell>
+                    ₹{((item.price_per_unit || 0) * (item.quantity || 0)).toLocaleString()}
+                  </TotalCell>
                   <Td>
-                    <ActionButton 
-                      delete 
+                    <ActionButton
+                      delete
                       onClick={() => deleteItem(i)}
                       disabled={items.length === 1}
                     >
