@@ -271,6 +271,28 @@ const TextArea = styled.textarea`
   }
 `;
 
+const TieBreakerToggle = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid var(--border-light);
+
+  input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--flame-orange);
+  }
+
+  label {
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+`;
+
 const ParticipantCounter = styled.div`
   display: flex;
   align-items: center;
@@ -410,6 +432,7 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
   const navigate = useNavigate();
   const [rounds, setRounds] = useState([]);
   const [newRule, setNewRule] = useState({});
+  const [newTieBreakerRule, setNewTieBreakerRule] = useState({});
   const [eventOverview, setEventOverview] = useState({
     oneLineDescription: '',
     aboutTheEvent: ''
@@ -444,7 +467,14 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
       name: `Round ${i + 1}`,
       description: "",
       rules: [],
-      participants: 0
+      participants: 0,
+      hasTieBreaker: false,
+      tieBreaker: {
+        name: `Tie-Breaker for Round ${i + 1}`,
+        description: "",
+        rules: [],
+        participants: 1, // default to 1 so it’s valid by default
+      }
     }));
     setRounds(initial);
   }, [globalFormData, navigate]);
@@ -466,13 +496,37 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
       if (!Array.isArray(r?.rules) || r.rules.length === 0) e.rules = 'Add at least one rule.';
       const p = Number(r?.participants);
       if (!Number.isFinite(p) || p < 1) e.participants = 'Participants must be at least 1.';
+      
+      if (r.hasTieBreaker) {
+        e.tieBreaker = {};
+        if (!r.tieBreaker?.name?.trim()) e.tieBreaker.name = 'Tie-breaker name is required.';
+        if (!r.tieBreaker?.description?.trim()) e.tieBreaker.description = 'Tie-breaker description is required.';
+        if (!Array.isArray(r.tieBreaker?.rules) || r.tieBreaker.rules.length === 0) e.tieBreaker.rules = 'Add at least one tie-breaker rule.';
+        const tbP = Number(r.tieBreaker?.participants);
+        if (!Number.isFinite(tbP) || tbP < 1) e.tieBreaker.participants = 'Participants must be at least 1.';
+      }
+
       return e;
     });
 
     return { overview, rounds: roundsErr };
   };
 
-  const isEmpty = (obj) => Object.keys(obj || {}).length === 0;
+  const isEmpty = (obj) => {
+    if (!obj) return true;
+    
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        if (typeof obj[key] === 'object' && obj[key] !== null) {
+          // Recursively check nested objects
+          if (!isEmpty(obj[key])) return false;
+        } else {
+          return false;
+        }
+      }
+    }
+    return true;
+  };
 
   // Revalidate whenever values change
   useEffect(() => {
@@ -493,6 +547,10 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
       else if (e.description) idsInOrder.push(`round-${i}-description`);
       else if (e.rules) idsInOrder.push(`round-${i}-rule-input`);
       else if (e.participants) idsInOrder.push(`round-${i}-participants`);
+      else if (e.tieBreaker?.name) idsInOrder.push(`tiebreaker-${i}-name`);
+      else if (e.tieBreaker?.description) idsInOrder.push(`tiebreaker-${i}-description`);
+      else if (e.tieBreaker?.rules) idsInOrder.push(`tiebreaker-${i}-rule-input`);
+      else if (e.tieBreaker?.participants) idsInOrder.push(`tiebreaker-${i}-participants`);
     });
 
     const id = idsInOrder[0];
@@ -511,6 +569,32 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
       const copy = [...prev];
       if (!copy[index]) return prev;
       copy[index] = { ...copy[index], [key]: value };
+
+      // If enabling tie-breaker, ensure participants is at least 1
+      if (key === 'hasTieBreaker' && value) {
+        const tb = copy[index].tieBreaker || {
+          name: `Tie-Breaker for Round ${index + 1}`,
+          description: "",
+          rules: [],
+          participants: 1
+        };
+        copy[index].tieBreaker = { ...tb, participants: Math.max(1, Number(tb.participants) || 1) };
+      }
+      return copy;
+    });
+  };
+
+  const handleTieBreakerChange = (index, key, value) => {
+    setRounds(prev => {
+      const copy = [...prev];
+      if (!copy[index]) return prev;
+      copy[index] = {
+        ...copy[index],
+        tieBreaker: {
+          ...copy[index].tieBreaker,
+          [key]: value,
+        },
+      };
       return copy;
     });
   };
@@ -520,10 +604,30 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
     if (!rule) return;
     setRounds(prev => {
       const copy = [...prev];
-      copy[roundIndex] = { ...copy[roundIndex], rules: [...(copy[roundIndex].rules || []), rule] };
+      const rules = copy[roundIndex].rules || [];
+      // Guard: prevent immediate double-adds and duplicates
+      if (rules[rules.length - 1] === rule || rules.includes(rule)) return prev;
+      copy[roundIndex] = { ...copy[roundIndex], rules: [...rules, rule] };
       return copy;
     });
     setNewRule(prev => ({ ...prev, [roundIndex]: "" }));
+  };
+
+  const addTieBreakerRule = (roundIndex) => {
+    const rule = (newTieBreakerRule[roundIndex] || "").trim();
+    if (!rule) return;
+    setRounds(prev => {
+      const copy = [...prev];
+      const rules = copy[roundIndex].tieBreaker?.rules || [];
+      // Guard: prevent immediate double-adds and duplicates
+      if (rules[rules.length - 1] === rule || rules.includes(rule)) return prev;
+      copy[roundIndex].tieBreaker = {
+        ...copy[roundIndex].tieBreaker,
+        rules: [...rules, rule]
+      };
+      return copy;
+    });
+    setNewTieBreakerRule(prev => ({ ...prev, [roundIndex]: "" }));
   };
 
   const removeRule = (roundIndex, ruleIndex) => {
@@ -532,6 +636,18 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
       copy[roundIndex] = {
         ...copy[roundIndex],
         rules: (copy[roundIndex].rules || []).filter((_, i) => i !== ruleIndex)
+      };
+      return copy;
+    });
+  };
+
+  const removeTieBreakerRule = (roundIndex, ruleIndex) => {
+    setRounds(prev => {
+      const copy = [...prev];
+      const tieBreakerRules = (copy[roundIndex].tieBreaker.rules || []).filter((_, i) => i !== ruleIndex);
+      copy[roundIndex].tieBreaker = {
+        ...copy[roundIndex].tieBreaker,
+        rules: tieBreakerRules
       };
       return copy;
     });
@@ -548,7 +664,14 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
         name: `Round ${prev.length + 1}`,
         description: "",
         rules: [],
-        participants: 0
+        participants: 0,
+        hasTieBreaker: false,
+        tieBreaker: {
+          name: `Tie-Breaker for Round ${prev.length + 1}`,
+          description: "",
+          rules: [],
+          participants: 1, // default to 1
+        }
       }
     ]);
   };
@@ -557,22 +680,32 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
     setRounds(prev => prev.filter((_, i) => i !== index));
   };
 
-  const updateParticipants = (index, delta) => {
+  const updateParticipants = (index, delta, isTieBreaker = false) => {
     setRounds(prev => {
       const copy = [...prev];
       if (!copy[index]) return prev;
-      const current = Number(copy[index].participants) || 0;
-      copy[index] = { ...copy[index], participants: Math.max(0, current + delta) };
+      if (isTieBreaker) {
+        const current = Number(copy[index].tieBreaker.participants) || 0;
+        copy[index].tieBreaker.participants = Math.max(1, current + delta);
+      } else {
+        const current = Number(copy[index].participants) || 0;
+        copy[index].participants = Math.max(1, current + delta);
+      }
       return copy;
     });
   };
 
-  const handleParticipantInputChange = (index, value) => {
+  const handleParticipantInputChange = (index, value, isTieBreaker = false) => {
     const num = parseInt(value, 10);
+    const finalValue = isNaN(num) ? 1 : Math.max(1, num);
     setRounds(prev => {
       const copy = [...prev];
       if (!copy[index]) return prev;
-      copy[index] = { ...copy[index], participants: isNaN(num) ? 0 : Math.max(0, num) };
+      if (isTieBreaker) {
+        copy[index].tieBreaker.participants = finalValue;
+      } else {
+        copy[index].participants = finalValue;
+      }
       return copy;
     });
   };
@@ -660,33 +793,17 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
         </EventOverviewSection>
         
         <RoundsGrid>
-          {rounds.map((round, i) => {
+          {rounds.flatMap((round, i) => {
             const rErr = errors.rounds[i] || {};
-            return (
-              <RoundCard key={i}>
+            const tbErr = rErr.tieBreaker || {};
+            const cards = [(
+              <RoundCard key={`round-${i}`}>
                 <RoundHeader>
                   <h3>
                     {round.name}
                     <span className="round-number">#{i + 1}</span>
                   </h3>
-                  {rounds.length > 2 && (
-                    <button 
-                      onClick={() => removeRound(i)}
-                      style={{
-                        position: 'absolute',
-                        right: '1rem',
-                        top: '1rem',
-                        background: 'none',
-                        border: 'none',
-                        fontSize: '1.2rem',
-                        cursor: 'pointer',
-                        color: '#dc2626'
-                      }}
-                      aria-label={`Remove Round ${i + 1}`}
-                    >
-                      ×
-                    </button>
-                  )}
+                  
                 </RoundHeader>
                 
                 <RoundContent>
@@ -745,7 +862,7 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
                         $invalid={!!rErr.rules}
                         aria-invalid={!!rErr.rules}
                       />
-                      <AddRuleButton onClick={() => addRule(i)}>
+                      <AddRuleButton type="button" onClick={() => addRule(i)}>
                         Add Rule
                       </AddRuleButton>
                     </RuleInput>
@@ -755,8 +872,9 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
                     <Label>Number of Participants *</Label>
                     <ParticipantCounter>
                       <CounterButton 
+                        type="button"
                         onClick={() => updateParticipants(i, -1)}
-                        disabled={round.participants <= 0}
+                        disabled={round.participants <= 1}
                         aria-label="Decrease participants"
                       >
                         −
@@ -764,30 +882,139 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
                       <ParticipantInput
                         id={`round-${i}-participants`}
                         type="number"
-                        min="0"
+                        min="1"
                         value={round.participants}
                         onChange={(e) => handleParticipantInputChange(i, e.target.value)}
-                        placeholder="0"
+                        placeholder="1"
                         $invalid={!!rErr.participants}
                         aria-invalid={!!rErr.participants}
                       />
-                      <CounterButton onClick={() => updateParticipants(i, 1)} aria-label="Increase participants">
+                      <CounterButton type="button" onClick={() => updateParticipants(i, 1)} aria-label="Increase participants">
                         +
                       </CounterButton>
                     </ParticipantCounter>
                     {rErr.participants && <ErrorText>{rErr.participants}</ErrorText>}
                   </FormGroup>
+
+                  <TieBreakerToggle>
+                    <input
+                      type="checkbox"
+                      id={`tiebreaker-toggle-${i}`}
+                      checked={round.hasTieBreaker}
+                      onChange={e => handleChange(i, "hasTieBreaker", e.target.checked)}
+                    />
+                    <label htmlFor={`tiebreaker-toggle-${i}`}>This round has a tie-breaker</label>
+                  </TieBreakerToggle>
                 </RoundContent>
               </RoundCard>
-            );
+            )];
+
+            if (round.hasTieBreaker) {
+              cards.push(
+                <RoundCard key={`tiebreaker-${i}`}>
+                  <RoundHeader>
+                    <h3>
+                      {round.tieBreaker.name}
+                      <span className="round-number" style={{background: 'var(--flame-gold)'}}>TIE-BREAKER</span>
+                    </h3>
+                  </RoundHeader>
+                  <RoundContent>
+                    <FormGroup>
+                      <Label>Tie-Breaker Name *</Label>
+                      <Input
+                        id={`tiebreaker-${i}-name`}
+                        value={round.tieBreaker.name}
+                        placeholder="Enter tie-breaker name..."
+                        onChange={e => handleTieBreakerChange(i, "name", e.target.value)}
+                        $invalid={!!tbErr.name}
+                        aria-invalid={!!tbErr.name}
+                      />
+                      {tbErr.name && <ErrorText>{tbErr.name}</ErrorText>}
+                    </FormGroup>
+                    <FormGroup>
+                      <Label>Tie-Breaker Description *</Label>
+                      <TextArea
+                        id={`tiebreaker-${i}-description`}
+                        value={round.tieBreaker.description}
+                        placeholder="Describe the tie-breaker round..."
+                        onChange={e => handleTieBreakerChange(i, "description", e.target.value)}
+                        $invalid={!!tbErr.description}
+                        aria-invalid={!!tbErr.description}
+                      />
+                      {tbErr.description && <ErrorText>{tbErr.description}</ErrorText>}
+                    </FormGroup>
+                    <RulesSection>
+                      <Label>Tie-Breaker Rules *</Label>
+                      <RulesList>
+                        {(round.tieBreaker.rules || []).map((rule, ruleIndex) => (
+                          <RuleItem key={ruleIndex}>
+                            <span>• {rule}</span>
+                            <RemoveRuleButton type="button" onClick={() => removeTieBreakerRule(i, ruleIndex)}>
+                              Remove
+                            </RemoveRuleButton>
+                          </RuleItem>
+                        ))}
+                      </RulesList>
+                      {tbErr.rules && <ErrorText>{tbErr.rules}</ErrorText>}
+                      <RuleInput>
+                        <RuleInputField
+                          id={`tiebreaker-${i}-rule-input`}
+                          placeholder="Enter a tie-breaker rule..."
+                          value={newTieBreakerRule[i] || ''}
+                          onChange={(e) => setNewTieBreakerRule(prev => ({...prev, [i]: e.target.value}))}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              addTieBreakerRule(i);
+                            }
+                          }}
+                          $invalid={!!tbErr.rules}
+                          aria-invalid={!!tbErr.rules}
+                        />
+                        <AddRuleButton type="button" onClick={() => addTieBreakerRule(i)}>
+                          Add Rule
+                        </AddRuleButton>
+                      </RuleInput>
+                    </RulesSection>
+                    <FormGroup style={{marginTop: '2rem'}}>
+                      <Label>Number of Participants *</Label>
+                      <ParticipantCounter>
+                        <CounterButton 
+                          type="button"
+                          onClick={() => updateParticipants(i, -1, true)}
+                          disabled={round.tieBreaker.participants <= 1}
+                          aria-label="Decrease tie-breaker participants"
+                        >
+                        </CounterButton>
+                        <ParticipantInput
+                          id={`tiebreaker-${i}-participants`}
+                          type="number"
+                          min="1"
+                          value={round.tieBreaker.participants}
+                          onChange={(e) => handleParticipantInputChange(i, e.target.value, true)}
+                          placeholder="1"
+                          $invalid={!!tbErr.participants}
+                          aria-invalid={!!tbErr.participants}
+                        />
+                        <CounterButton type="button" onClick={() => updateParticipants(i, 1, true)} aria-label="Increase tie-breaker participants">
+                          +
+                        </CounterButton>
+                      </ParticipantCounter>
+                      {tbErr.participants && <ErrorText>{tbErr.participants}</ErrorText>}
+                    </FormGroup>
+                  </RoundContent>
+                </RoundCard>
+              );
+            }
+            return cards;
           })}
         </RoundsGrid>
         
         <ButtonGroup>
-          <ActionButton onClick={addRound}>
+          <ActionButton type="button" onClick={addRound}>
             Add Round
           </ActionButton>
-          <ActionButton primary onClick={handleSubmit} disabled={!isFormValid}>
+          <ActionButton primary onClick={handleSubmit}>
             Save & Continue
           </ActionButton>
         </ButtonGroup>

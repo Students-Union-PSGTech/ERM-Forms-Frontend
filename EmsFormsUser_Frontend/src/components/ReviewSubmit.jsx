@@ -323,7 +323,13 @@ const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
   const items = formData.items || [];
 
   const totalCost = items?.reduce((sum, item) => sum + (item.price_per_unit * item.quantity), 0) || 0;
-  const totalParticipants = rounds?.reduce((sum, round) => sum + (round.participants || 0), 0) || 0;
+  const totalParticipants = rounds?.reduce((sum, round) => {
+    let roundParticipants = round.participants || 0;
+    if (round.hasTieBreaker) {
+      roundParticipants += round.tieBreaker?.participants || 0;
+    }
+    return sum + roundParticipants;
+  }, 0) || 0;
 
   // Helper to map frontend person fields to backend schema (snake_case)
   const toPerson = (p = {}) => ({
@@ -351,19 +357,36 @@ const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
         eventOverview = {}
       } = formData || {};
 
+      const finalRounds = (rounds || []).map(r => {
+        const roundData = {
+          name: r?.name || '',
+          description: r?.description || '',
+          rules: Array.isArray(r?.rules) ? r.rules.filter(Boolean) : [],
+          participants: Number(r?.participants) || 0,
+          hasTieBreaker: r?.hasTieBreaker || false,
+        };
+
+        if (r.hasTieBreaker && r.tieBreaker) {
+          roundData.tieBreaker = {
+            name: r.tieBreaker.name || '',
+            description: r.tieBreaker.description || '',
+            rules: Array.isArray(r.tieBreaker.rules) ? r.tieBreaker.rules.filter(Boolean) : [],
+            participants: Number(r.tieBreaker.participants) || 0,
+          };
+        }
+        
+        return roundData;
+      });
+
       const payload = {
         // Core event fields
         name: eventPreview?.eventName?.trim() || '',
         tagline: eventOverview?.oneLineDescription?.trim() || '',
         about: eventOverview?.aboutTheEvent?.trim() || '',
-        round_count: Number(eventDetails?.numberOfRounds) || Number(rounds?.length) || 0,
+        round_count: finalRounds.length,
 
-        // Rounds (backend expects name, description, rules only)
-        rounds: (rounds || []).map(r => ({
-          name: r?.name || '',
-          description: r?.description || '',
-          rules: Array.isArray(r?.rules) ? r.rules.filter(Boolean) : []
-        })),
+        // Rounds (including tie-breakers)
+        rounds: finalRounds,
 
         // Event details (people) with snake_case keys
         details: {
@@ -657,31 +680,63 @@ const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
           <SectionContent>
             {rounds && rounds.length > 0 ? (
               <>
-                {rounds.map((round, idx) => (
-                  <RoundCard key={idx}>
-                    <div className="round-name">{round.name}</div>
-                    <div className="round-info">
-                      <div className="description">
-                        <strong>Description:</strong><br/>
-                        {round.description || "No description provided"}
-                        {round.rules && round.rules.length > 0 && (
-                          <>
-                            <br/><br/><strong>Rules:</strong>
-                            <ul style={{margin: '0.5rem 0', paddingLeft: '1.5rem'}}>
-                              {round.rules.map((rule, ruleIdx) => (
-                                <li key={ruleIdx} style={{marginBottom: '0.25rem'}}>{rule}</li>
-                              ))}
-                            </ul>
-                          </>
-                        )}
+                {rounds.flatMap((round, idx) => {
+                  const roundCards = [
+                    <RoundCard key={`round-${idx}`}>
+                      <div className="round-name">{round.name}</div>
+                      <div className="round-info">
+                        <div className="description">
+                          <strong>Description:</strong><br/>
+                          {round.description || "No description provided"}
+                          {round.rules && round.rules.length > 0 && (
+                            <>
+                              <br/><br/><strong>Rules:</strong>
+                              <ul style={{margin: '0.5rem 0', paddingLeft: '1.5rem'}}>
+                                {round.rules.map((rule, ruleIdx) => (
+                                  <li key={ruleIdx} style={{marginBottom: '0.25rem'}}>{rule}</li>
+                                ))}
+                              </ul>
+                            </>
+                          )}
+                        </div>
+                        <div className="participants">
+                          <div className="count">{round.participants || 0}</div>
+                          <div className="label">Participants</div>
+                        </div>
                       </div>
-                      <div className="participants">
-                        <div className="count">{round.participants || 0}</div>
-                        <div className="label">Participants</div>
-                      </div>
-                    </div>
-                  </RoundCard>
-                ))}
+                    </RoundCard>
+                  ];
+
+                  if (round.hasTieBreaker && round.tieBreaker) {
+                    roundCards.push(
+                      <RoundCard key={`tiebreaker-${idx}`} style={{borderColor: 'var(--flame-gold)'}}>
+                        <div className="round-name">{round.tieBreaker.name}</div>
+                        <div className="round-info">
+                          <div className="description">
+                            <strong>Description:</strong><br/>
+                            {round.tieBreaker.description || "No description provided"}
+                            {round.tieBreaker.rules && round.tieBreaker.rules.length > 0 && (
+                              <>
+                                <br/><br/><strong>Rules:</strong>
+                                <ul style={{margin: '0.5rem 0', paddingLeft: '1.5rem'}}>
+                                  {round.tieBreaker.rules.map((rule, ruleIdx) => (
+                                    <li key={ruleIdx} style={{marginBottom: '0.25rem'}}>{rule}</li>
+                                  ))}
+                                </ul>
+                              </>
+                            )}
+                          </div>
+                          <div className="participants">
+                            <div className="count">{round.tieBreaker.participants || 0}</div>
+                            <div className="label">Participants</div>
+                          </div>
+                        </div>
+                      </RoundCard>
+                    );
+                  }
+                  
+                  return roundCards;
+                })}
                 <TotalSummary>
                   <div className="amount">{totalParticipants}</div>
                   <div className="label">Total Expected Participants</div>
