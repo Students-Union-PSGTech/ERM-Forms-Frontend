@@ -12,10 +12,20 @@ const API = axios.create({
 export const login = (credentials) => API.post('/api/auth/login', credentials);
 export const getEventPDF = (eventId) =>
   API.get(`/api/events/pdf/${eventId}`, { responseType: 'blob' });
-// Create a new event (expects eventData, roundsData, eventDetailsData, itemsData, eventFormData)
-export const createEvent = async (payload) => {
-  const res = await API.post('/api/events', payload);
-  return res.data;
+
+// Create a new event with FormData support for file uploads
+export const createEvent = async (formData) => {
+  try {
+    const res = await API.post('/api/events', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data', // Important for file uploads
+      },
+    });
+    return res.data;
+  } catch (error) {
+    console.error('Error creating event:', error);
+    throw error;
+  }
 };
 
 // List events for the logged-in association

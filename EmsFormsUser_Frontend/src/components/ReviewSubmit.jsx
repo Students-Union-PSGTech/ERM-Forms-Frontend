@@ -309,11 +309,162 @@ const TotalSummary = styled.div`
   }
 `;
 
+const FileUploadSection = styled.div`
+  background: white;
+  border-radius: 16px;
+  box-shadow: var(--shadow-medium);
+  margin-bottom: 2rem;
+  overflow: hidden;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: var(--gradient-fire);
+  }
+`;
+
+// Modified FileUploadArea to use $isDragging instead of isDragging
+const FileUploadArea = styled.div`
+  padding: 2rem;
+  border: 2px dashed var(--border-light);
+  border-radius: 12px;
+  margin: 2rem;
+  text-align: center;
+  transition: all 0.3s ease;
+  position: relative;
+  
+  ${props => props.$isDragging ? `
+    background: rgba(234, 88, 12, 0.05);
+    border-color: var(--flame-orange);
+  ` : ''}
+  
+  &:hover {
+    background: #f8fafc;
+  }
+  
+  input[type="file"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+`;
+
+const UploadIcon = styled.div`
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: var(--flame-orange);
+`;
+
+const UploadText = styled.div`
+  margin-bottom: 1rem;
+  
+  h4 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+  }
+  
+  p {
+    color: var(--text-secondary);
+  }
+`;
+
+const UploadButton = styled.button`
+  padding: 0.75rem 1.5rem;
+  background: var(--gradient-fire);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-flame);
+  }
+`;
+
+const FilePreviewList = styled.div`
+  margin-top: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+`;
+
+const FilePreview = styled.div`
+  background: #f8fafc;
+  border-radius: 8px;
+  padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-left: 4px solid var(--flame-orange);
+  
+  .file-info {
+    overflow: hidden;
+    
+    .file-name {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .file-size {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+  }
+  
+  .remove-file {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    
+    &:hover {
+      background: #fecaca;
+      transform: scale(1.1);
+    }
+  }
+`;
+
+const FileError = styled.div`
+  color: #b91c1c;
+  background: #fee2e2;
+  padding: 0.75rem;
+  border-radius: 6px;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+`;
+
 const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [files, setFiles] = useState([]);
+  const [fileError, setFileError] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
 
   // Extract data from different sections
   const eventPreview = formData.eventPreview || {};
@@ -323,13 +474,7 @@ const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
   const items = formData.items || [];
 
   const totalCost = items?.reduce((sum, item) => sum + (item.price_per_unit * item.quantity), 0) || 0;
-  const totalParticipants = rounds?.reduce((sum, round) => {
-    let roundParticipants = round.participants || 0;
-    if (round.hasTieBreaker) {
-      roundParticipants += round.tieBreaker?.participants || 0;
-    }
-    return sum + roundParticipants;
-  }, 0) || 0;
+  const totalParticipants = rounds?.reduce((sum, round) => sum + (round.participants || 0), 0) || 0;
 
   // Helper to map frontend person fields to backend schema (snake_case)
   const toPerson = (p = {}) => ({
@@ -338,6 +483,73 @@ const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
     mobile: p.mobile || p.contact || '',
     designation: p.designation || ''
   });
+
+  const handleFileChange = (e) => {
+    const selectedFiles = Array.from(e.target.files);
+    validateAndAddFiles(selectedFiles);
+  };
+
+  const validateAndAddFiles = (selectedFiles) => {
+    setFileError('');
+    
+    // Check if adding these files would exceed the limit
+    if (files.length + selectedFiles.length > 5) {
+      setFileError('Maximum 5 files allowed');
+      return;
+    }
+    
+    const validFiles = [];
+    
+    for (const file of selectedFiles) {
+      // Check file size (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        setFileError(`File "${file.name}" exceeds the 10MB size limit`);
+        continue;
+      }
+      
+      // Validate file type (only allow PDF and DOC files)
+      const fileExtension = file.name.split('.').pop().toLowerCase();
+      if (!['pdf', 'doc', 'docx'].includes(fileExtension)) {
+        setFileError(`File "${file.name}" has invalid format. Only PDF and DOC files are allowed.`);
+        continue;
+      }
+      
+      validFiles.push(file);
+    }
+    
+    if (validFiles.length > 0) {
+      setFiles(prev => [...prev, ...validFiles]);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => {
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      validateAndAddFiles(Array.from(e.dataTransfer.files));
+    }
+  };
+
+  const removeFile = (index) => {
+    setFiles(files.filter((_, i) => i !== index));
+    setFileError('');
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes < 1024) return bytes + ' bytes';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  };
 
   const handleSubmit = async (e) => {
     e?.preventDefault?.();
@@ -357,36 +569,19 @@ const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
         eventOverview = {}
       } = formData || {};
 
-      const finalRounds = (rounds || []).map(r => {
-        const roundData = {
-          name: r?.name || '',
-          description: r?.description || '',
-          rules: Array.isArray(r?.rules) ? r.rules.filter(Boolean) : [],
-          participants: Number(r?.participants) || 0,
-          hasTieBreaker: r?.hasTieBreaker || false,
-        };
-
-        if (r.hasTieBreaker && r.tieBreaker) {
-          roundData.tieBreaker = {
-            name: r.tieBreaker.name || '',
-            description: r.tieBreaker.description || '',
-            rules: Array.isArray(r.tieBreaker.rules) ? r.tieBreaker.rules.filter(Boolean) : [],
-            participants: Number(r.tieBreaker.participants) || 0,
-          };
-        }
-        
-        return roundData;
-      });
-
       const payload = {
         // Core event fields
         name: eventPreview?.eventName?.trim() || '',
         tagline: eventOverview?.oneLineDescription?.trim() || '',
         about: eventOverview?.aboutTheEvent?.trim() || '',
-        round_count: finalRounds.length,
+        round_count: Number(eventDetails?.numberOfRounds) || Number(rounds?.length) || 0,
 
-        // Rounds (including tie-breakers)
-        rounds: finalRounds,
+        // Rounds (backend expects name, description, rules only)
+        rounds: (rounds || []).map(r => ({
+          name: r?.name || '',
+          description: r?.description || '',
+          rules: Array.isArray(r?.rules) ? r.rules.filter(Boolean) : []
+        })),
 
         // Event details (people) with snake_case keys
         details: {
@@ -437,7 +632,21 @@ const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
       if (user?.association_name) payload.association_name = user.association_name;
 
       console.log("Submitting final payload:", payload);
-      await createEvent(payload);
+      
+      // Create a FormData object with a different name to avoid conflicts
+      const uploadFormData = new FormData();
+      
+      // Append the JSON payload as a string
+      uploadFormData.append('payload', JSON.stringify(payload));
+      
+      // Append each file
+      files.forEach((file) => {
+        uploadFormData.append('annexure', file);
+      });
+      
+      // Update the API call to send FormData
+      await createEvent(uploadFormData);
+      
       sessionStorage.removeItem("createEventFormData");
       navigate('/home', { state: { success: true, message: 'Event created successfully!' } });
     } catch (err) {
@@ -680,63 +889,31 @@ const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
           <SectionContent>
             {rounds && rounds.length > 0 ? (
               <>
-                {rounds.flatMap((round, idx) => {
-                  const roundCards = [
-                    <RoundCard key={`round-${idx}`}>
-                      <div className="round-name">{round.name}</div>
-                      <div className="round-info">
-                        <div className="description">
-                          <strong>Description:</strong><br/>
-                          {round.description || "No description provided"}
-                          {round.rules && round.rules.length > 0 && (
-                            <>
-                              <br/><br/><strong>Rules:</strong>
-                              <ul style={{margin: '0.5rem 0', paddingLeft: '1.5rem'}}>
-                                {round.rules.map((rule, ruleIdx) => (
-                                  <li key={ruleIdx} style={{marginBottom: '0.25rem'}}>{rule}</li>
-                                ))}
-                              </ul>
-                            </>
-                          )}
-                        </div>
-                        <div className="participants">
-                          <div className="count">{round.participants || 0}</div>
-                          <div className="label">Participants</div>
-                        </div>
+                {rounds.map((round, idx) => (
+                  <RoundCard key={idx}>
+                    <div className="round-name">{round.name}</div>
+                    <div className="round-info">
+                      <div className="description">
+                        <strong>Description:</strong><br/>
+                        {round.description || "No description provided"}
+                        {round.rules && round.rules.length > 0 && (
+                          <>
+                            <br/><br/><strong>Rules:</strong>
+                            <ul style={{margin: '0.5rem 0', paddingLeft: '1.5rem'}}>
+                              {round.rules.map((rule, ruleIdx) => (
+                                <li key={ruleIdx} style={{marginBottom: '0.25rem'}}>{rule}</li>
+                              ))}
+                            </ul>
+                          </>
+                        )}
                       </div>
-                    </RoundCard>
-                  ];
-
-                  if (round.hasTieBreaker && round.tieBreaker) {
-                    roundCards.push(
-                      <RoundCard key={`tiebreaker-${idx}`} style={{borderColor: 'var(--flame-gold)'}}>
-                        <div className="round-name">{round.tieBreaker.name}</div>
-                        <div className="round-info">
-                          <div className="description">
-                            <strong>Description:</strong><br/>
-                            {round.tieBreaker.description || "No description provided"}
-                            {round.tieBreaker.rules && round.tieBreaker.rules.length > 0 && (
-                              <>
-                                <br/><br/><strong>Rules:</strong>
-                                <ul style={{margin: '0.5rem 0', paddingLeft: '1.5rem'}}>
-                                  {round.tieBreaker.rules.map((rule, ruleIdx) => (
-                                    <li key={ruleIdx} style={{marginBottom: '0.25rem'}}>{rule}</li>
-                                  ))}
-                                </ul>
-                              </>
-                            )}
-                          </div>
-                          <div className="participants">
-                            <div className="count">{round.tieBreaker.participants || 0}</div>
-                            <div className="label">Participants</div>
-                          </div>
-                        </div>
-                      </RoundCard>
-                    );
-                  }
-                  
-                  return roundCards;
-                })}
+                      <div className="participants">
+                        <div className="count">{round.participants || 0}</div>
+                        <div className="label">Participants</div>
+                      </div>
+                    </div>
+                  </RoundCard>
+                ))}
                 <TotalSummary>
                   <div className="amount">{totalParticipants}</div>
                   <div className="label">Total Expected Participants</div>
@@ -751,24 +928,66 @@ const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
           </SectionContent>
         </ReviewCard>
 
+        {/* File Upload Section */}
+        <FileUploadSection>
+          <SectionHeader>
+            <h3>Upload Annexure (Optional)</h3>
+          </SectionHeader>
+          <SectionContent>
+            <FileUploadArea 
+              $isDragging={isDragging}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <input
+                type="file"
+                multiple
+                onChange={handleFileChange}
+                accept=".pdf,.doc,.docx"
+              />
+              <UploadIcon>📄</UploadIcon>
+              <UploadText>
+                <h4>Drag and drop or click to upload</h4>
+                <p>Upload up to 5 documents (Max 10MB each)</p>
+                <p>Accepted formats: PDF, DOC, DOCX</p>
+              </UploadText>
+              <UploadButton>Choose Files</UploadButton>
+            </FileUploadArea>
+            
+            {fileError && <FileError>{fileError}</FileError>}
+            
+            {files.length > 0 && (
+              <FilePreviewList>
+                {files.map((file, index) => (
+                  <FilePreview key={index}>
+                    <div className="file-info">
+                      <div className="file-name">{file.name}</div>
+                      <div className="file-size">{formatFileSize(file.size)}</div>
+                    </div>
+                    <button 
+                      className="remove-file" 
+                      onClick={() => removeFile(index)}
+                      aria-label="Remove file"
+                    >
+                      ×
+                    </button>
+                  </FilePreview>
+                ))}
+              </FilePreviewList>
+            )}
+          </SectionContent>
+        </FileUploadSection>
+
         {/* Submit Section */}
         <ActionSection>
-          
-
           {error && (
-            <div className="error-message">
+            <div className="error-message" style={{color: '#b91c1c', marginBottom: '1rem'}}>
               {error}
             </div>
           )}
 
           <div className="button-container">
-            {/*<button
-              className="back-button"
-              onClick={() => navigate('/create-event/rounds')}
-              disabled={submitting}
-            >
-              Back
-            </button>*/}
             <SubmitButton 
               onClick={handleSubmit}
               disabled={submitting}
