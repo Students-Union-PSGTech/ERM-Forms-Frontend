@@ -21,7 +21,7 @@ const Container = styled.div`
   box-shadow: var(--shadow-medium);
   overflow: hidden;
   position: relative;  /* important: so the back button can anchor here */
-  
+  padding: 50px;
   &::before {
     content: '';
     position: absolute;
@@ -492,7 +492,7 @@ export default function ViewEvents() {
   if (err) return <PageWrapper><Container>Error: {err}</Container></PageWrapper>;
 
   return (
-    <PageWrapper>
+    <div>
       <Container>
         {/* Back button at the top */}
         <BackButton onClick={() => navigate(-1)}>← Back</BackButton>
@@ -526,6 +526,6 @@ export default function ViewEvents() {
       </Container>
 
       <EventDetailModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
-    </PageWrapper>
+    </div>
   );
 }
