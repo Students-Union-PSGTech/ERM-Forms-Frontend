@@ -81,9 +81,15 @@ const RuleInput = styled.div`
 const RuleInputField = styled.input`
   flex: 1;
   padding: 0.5rem;
-  border: 1px solid var(--border-light);
+  border: 1px solid ${props => (props.$invalid ? '#dc2626' : 'var(--border-light)')};
   border-radius: 6px;
   font-size: 0.9rem;
+
+  &:focus {
+    outline: none;
+    border-color: ${props => (props.$invalid ? '#dc2626' : 'var(--flame-orange)')};
+    box-shadow: 0 0 0 3px ${props => (props.$invalid ? 'rgba(220,38,38,0.15)' : 'rgba(234,88,12,0.1)')};
+  }
 `;
 
 const AddRuleButton = styled.button`
@@ -223,16 +229,16 @@ const Label = styled.label`
 const Input = styled.input`
   width: 100%;
   padding: 1rem;
-  border: 2px solid var(--border-light);
+  border: 2px solid ${props => (props.$invalid ? '#dc2626' : 'var(--border-light)')};
   border-radius: 10px;
   font-size: 1rem;
   transition: all 0.3s ease;
   background: #fafafa;
   
   &:focus {
-    border-color: var(--flame-orange);
+    border-color: ${props => (props.$invalid ? '#dc2626' : 'var(--flame-orange)')};
     background: white;
-    box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
+    box-shadow: 0 0 0 3px ${props => (props.$invalid ? 'rgba(220,38,38,0.15)' : 'rgba(234, 88, 12, 0.1)')};
     transform: translateY(-1px);
   }
   
@@ -244,7 +250,7 @@ const Input = styled.input`
 const TextArea = styled.textarea`
   width: 100%;
   padding: 1rem;
-  border: 2px solid var(--border-light);
+  border: 2px solid ${props => (props.$invalid ? '#dc2626' : 'var(--border-light)')};
   border-radius: 10px;
   font-size: 1rem;
   min-height: 120px;
@@ -254,9 +260,9 @@ const TextArea = styled.textarea`
   background: #fafafa;
   
   &:focus {
-    border-color: var(--flame-orange);
+    border-color: ${props => (props.$invalid ? '#dc2626' : 'var(--flame-orange)')};
     background: white;
-    box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
+    box-shadow: 0 0 0 3px ${props => (props.$invalid ? 'rgba(220,38,38,0.15)' : 'rgba(234, 88, 12, 0.1)')};
     transform: translateY(-1px);
   }
   
@@ -298,7 +304,7 @@ const CounterButton = styled.button`
 
 const ParticipantInput = styled.input`
   background: white;
-  border: 2px solid var(--border-light);
+  border: 2px solid ${props => (props.$invalid ? '#dc2626' : 'var(--border-light)')};
   padding: 0.75rem 1.5rem;
   border-radius: 10px;
   font-size: 1.2rem;
@@ -309,8 +315,8 @@ const ParticipantInput = styled.input`
   transition: all 0.3s ease;
   
   &:focus {
-    border-color: var(--flame-orange);
-    box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
+    border-color: ${props => (props.$invalid ? '#dc2626' : 'var(--flame-orange)')};
+    box-shadow: 0 0 0 3px ${props => (props.$invalid ? 'rgba(220,38,38,0.15)' : 'rgba(234, 88, 12, 0.1)')};
     transform: translateY(-1px);
   }
   
@@ -359,6 +365,13 @@ const ActionButton = styled.button`
     &:hover::before {
       left: 100%;
     }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
   ` : `
     background: transparent;
     color: var(--text-secondary);
@@ -369,7 +382,19 @@ const ActionButton = styled.button`
       color: var(--flame-orange);
       transform: translateY(-1px);
     }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
   `}
+`;
+
+const ErrorText = styled.div`
+  color: #dc2626;
+  font-size: 0.85rem;
+  margin-top: 0.4rem;
 `;
 
 const parseRules = v => {
@@ -389,6 +414,10 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
     oneLineDescription: '',
     aboutTheEvent: ''
   });
+
+  // Validation state
+  const [errors, setErrors] = useState({ overview: {}, rounds: [] });
+  const [isFormValid, setIsFormValid] = useState(false);
 
   // Load data from global state on mount
   useEffect(() => {
@@ -420,8 +449,62 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
     setRounds(initial);
   }, [globalFormData, navigate]);
 
-  // Auto-sync local edits into global formData so navbar navigation also preserves state
-  
+  // Build errors for current state
+  const buildErrors = () => {
+    const overview = {};
+    if (!eventOverview.oneLineDescription?.trim()) {
+      overview.oneLineDescription = 'This field is required.';
+    }
+    if (!eventOverview.aboutTheEvent?.trim()) {
+      overview.aboutTheEvent = 'This field is required.';
+    }
+
+    const roundsErr = rounds.map(r => {
+      const e = {};
+      if (!r?.name?.trim()) e.name = 'Round name is required.';
+      if (!r?.description?.trim()) e.description = 'Description is required.';
+      if (!Array.isArray(r?.rules) || r.rules.length === 0) e.rules = 'Add at least one rule.';
+      const p = Number(r?.participants);
+      if (!Number.isFinite(p) || p < 1) e.participants = 'Participants must be at least 1.';
+      return e;
+    });
+
+    return { overview, rounds: roundsErr };
+  };
+
+  const isEmpty = (obj) => Object.keys(obj || {}).length === 0;
+
+  // Revalidate whenever values change
+  useEffect(() => {
+    const errs = buildErrors();
+    setErrors(errs);
+    setIsFormValid(isEmpty(errs.overview) && errs.rounds.every(isEmpty));
+  }, [eventOverview, rounds]);
+
+  const focusFirstError = (errs) => {
+    const idsInOrder = [
+      errs.overview.oneLineDescription ? 'overview-oneLineDescription' : null,
+      errs.overview.aboutTheEvent ? 'overview-aboutTheEvent' : null,
+    ].filter(Boolean);
+
+    // Round fields in order per round
+    errs.rounds.forEach((e, i) => {
+      if (e.name) idsInOrder.push(`round-${i}-name`);
+      else if (e.description) idsInOrder.push(`round-${i}-description`);
+      else if (e.rules) idsInOrder.push(`round-${i}-rule-input`);
+      else if (e.participants) idsInOrder.push(`round-${i}-participants`);
+    });
+
+    const id = idsInOrder[0];
+    if (id) {
+      const el = document.getElementById(id);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Slight timeout to ensure scroll completes before focusing
+        setTimeout(() => el.focus?.({ preventScroll: true }), 250);
+      }
+    }
+  };
 
   const handleChange = (index, key, value) => {
     setRounds(prev => {
@@ -454,7 +537,6 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
     });
   };
 
-  // NEW: handlers that were missing
   const handleEventOverviewChange = (key, value) => {
     setEventOverview(prev => ({ ...prev, [key]: value }));
   };
@@ -495,6 +577,7 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
     });
   };
 
+  // Note: handleRoundChange isn't used; keeping for potential future syncs
   const handleRoundChange = (index, field, value) => {
     setFormData(prev => {
       const list = Array.isArray(prev.rounds) ? [...prev.rounds] : [];
@@ -510,17 +593,15 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
     });
   };
 
-  const onSaveAndContinue = () => {
-    setGlobalFormData(prev => ({
-      ...prev,
-      eventOverview,
-      rounds
-    }));
-    navigate('/create-event/review');
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
+    const errs = buildErrors();
+    setErrors(errs);
+    const valid = isEmpty(errs.overview) && errs.rounds.every(isEmpty);
+    if (!valid) {
+      focusFirstError(errs);
+      return;
+    }
     setGlobalFormData(prev => ({
       ...prev,
       eventOverview,
@@ -549,131 +630,164 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
           <FormGroup>
             <Label>One Line Description (Tag Line) *</Label>
             <Input
+              id="overview-oneLineDescription"
               type="text"
               placeholder="Enter a catchy one-line description for your event..."
               value={eventOverview.oneLineDescription}
               onChange={(e) => handleEventOverviewChange('oneLineDescription', e.target.value)}
+              $invalid={!!errors.overview.oneLineDescription}
+              aria-invalid={!!errors.overview.oneLineDescription}
             />
+            {errors.overview.oneLineDescription && (
+              <ErrorText>{errors.overview.oneLineDescription}</ErrorText>
+            )}
           </FormGroup>
           
           <FormGroup>
             <Label>About the Event *</Label>
             <TextArea
+              id="overview-aboutTheEvent"
               placeholder="Provide detailed information about your event..."
               value={eventOverview.aboutTheEvent}
               onChange={(e) => handleEventOverviewChange('aboutTheEvent', e.target.value)}
+              $invalid={!!errors.overview.aboutTheEvent}
+              aria-invalid={!!errors.overview.aboutTheEvent}
             />
+            {errors.overview.aboutTheEvent && (
+              <ErrorText>{errors.overview.aboutTheEvent}</ErrorText>
+            )}
           </FormGroup>
         </EventOverviewSection>
         
         <RoundsGrid>
-          {rounds.map((round, i) => (
-            <RoundCard key={i}>
-              <RoundHeader>
-                <h3>
-                  {round.name}
-                  <span className="round-number">#{i + 1}</span>
-                </h3>
-                {rounds.length > 2 && (
-                  <button 
-                    onClick={() => removeRound(i)}
-                    style={{
-                      position: 'absolute',
-                      right: '1rem',
-                      top: '1rem',
-                      background: 'none',
-                      border: 'none',
-                      fontSize: '1.2rem',
-                      cursor: 'pointer',
-                      color: '#dc2626'
-                    }}
-                  >
-                    ×
-                  </button>
-                )}
-              </RoundHeader>
-              
-              <RoundContent>
-                <FormGroup>
-                  <Label>Round Name</Label>
-                  <Input 
-                    value={round.name}
-                    placeholder="Enter round name..."
-                    onChange={e => handleChange(i, "name", e.target.value)}
-                  />
-                </FormGroup>
-                
-                <FormGroup>
-                  <Label>Description</Label>
-                  <TextArea 
-                    value={round.description}
-                    placeholder="Describe the rules, objectives, and format of this round..."
-                    onChange={e => handleChange(i, "description", e.target.value)}
-                  />
-                </FormGroup>
-
-                {/* Round Rules Section */}
-                <RulesSection>
-                  <Label>Round Rules</Label>
-                  <RulesList>
-                    {round.rules.map((rule, ruleIndex) => (
-                      <RuleItem key={ruleIndex}>
-                        <span>• {rule}</span>
-                        <RemoveRuleButton onClick={() => removeRule(i, ruleIndex)}>
-                          Remove
-                        </RemoveRuleButton>
-                      </RuleItem>
-                    ))}
-                  </RulesList>
-                  <RuleInput>
-                    <RuleInputField
-                      placeholder="Enter a rule (e.g., No internet, Time limit 30 mins)..."
-                      value={newRule[i] || ''}
-                      onChange={(e) => setNewRule(prev => ({...prev, [i]: e.target.value}))}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          addRule(i);
-                        }
+          {rounds.map((round, i) => {
+            const rErr = errors.rounds[i] || {};
+            return (
+              <RoundCard key={i}>
+                <RoundHeader>
+                  <h3>
+                    {round.name}
+                    <span className="round-number">#{i + 1}</span>
+                  </h3>
+                  {rounds.length > 2 && (
+                    <button 
+                      onClick={() => removeRound(i)}
+                      style={{
+                        position: 'absolute',
+                        right: '1rem',
+                        top: '1rem',
+                        background: 'none',
+                        border: 'none',
+                        fontSize: '1.2rem',
+                        cursor: 'pointer',
+                        color: '#dc2626'
                       }}
-                    />
-                    <AddRuleButton onClick={() => addRule(i)}>
-                      Add Rule
-                    </AddRuleButton>
-                  </RuleInput>
-                </RulesSection>
-                
-                <FormGroup style={{marginTop: '2rem'}}>
-                  <Label>Number of Participants</Label>
-                  <ParticipantCounter>
-                    <CounterButton 
-                      onClick={() => updateParticipants(i, -1)}
-                      disabled={round.participants <= 0}
+                      aria-label={`Remove Round ${i + 1}`}
                     >
-                      −
-                    </CounterButton>
-                    <ParticipantInput
-                      type="number"
-                      min="0"
-                      value={round.participants}
-                      onChange={(e) => handleParticipantInputChange(i, e.target.value)}
-                      placeholder="0"
+                      ×
+                    </button>
+                  )}
+                </RoundHeader>
+                
+                <RoundContent>
+                  <FormGroup>
+                    <Label>Round Name *</Label>
+                    <Input 
+                      id={`round-${i}-name`}
+                      value={round.name}
+                      placeholder="Enter round name..."
+                      onChange={e => handleChange(i, "name", e.target.value)}
+                      $invalid={!!rErr.name}
+                      aria-invalid={!!rErr.name}
                     />
-                    <CounterButton onClick={() => updateParticipants(i, 1)}>
-                      +
-                    </CounterButton>
-                  </ParticipantCounter>
-                </FormGroup>
-              </RoundContent>
-            </RoundCard>
-          ))}
+                    {rErr.name && <ErrorText>{rErr.name}</ErrorText>}
+                  </FormGroup>
+                  
+                  <FormGroup>
+                    <Label>Description *</Label>
+                    <TextArea 
+                      id={`round-${i}-description`}
+                      value={round.description}
+                      placeholder="Describe the rules, objectives, and format of this round..."
+                      onChange={e => handleChange(i, "description", e.target.value)}
+                      $invalid={!!rErr.description}
+                      aria-invalid={!!rErr.description}
+                    />
+                    {rErr.description && <ErrorText>{rErr.description}</ErrorText>}
+                  </FormGroup>
+
+                  {/* Round Rules Section */}
+                  <RulesSection>
+                    <Label>Round Rules *</Label>
+                    <RulesList>
+                      {round.rules.map((rule, ruleIndex) => (
+                        <RuleItem key={ruleIndex}>
+                          <span>• {rule}</span>
+                          <RemoveRuleButton onClick={() => removeRule(i, ruleIndex)}>
+                            Remove
+                          </RemoveRuleButton>
+                        </RuleItem>
+                      ))}
+                    </RulesList>
+                    {rErr.rules && <ErrorText>{rErr.rules}</ErrorText>}
+                    <RuleInput>
+                      <RuleInputField
+                        id={`round-${i}-rule-input`}
+                        placeholder="Enter a rule (e.g., No internet, Time limit 30 mins)..."
+                        value={newRule[i] || ''}
+                        onChange={(e) => setNewRule(prev => ({...prev, [i]: e.target.value}))}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            addRule(i);
+                          }
+                        }}
+                        $invalid={!!rErr.rules}
+                        aria-invalid={!!rErr.rules}
+                      />
+                      <AddRuleButton onClick={() => addRule(i)}>
+                        Add Rule
+                      </AddRuleButton>
+                    </RuleInput>
+                  </RulesSection>
+                  
+                  <FormGroup style={{marginTop: '2rem'}}>
+                    <Label>Number of Participants *</Label>
+                    <ParticipantCounter>
+                      <CounterButton 
+                        onClick={() => updateParticipants(i, -1)}
+                        disabled={round.participants <= 0}
+                        aria-label="Decrease participants"
+                      >
+                        −
+                      </CounterButton>
+                      <ParticipantInput
+                        id={`round-${i}-participants`}
+                        type="number"
+                        min="0"
+                        value={round.participants}
+                        onChange={(e) => handleParticipantInputChange(i, e.target.value)}
+                        placeholder="0"
+                        $invalid={!!rErr.participants}
+                        aria-invalid={!!rErr.participants}
+                      />
+                      <CounterButton onClick={() => updateParticipants(i, 1)} aria-label="Increase participants">
+                        +
+                      </CounterButton>
+                    </ParticipantCounter>
+                    {rErr.participants && <ErrorText>{rErr.participants}</ErrorText>}
+                  </FormGroup>
+                </RoundContent>
+              </RoundCard>
+            );
+          })}
         </RoundsGrid>
         
         <ButtonGroup>
           <ActionButton onClick={addRound}>
             Add Round
           </ActionButton>
-          <ActionButton primary onClick={handleSubmit}>
+          <ActionButton primary onClick={handleSubmit} disabled={!isFormValid}>
             Save & Continue
           </ActionButton>
         </ButtonGroup>
