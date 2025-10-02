@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { GlobalStyles } from "./GlobalStyles";
-import NavBar from "./components/NavBar";
 import EventDetails from "./components/EventDetails";
 import EventPreview from "./components/EventPreview";
 import ItemsPage from "./components/ItemsPage";
