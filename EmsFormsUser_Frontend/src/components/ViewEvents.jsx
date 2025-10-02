@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { listEvents } from '../api/api';
+import { listEvents, getEventPDF } from '../api/api';
 import styled from 'styled-components';
 
 // =====================================================================
@@ -16,8 +16,22 @@ const PageWrapper = styled.div`
 const Container = styled.div`
   max-width: 1000px;
   margin: 0 auto;
+  background: white;
+  border-radius: 16px;
+  box-shadow: var(--shadow-medium);
+  overflow: hidden;
+  position: relative;  /* important: so the back button can anchor here */
+  padding: 50px;
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: var(--gradient-fire);
+  }
 `;
-
 const Header = styled.header`
   text-align: center;
   margin-bottom: 2.5rem;
@@ -277,6 +291,25 @@ const PreviewCard = styled.div`
     text-overflow: ellipsis;
   }
 `;
+const BackButton = styled.button`
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background: #b45309;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background 0.2s ease;
+  z-index: 10;
+
+  &:hover {
+    background: #92400e;
+  }
+`;
 
 // =====================================================================
 // Helper Component for displaying a person's details
@@ -307,6 +340,37 @@ const PersonDetail = ({ title, person }) => (
 const EventDetailModal = ({ event, onClose }) => {
   if (!event) return null;
 
+  const handleViewPDF = async () => {
+    if (!event?.event_id) return;
+    try {
+      const res = await getEventPDF(event.event_id);
+      const file = new Blob([res.data], { type: 'application/pdf' });
+      const fileURL = URL.createObjectURL(file);
+      window.open(fileURL, '_blank');
+    } catch (err) {
+      alert('Failed to load PDF');
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!event?.event_id) return;
+    try {
+      const res = await getEventPDF(event.event_id);
+      const file = new Blob([res.data], { type: 'application/pdf' });
+      const fileURL = URL.createObjectURL(file);
+
+      const link = document.createElement('a');
+      link.href = fileURL;
+      link.download = `${event.name || 'event'}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(fileURL);
+    } catch (err) {
+      alert('Failed to download PDF');
+    }
+  };
+
   return (
     <ModalOverlay onClick={onClose}>
       <ModalContent onClick={(e) => e.stopPropagation()}>
@@ -315,6 +379,42 @@ const EventDetailModal = ({ event, onClose }) => {
           <h2>{event.name || 'Untitled Event'}</h2>
           <p>{event.tagline || 'No tagline provided'}</p>
         </EventHeader>
+
+        <div style={{   display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  margin: '1rem 2rem 0 2rem' }}>
+          <button
+            type="button"
+            style={{
+              background: '#d97706',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              padding: '0.5rem 1.25rem',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+            onClick={handleViewPDF}
+          >
+            View PDF
+          </button>
+          <button
+            type="button"
+            style={{
+              background: '#2563eb',
+              color: 'white',
+              border: 'none',
+              borderRadius: 8,
+              padding: '0.5rem 1.25rem',
+              fontWeight: 600,
+              cursor: 'pointer'
+            }}
+            onClick={handleDownloadPDF}
+          >
+            Download PDF
+          </button>
+        </div>
 
         <Section>
           <SectionTitle>About</SectionTitle>
@@ -459,8 +559,11 @@ export default function ViewEvents() {
   if (err) return <PageWrapper><Container>Error: {err}</Container></PageWrapper>;
 
   return (
-    <PageWrapper>
+    <div>
       <Container>
+        {/* Back button at the top */}
+        <BackButton onClick={() => navigate(-1)}>← Back</BackButton>
+
         <Header>
           <h1>My Submitted Events</h1>
           <p>A detailed overview of all your event submissions.</p>
@@ -488,7 +591,8 @@ export default function ViewEvents() {
           <p>No events found.</p>
         )}
       </Container>
+
       <EventDetailModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
-    </PageWrapper>
+    </div>
   );
 }

@@ -1,28 +1,52 @@
 import React, { useState } from "react";
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import styled, { keyframes } from "styled-components";
+import styled, { keyframes, css } from "styled-components";
 
-const slideDown = keyframes`
+// 1. New, modern keyframes for a smoother 'pop' effect
+
+// Keyframes for the Overlay fade
+const fadeIn = keyframes`
   from {
-    transform: translateY(-100%);
     opacity: 0;
   }
   to {
-    transform: translateY(0);
     opacity: 1;
   }
 `;
 
-const slideUp = keyframes`
+const fadeOut = keyframes`
   from {
-    transform: translateY(0);
     opacity: 1;
   }
   to {
-    transform: translateY(-100%);
     opacity: 0;
   }
 `;
+
+// Keyframes for the InstructionsContainer (the modal box itself)
+const modalEnter = keyframes`
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+`;
+
+const modalExit = keyframes`
+  from {
+    transform: scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+`;
+
+// 2. Updated styled components to use the new keyframes
 
 const Overlay = styled.div`
   position: fixed;
@@ -36,7 +60,12 @@ const Overlay = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  animation: ${props => props.closing ? slideUp : slideDown} 0.5s ease-in-out;
+  
+  // Apply fade animation to the overlay
+  animation: ${props => props.closing ? fadeOut : fadeIn} 0.3s ease-in-out forwards;
+  
+  // Necessary to allow the modal box to fade out properly
+  pointer-events: ${props => props.closing ? 'none' : 'auto'};
 `;
 
 const InstructionsContainer = styled.div`
@@ -48,7 +77,12 @@ const InstructionsContainer = styled.div`
   margin: 2rem;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   position: relative;
+  
+  // Apply scale/pop animation to the container
+  animation: ${props => props.closing ? modalExit : modalEnter} 0.3s cubic-bezier(0.3, 0.8, 0.5, 1) forwards;
 `;
+
+// --- The rest of the styled components remain the same ---
 
 const Header = styled.div`
   background: var(--gradient-fire);
@@ -156,7 +190,7 @@ const Button = styled.button`
   position: relative;
   overflow: hidden;
   
-  ${props => props.primary ? `
+  ${props => props.primary ? css`
     background: var(--gradient-fire);
     color: white;
     
@@ -179,7 +213,7 @@ const Button = styled.button`
     &:hover::before {
       left: 100%;
     }
-  ` : `
+  ` : css`
     background: transparent;
     color: var(--text-secondary);
     border: 2px solid var(--border-light);
@@ -256,6 +290,7 @@ const CheckboxContainer = styled.div`
   }
 `;
 
+// 3. The main Instructions component logic remains the same
 const Instructions = () => {
     const navigate = useNavigate();
     const { setAgreedToInstructions } = useOutletContext() || {};
@@ -266,15 +301,17 @@ const Instructions = () => {
         if (agreed) {
             setAgreedToInstructions?.(true); // persist agreement for guard
             setClosing(true);
+            
+            // Note: The new animation is 0.3s, so the timeout is reduced accordingly.
             setTimeout(() => {
                 navigate('/create-event/preview');
-            }, 500);
+            }, 300);
         }
     };
 
     return (
         <Overlay closing={closing}>
-            <InstructionsContainer>
+            <InstructionsContainer closing={closing}>
                 <Header>
                     <h1>Instructions to be Read Before Filling the Form</h1>
                     <p>Please read all instructions carefully before proceeding</p>
@@ -299,13 +336,13 @@ const Instructions = () => {
                             <li>No cash prize, memento, or any other form of prizes should be given by clubs/associations to the event winners.</li>
                             <li>Memento for the external chief guest will be provided by the Students Union if filled in the items required table.</li>
                             <li>Certificates to the winners, runners, convenors, and volunteers of each event will be provided by the Students Union.</li>
-                            <li>If any materials are required prior to the day of the event, please mention "Required in advance" near that material in the "Item Name" column.</li>
+                            <li>If any materials are required prior to the day of the event, please mention "**Required in advance**" near that material in the "Item Name" column.</li>
                             <li>Halls will be allotted based on availability.</li>
-                            <li>The projector will not be provided by the Students Union. Use the projector available in the hall.</li>
-                            <li>Winner and runner details should be submitted within one hour from the end of the event.</li>
-                            <li>HDMI cables/VGA converter will not be provided.</li>
+                            <li>The projector will **not** be provided by the Students Union. Use the projector available in the hall.</li>
+                            <li>Winner and runner details should be submitted **within one hour** from the end of the event.</li>
+                            <li>HDMI cables/VGA converter will **not** be provided.</li>
                             <li>Take enough copies of the form for your reference.</li>
-                            <li>Further changes are not accepted.</li>
+                            <li>Further changes are **not** accepted.</li>
                             <li>Submit it to the point of contact allotted to your club/association.</li>
                             <li>For more details, contact your respective point of contact.</li>
                         </ul>
@@ -313,26 +350,26 @@ const Instructions = () => {
                     
                     <CheckboxContainer>
                         <input 
-                          type="checkbox" 
-                          id="agree" 
-                          checked={agreed}
-                          onChange={(e) => setAgreed(e.target.checked)}
+                            type="checkbox" 
+                            id="agree" 
+                            checked={agreed}
+                            onChange={(e) => setAgreed(e.target.checked)}
                         />
                         <label htmlFor="agree">I agree to the terms and conditions</label>
                     </CheckboxContainer>
                     
                     {!agreed && (
                         <div style={{
-                          padding: '1rem',
-                          background: '#fef2f2',
-                          border: '1px solid #fecaca',
-                          borderRadius: '8px',
-                          color: '#991b1b',
-                          textAlign: 'center',
-                          fontSize: '0.9rem',
-                          fontWeight: '500'
+                            padding: '1rem',
+                            background: '#fef2f2',
+                            border: '1px solid #fecaca',
+                            borderRadius: '8px',
+                            color: '#991b1b',
+                            textAlign: 'center',
+                            fontSize: '0.9rem',
+                            fontWeight: '500'
                         }}>
-                          You must agree to the terms and conditions to proceed with the form.
+                            You must agree to the terms and conditions to proceed with the form.
                         </div>
                     )}
                     
@@ -342,14 +379,14 @@ const Instructions = () => {
                 </Content>
                 
                 <ButtonGroup>
-                  {agreed && (
-                    <Button 
-                      primary 
-                      onClick={handleAgree}
-                    >
-                      Proceed
-                    </Button>
-                  )}
+                    {agreed && (
+                        <Button 
+                            primary 
+                            onClick={handleAgree}
+                        >
+                            Proceed
+                        </Button>
+                    )}
                 </ButtonGroup>
             </InstructionsContainer>
         </Overlay>

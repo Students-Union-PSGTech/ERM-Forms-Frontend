@@ -10,7 +10,8 @@ const API = axios.create({
 
 // Auth: association user login
 export const login = (credentials) => API.post('/api/auth/login', credentials);
-
+export const getEventPDF = (eventId) =>
+  API.get(`/api/events/pdf/${eventId}`, { responseType: 'blob' });
 // Create a new event (expects eventData, roundsData, eventDetailsData, itemsData, eventFormData)
 export const createEvent = async (payload) => {
   const res = await API.post('/api/events', payload);

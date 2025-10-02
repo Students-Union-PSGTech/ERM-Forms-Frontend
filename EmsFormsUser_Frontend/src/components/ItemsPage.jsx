@@ -17,6 +17,7 @@ const Container = styled.div`
 const Header = styled.div`
   text-align: center;
   margin-bottom: 2rem;
+  position: relative; /* for absolute positioning of back button inside */
   
   h2 {
     font-size: 2.25rem;
@@ -28,6 +29,7 @@ const Header = styled.div`
     font-size: 1.1rem;
   }
 `;
+
 
 const TableContainer = styled.div`
   background: white;
@@ -243,6 +245,29 @@ const EmptyState = styled.div`
     color: var(--text-primary);
   }
 `;
+const BackButton = styled.button`
+  position: absolute;   /* key: absolute inside Header */
+  top: 1rem;            /* distance from top of white box */
+  left: 1rem;           /* distance from left of white box */
+  
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  border: none;
+  background: linear-gradient(135deg, #6b7280, #374151);
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+
+  &:hover {
+    background: linear-gradient(135deg, #4b5563, #1f2937);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  }
+`;
+
+
+
 
 export default function ItemsPage({ formData: globalFormData, setFormData: setGlobalFormData }) {
   const navigate = useNavigate();
@@ -334,8 +359,10 @@ export default function ItemsPage({ formData: globalFormData, setFormData: setGl
 
   return (
     <PageWrapper>
+      
       <Container>
         <Header>
+          {/*<BackButton onClick={() => navigate("/home")}>← Back</BackButton>*/}
           <h2>Items Management</h2>
           <p>Add and manage items for your event</p>
         </Header>
