@@ -192,14 +192,14 @@ export default function UpdateEventController() {
             <div key={idx} style={{ marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid #eee', background: '#f9fafb', borderRadius: 8, position: 'relative' }}>
               <label style={labelStyle}>Item Name</label>
               <select
-                value={item.item_id || ''}
+                value={item._id || ''}
                 onChange={e => {
                   const selected = availableItems.find(opt => opt._id === e.target.value);
                   setFormData(prev => {
                     const items = [...prev.items];
                     items[idx] = {
                       ...items[idx],
-                      item_id: selected?._id || '',
+                      _id: selected?._id || '',
                       item_name: selected?.item_name || '',
                       price_per_unit: selected?.price_per_unit || '',
                       total_price: (selected?.price_per_unit || 0) * (items[idx].quantity || 0)
@@ -210,7 +210,15 @@ export default function UpdateEventController() {
                 style={{ width: '100%', padding: '0.75rem', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fafafa', fontSize: '1rem', marginBottom: '1rem' }}
                 disabled={loadingItems}
               >
-                <option value="">Select item...</option>
+                      {!item._id && <option value="">Select item...</option>}
+      {/* If item is selected, show it as the first option */}
+      {item._id && (
+        <option value={item._id}>
+          {item.item_name ||
+            (availableItems.find(opt => opt._id === item._id)?.item_name) ||
+            'Selected item'}
+        </option>
+      )}
                 {availableItems.map(opt => (
                   <option key={opt._id} value={opt._id}>{opt.item_name}</option>
                 ))}
