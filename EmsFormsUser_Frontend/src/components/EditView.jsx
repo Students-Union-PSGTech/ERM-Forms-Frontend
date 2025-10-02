@@ -497,7 +497,7 @@ export default function EditView() {
   return (
     <div>
   <Container>
-    <BackButton onClick={() => navigate(-1)}>← Back</BackButton>
+    <BackButton onClick={() => navigate('/home')}>← Back</BackButton>
 
     <Header>
       <h1>Edit Events</h1>

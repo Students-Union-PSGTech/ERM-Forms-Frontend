@@ -562,7 +562,7 @@ export default function ViewEvents() {
     <div>
       <Container>
         {/* Back button at the top */}
-        <BackButton onClick={() => navigate(-1)}>← Back</BackButton>
+        <BackButton onClick={() => navigate('/home')}>← Back</BackButton>
 
         <Header>
           <h1>My Submitted Events</h1>
