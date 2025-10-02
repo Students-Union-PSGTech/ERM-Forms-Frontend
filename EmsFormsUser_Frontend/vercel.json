@@ -8,8 +8,5 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ],
-  "devDependencies": {
-    "vite": "^2.0.0"
-  }
+  ]
 }
