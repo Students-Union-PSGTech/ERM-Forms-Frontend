@@ -7,20 +7,15 @@ const AuthContext = createContext();
 export function AuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Start as true
   const [error, setError] = useState(null);
 
   // Check authentication on mount and tab/window focus
   useEffect(() => {
     const checkAuthStatus = async () => {
-      // If this is a new tab, don't check auth status
+      // Allow this tab to check auth status on refresh
       if (!isActiveSession()) {
-        setIsAuthenticated(false);
-        setUser(null);
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
-        }
-        return;
+        setSessionActive(); // Claim this tab
       }
 
       try {
@@ -38,6 +33,7 @@ export function AuthProvider({ children }) {
         clearSession();
         setIsAuthenticated(false);
         setUser(null);
+        // Only redirect if not on login page
         if (window.location.pathname !== '/login') {
           window.location.href = '/login';
         }
