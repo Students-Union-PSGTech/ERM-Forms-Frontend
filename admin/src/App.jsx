@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import InfoDeep from './components/info-deep';
 import EditAccess from './components/editaccess';
+import Logs from './components/Logs';
 //import './App.css'
 
 function App() {
@@ -51,6 +52,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Stats/>
+                </ProtectedRoute>
+              }
+            />
+            <Route 
+              path='/logs' 
+              element={
+                <ProtectedRoute>
+                  <Logs/>
                 </ProtectedRoute>
               }
             />

@@ -34,7 +34,8 @@ export default function Layout({ children }) {
     { to: '/add', icon: Code, label: 'Add User' },
     { to: '/items', icon: Package, label: 'Items' },
     { to: '/stats', icon: TrendingUp, label: 'Statistics' },
-    { to: '/edit-access', icon: Code, label: 'Edit Access' }
+    { to: '/edit-access', icon: Code, label: 'Edit Access' },
+    { to: '/logs', icon: FileText, label: 'Server Logs' }
   ];
 
   const openSummaryModal = () => {

@@ -50,7 +50,8 @@ const EventCards = () => {
     const fetchEvents = async () => {
       try {
         const response = await adminAPI.getEvents();
-        setEvents(response.data);
+        console.log("Fetched events:", response.data);
+        setEvents(response.data.data);
       } catch (err) {
         setError(err.message);
       } finally {

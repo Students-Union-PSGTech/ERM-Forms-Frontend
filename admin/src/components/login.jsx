@@ -1,40 +1,71 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../context/AuthContext";
+import { adminAPI } from "../api";
 import { useNavigate } from "react-router-dom";
 import Particles from "react-tsparticles";
 import { loadSlim } from "tsparticles-slim";
 
 function Login() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  
-  const { login, isAuthenticated } = useAuth();
+  const [step, setStep] = useState("email"); // 'email' or 'otp'
+  const { isAuthenticated, setIsAuthenticated, setIsLoading, setUser } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
       navigate("/cards", { replace: true });
     }
   }, [isAuthenticated, navigate]);
 
-  const handleSubmit = async (e) => {
+  // Send OTP
+  const handleSendOtp = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-
-    const result = await login({ username, password });
-    
-    if (result.success) {
-      navigate("/cards", { replace: true });
-    } else {
-      setError(result.error);
+    try {
+      const res = await adminAPI.sendOtp(email);
+      if (res.data.success) {
+        setStep("otp");
+      } else {
+        setError(res.data.message || "Failed to send OTP");
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || "Network error. Please try again.");
     }
-    
     setLoading(false);
+  };
+
+  // Verify OTP
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    setIsLoading(true); // For ProtectedRoute
+    try {
+      const res = await adminAPI.verifyOtp(email, otp);
+
+
+      if (res.data.success) {
+        setIsAuthenticated(true);
+        setUser({ role: 'admin', email });
+        setTimeout(() => {
+          setIsLoading(false);
+          setLoading(false);
+          navigate("/cards", { replace: true });
+        }, 1000);
+      } else {
+        setError(res.data.message || "Invalid OTP");
+        setIsLoading(false);
+        setLoading(false);
+      }
+    } catch (err) {
+      setError(err?.response?.data?.message || "Network error. Please try again.");
+      setIsLoading(false);
+      setLoading(false);
+    }
   };
 
   const particlesInit = useCallback(async (engine) => {
@@ -145,47 +176,49 @@ function Login() {
 
           {/* Form Section */}
           <div className="p-8">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Username Field */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 block">Username</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
+            <form onSubmit={step === "email" ? handleSendOtp : handleVerifyOtp} className="space-y-6">
+              {/* Email Field */}
+              {step === "email" && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 block">Email</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                      </svg>
+                    </div>
+                    <input
+                      type="email"
+                      placeholder="Enter your email"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-accent-orange focus:border-accent-orange transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
                   </div>
-                  <input
-                    type="text"
-                    placeholder="Enter your username"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-accent-orange focus:border-accent-orange transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                  />
                 </div>
-              </div>
-
-              {/* Password Field */}
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-700 block">Password</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                    </svg>
+              )}
+              {/* OTP Field */}
+              {step === "otp" && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-gray-700 block">OTP</label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                      </svg>
+                    </div>
+                    <input
+                      type="text"
+                      placeholder="Enter OTP"
+                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-accent-orange focus:border-accent-orange transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      required
+                    />
                   </div>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-accent-orange focus:border-accent-orange transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                  />
-
                 </div>
-              </div>
+              )}
 
               {/* Error Message */}
               {error && (
@@ -209,10 +242,10 @@ function Login() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    <span>Logging in...</span>
+                    <span>{step === "email" ? "Sending OTP..." : "Verifying..."}</span>
                   </div>
                 ) : (
-                  "Log In"
+                  step === "email" ? "Send OTP" : "Verify OTP"
                 )}
               </button>
             </form>

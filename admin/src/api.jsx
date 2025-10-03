@@ -20,6 +20,11 @@ API.interceptors.request.use(
 
 // Admin API endpoints
 export const adminAPI = {
+  // Logs endpoint
+  getLogs: () => API.get('/api/admin/logs'),
+  // OTP login endpoints
+  sendOtp: (email) => API.post('/api/admin/send-otp', { email }),
+  verifyOtp: (email, otp) => API.post('/api/admin/verify-otp', { email, otp }),
   // Login endpoint
   login: (credentials) => API.post('/api/admin/login', credentials),
   logout: () => API.post('/api/admin/logout'),

@@ -41,22 +41,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (credentials) => {
-    try {
-      const response = await adminAPI.login(credentials);
-      if (response.status === 200) {
-        setIsAuthenticated(true);
-        setUser({ role: 'admin' });
-        return { success: true };
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Login failed' 
-      };
-    }
-  };
 
   const logout = async () => {
     try {
@@ -106,11 +90,13 @@ export const AuthProvider = ({ children }) => {
     isAuthenticated,
     isLoading,
     user,
-    login,
     logout,
     forgotPassword,
     resetPassword,
-    checkAuthStatus
+    checkAuthStatus,
+    setIsAuthenticated,
+    setIsLoading,
+    setUser
   };
 
   return (
