@@ -321,10 +321,10 @@ export default function UpdateEventController() {
             role !== '_id' ? (
               <div key={role} style={{ marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid #eee' }}>
                 <strong style={{ color: '#d97706', fontSize: '1.1rem' }}>{role.replace(/_/g, ' ')}</strong>
-                {['name','roll_number','mobile','department','designation'].map(field => {
+                {['name','roll_number','mobile','department','year','designation'].map(field => {
                   const isDesignationField = field === 'designation';
                   const allowDesignation = role === 'faculty_advisor' || role === 'judge';
-                  const isStudentField = ['roll_number', 'department'].includes(field);
+                  const isStudentField = ['roll_number', 'department', 'year'].includes(field);
                   const isStudentRole = ['secretary1', 'secretary2', 'convenor1', 'convenor2', 'volunteer1', 'volunteer2'].includes(role);
 
                   if (isDesignationField && !allowDesignation) return null;
@@ -341,6 +341,22 @@ export default function UpdateEventController() {
                         >
                           <option value="">Select department...</option>
                           {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                        </select>
+                      </div>
+                    );
+                  }
+
+                  if (field === 'year') {
+                    return (
+                      <div key={field}>
+                        <label style={labelStyle}>Year:</label>
+                        <select
+                          value={person?.[field] || ''}
+                          onChange={e => handleDetailsChange(role, field, e.target.value)}
+                          style={inputStyle}
+                        >
+                          <option value="">Select year...</option>
+                          {[1, 2, 3, 4, 5].map(year => <option key={year} value={year}>{year}</option>)}
                         </select>
                       </div>
                     );

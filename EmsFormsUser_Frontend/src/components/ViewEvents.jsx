@@ -315,23 +315,31 @@ const BackButton = styled.button`
 // Helper Component for displaying a person's details
 // =====================================================================
 
-const PersonDetail = ({ title, person }) => (
-  <InfoItem>
-    <div className="label">{title}</div>
-    {person && person.name ? (
-      <div className="value">
-        {person.name}<br />
-        <small>
-          {person.roll_number && `Roll: ${person.roll_number} | `}
-          {person.mobile && `Mobile: ${person.mobile}`}
-          {person.designation && `Designation: ${person.designation}`}
-        </small>
-      </div>
-    ) : (
-      <div className="value">Not Specified</div>
-    )}
-  </InfoItem>
-);
+const PersonDetail = ({ title, person }) => {
+  const isStudent = title.toLowerCase().includes('secretary') || 
+                    title.toLowerCase().includes('convenor') || 
+                    title.toLowerCase().includes('volunteer');
+
+  return (
+    <InfoItem>
+      <div className="label">{title}</div>
+      {person && person.name ? (
+        <div className="value">
+          {person.name}<br />
+          <small>
+            {person.roll_number && `Roll: ${person.roll_number} | `}
+            {isStudent && person.year && `Year: ${person.year} | `}
+            {isStudent && person.department && `Dept: ${person.department} | `}
+            {person.mobile && `Mobile: ${person.mobile}`}
+            {person.designation && ` | Designation: ${person.designation}`}
+          </small>
+        </div>
+      ) : (
+        <div className="value">Not Specified</div>
+      )}
+    </InfoItem>
+  );
+};
 
 // =====================================================================
 // New Modal Component for Full Event Details

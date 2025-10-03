@@ -297,16 +297,16 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
     eventName: '',
     
     // Secretary Details
-    secretary1: { name: '', rollNumber: '', mobile: '', department: '' },
-    secretary2: { name: '', rollNumber: '', mobile: '', department: '' },
+    secretary1: { name: '', rollNumber: '', mobile: '', department: '', year: '' },
+    secretary2: { name: '', rollNumber: '', mobile: '', department: '', year: '' },
     
     // Convenor Details
-    convenor1: { name: '', rollNumber: '', mobile: '', department: '' },
-    convenor2: { name: '', rollNumber: '', mobile: '', department: '' },
+    convenor1: { name: '', rollNumber: '', mobile: '', department: '', year: '' },
+    convenor2: { name: '', rollNumber: '', mobile: '', department: '', year: '' },
     
     // Volunteer Details
-    volunteer1: { name: '', rollNumber: '', mobile: '', department: '' },
-    volunteer2: { name: '', rollNumber: '', mobile: '', department: '' },
+    volunteer1: { name: '', rollNumber: '', mobile: '', department: '', year: '' },
+    volunteer2: { name: '', rollNumber: '', mobile: '', department: '', year: '' },
     
     // Faculty Advisor Details
     facultyAdvisor: { name: '', designation: '', contact: '' },
@@ -362,7 +362,8 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
     rollNumber: p.rollNumber || p.roll_number || p.roll || '',
     mobile: p.mobile || p.contact || '',
     designation: p.designation || '',
-    department: p.department || ''
+    department: p.department || '',
+    year: p.year || ''
   });
 
   const handlePersonChange = (roleKey, field, value) => {
@@ -391,28 +392,34 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
     if (!formData.secretary1.name.trim()) newErrors['secretary1.name'] = 'Secretary 1 name is required';
     if (!formData.secretary1.rollNumber.trim()) newErrors['secretary1.rollNumber'] = 'Secretary 1 roll number is required';
     if (!formData.secretary1.mobile.trim()) newErrors['secretary1.mobile'] = 'Secretary 1 mobile is required';
+    if (!formData.secretary1.year) newErrors['secretary1.year'] = 'Secretary 1 year is required';
     
     if (!formData.secretary2.name.trim()) newErrors['secretary2.name'] = 'Secretary 2 name is required';
     if (!formData.secretary2.rollNumber.trim()) newErrors['secretary2.rollNumber'] = 'Secretary 2 roll number is required';
     if (!formData.secretary2.mobile.trim()) newErrors['secretary2.mobile'] = 'Secretary 2 mobile is required';
+    if (!formData.secretary2.year) newErrors['secretary2.year'] = 'Secretary 2 year is required';
     
     // Convenor validation
     if (!formData.convenor1.name.trim()) newErrors['convenor1.name'] = 'Convenor 1 name is required';
     if (!formData.convenor1.rollNumber.trim()) newErrors['convenor1.rollNumber'] = 'Convenor 1 roll number is required';
     if (!formData.convenor1.mobile.trim()) newErrors['convenor1.mobile'] = 'Convenor 1 mobile is required';
+    if (!formData.convenor1.year) newErrors['convenor1.year'] = 'Convenor 1 year is required';
     
     if (!formData.convenor2.name.trim()) newErrors['convenor2.name'] = 'Convenor 2 name is required';
     if (!formData.convenor2.rollNumber.trim()) newErrors['convenor2.rollNumber'] = 'Convenor 2 roll number is required';
     if (!formData.convenor2.mobile.trim()) newErrors['convenor2.mobile'] = 'Convenor 2 mobile is required';
+    if (!formData.convenor2.year) newErrors['convenor2.year'] = 'Convenor 2 year is required';
     
     // Volunteer validation
     if (!formData.volunteer1.name.trim()) newErrors['volunteer1.name'] = 'Volunteer 1 name is required';
     if (!formData.volunteer1.rollNumber.trim()) newErrors['volunteer1.rollNumber'] = 'Volunteer 1 roll number is required';
     if (!formData.volunteer1.mobile.trim()) newErrors['volunteer1.mobile'] = 'Volunteer 1 mobile is required';
+    if (!formData.volunteer1.year) newErrors['volunteer1.year'] = 'Volunteer 1 year is required';
     
     if (!formData.volunteer2.name.trim()) newErrors['volunteer2.name'] = 'Volunteer 2 name is required';
     if (!formData.volunteer2.rollNumber.trim()) newErrors['volunteer2.rollNumber'] = 'Volunteer 2 roll number is required';
     if (!formData.volunteer2.mobile.trim()) newErrors['volunteer2.mobile'] = 'Volunteer 2 mobile is required';
+    if (!formData.volunteer2.year) newErrors['volunteer2.year'] = 'Volunteer 2 year is required';
     
     // Faculty Advisor validation
     if (!formData.facultyAdvisor.name.trim()) newErrors['facultyAdvisor.name'] = 'Faculty advisor name is required';
@@ -533,6 +540,18 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
                   {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
                 </Select>
               </FormGroup>
+              <FormGroup>
+                <Label>Year</Label>
+                <Select
+                  value={formData.secretary1.year}
+                  onChange={(e) => handleNestedChange('secretary1', 'year', e.target.value)}
+                  className={errors['secretary1.year'] ? 'error' : ''}
+                >
+                  <option value="">Select year...</option>
+                  {[1, 2, 3, 4, 5].map(year => <option key={year} value={year}>{year}</option>)}
+                </Select>
+                {errors['secretary1.year'] && <ErrorMessage>{errors['secretary1.year']}</ErrorMessage>}
+              </FormGroup>
             </PersonCard>
 
             <PersonCard>
@@ -579,6 +598,18 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
                   <option value="">Select department...</option>
                   {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
                 </Select>
+              </FormGroup>
+              <FormGroup>
+                <Label>Year</Label>
+                <Select
+                  value={formData.secretary2.year}
+                  onChange={(e) => handleNestedChange('secretary2', 'year', e.target.value)}
+                  className={errors['secretary2.year'] ? 'error' : ''}
+                >
+                  <option value="">Select year...</option>
+                  {[1, 2, 3, 4, 5].map(year => <option key={year} value={year}>{year}</option>)}
+                </Select>
+                {errors['secretary2.year'] && <ErrorMessage>{errors['secretary2.year']}</ErrorMessage>}
               </FormGroup>
             </PersonCard>
           </PersonGrid>
@@ -631,6 +662,18 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
                   {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
                 </Select>
               </FormGroup>
+              <FormGroup>
+                <Label>Year</Label>
+                <Select
+                  value={formData.convenor1.year}
+                  onChange={(e) => handleNestedChange('convenor1', 'year', e.target.value)}
+                  className={errors['convenor1.year'] ? 'error' : ''}
+                >
+                  <option value="">Select year...</option>
+                  {[1, 2, 3, 4, 5].map(year => <option key={year} value={year}>{year}</option>)}
+                </Select>
+                {errors['convenor1.year'] && <ErrorMessage>{errors['convenor1.year']}</ErrorMessage>}
+              </FormGroup>
             </PersonCard>
 
             <PersonCard>
@@ -677,6 +720,18 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
                   <option value="">Select department...</option>
                   {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
                 </Select>
+              </FormGroup>
+              <FormGroup>
+                <Label>Year</Label>
+                <Select
+                  value={formData.convenor2.year}
+                  onChange={(e) => handleNestedChange('convenor2', 'year', e.target.value)}
+                  className={errors['convenor2.year'] ? 'error' : ''}
+                >
+                  <option value="">Select year...</option>
+                  {[1, 2, 3, 4, 5].map(year => <option key={year} value={year}>{year}</option>)}
+                </Select>
+                {errors['convenor2.year'] && <ErrorMessage>{errors['convenor2.year']}</ErrorMessage>}
               </FormGroup>
             </PersonCard>
           </PersonGrid>
@@ -729,6 +784,18 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
                   {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
                 </Select>
               </FormGroup>
+              <FormGroup>
+                <Label>Year</Label>
+                <Select
+                  value={formData.volunteer1.year}
+                  onChange={(e) => handleNestedChange('volunteer1', 'year', e.target.value)}
+                  className={errors['volunteer1.year'] ? 'error' : ''}
+                >
+                  <option value="">Select year...</option>
+                  {[1, 2, 3, 4, 5].map(year => <option key={year} value={year}>{year}</option>)}
+                </Select>
+                {errors['volunteer1.year'] && <ErrorMessage>{errors['volunteer1.year']}</ErrorMessage>}
+              </FormGroup>
             </PersonCard>
 
             <PersonCard>
@@ -775,6 +842,18 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
                   <option value="">Select department...</option>
                   {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
                 </Select>
+              </FormGroup>
+              <FormGroup>
+                <Label>Year</Label>
+                <Select
+                  value={formData.volunteer2.year}
+                  onChange={(e) => handleNestedChange('volunteer2', 'year', e.target.value)}
+                  className={errors['volunteer2.year'] ? 'error' : ''}
+                >
+                  <option value="">Select year...</option>
+                  {[1, 2, 3, 4, 5].map(year => <option key={year} value={year}>{year}</option>)}
+                </Select>
+                {errors['volunteer2.year'] && <ErrorMessage>{errors['volunteer2.year']}</ErrorMessage>}
               </FormGroup>
             </PersonCard>
           </PersonGrid>
@@ -858,12 +937,13 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
           <ButtonGroup>
             <Button type="button" onClick={() => {
               setFormData({
-                secretary1: { name: '', rollNumber: '', mobile: '', department: '' },
-                secretary2: { name: '', rollNumber: '', mobile: '', department: '' },
-                convenor1: { name: '', rollNumber: '', mobile: '', department: '' },
-                convenor2: { name: '', rollNumber: '', mobile: '', department: '' },
-                volunteer1: { name: '', rollNumber: '', mobile: '', department: '' },
-                volunteer2: { name: '', rollNumber: '', mobile: '', department: '' },
+                eventName: '',
+                secretary1: { name: '', rollNumber: '', mobile: '', department: '', year: '' },
+                secretary2: { name: '', rollNumber: '', mobile: '', department: '', year: '' },
+                convenor1: { name: '', rollNumber: '', mobile: '', department: '', year: '' },
+                convenor2: { name: '', rollNumber: '', mobile: '', department: '', year: '' },
+                volunteer1: { name: '', rollNumber: '', mobile: '', department: '', year: '' },
+                volunteer2: { name: '', rollNumber: '', mobile: '', department: '', year: '' },
                 facultyAdvisor: { name: '', designation: '', contact: '' },
                 judge: { name: '', designation: '', contact: '' }
               });
