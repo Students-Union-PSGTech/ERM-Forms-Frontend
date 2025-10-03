@@ -66,16 +66,37 @@ const EventCards = () => {
       event.association_name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const eventItems = filteredEvents.map((event) => ({
-    title: event.name,
-    about: event.about,
-    description: [
-      `Association: ${event.association_name}`,
-      `Day: ${event.form.two_days === "No" || event.form.two_days === "no" ? event.form.day : "Both days"}`,
-      `Convenors: ${event.details.convenor1.name}, ${event.details.convenor2.name}`,
-    ],
-    onClick: () => navigate(`/info-deep/${event._id}`, { state: event }),
-  }));
+  const eventItems = filteredEvents.map((event) => {
+    const association = event?.association_name || "Unknown Association";
+    const twoDays = event?.form?.two_days;
+    const dayInfo = twoDays
+      ? /yes/i.test(twoDays)
+        ? "Both days"
+        : event?.form?.day || "Single day"
+      : "Schedule TBA";
+
+    const convenorNames = [
+      event?.details?.convenor1?.name,
+      event?.details?.convenor2?.name,
+    ].filter(Boolean);
+
+    const status = event?.status || event?.form?.status || "Pending";
+
+    const updatedAt = event?.updatedAt || event?.createdAt || null;
+
+    return {
+      id: event?._id,
+      title: event?.name || "Untitled Event",
+      tagline: event?.tagline || "",
+      about: event?.about || "",
+      association,
+      dayInfo,
+      convenors: convenorNames,
+      status,
+      updatedAt,
+      onClick: () => navigate(`/info-deep/${event?._id}`, { state: event }),
+    };
+  });
 
   return (
   <div className="min-h-screen relative flex flex-col items-center justify-start bg-gradient-to-br from-accent-orange via-accent-yellow to-yellow-400 overflow-hidden">

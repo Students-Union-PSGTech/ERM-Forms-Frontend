@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { listEvents } from '../api/api';
+import { listEvents, requestEditAccess } from '../api/api'; // <-- import your API function
 import styled from 'styled-components';
 
 // =====================================================================
@@ -313,143 +313,44 @@ const BackButton = styled.button`
   }
 `;
 
-// =====================================================================
-// Helper Component for displaying a person's details
-// =====================================================================
 
-const PersonDetail = ({ title, person }) => (
-  <InfoItem>
-    <div className="label">{title}</div>
-    {person && person.name ? (
-      <div className="value">
-        {person.name}<br />
-        <small>
-          {person.roll_number && `Roll: ${person.roll_number} | `}
-          {person.mobile && `Mobile: ${person.mobile}`}
-          {person.designation && `Designation: ${person.designation}`}
-        </small>
-      </div>
-    ) : (
-      <div className="value">Not Specified</div>
-    )}
-  </InfoItem>
-);
+const OverlayBg = styled.div`
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(17,24,39,0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+`;
 
-// =====================================================================
-// New Modal Component for Full Event Details
-// =====================================================================
+const OverlayCard = styled.div`
+  background: white;
+  border-radius: 16px;
+  padding: 2rem;
+  max-width: 400px;
+  width: 100%;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+`;
 
-const EventDetailModal = ({ event, onClose }) => {
-  if (!event) return null;
+const OverlayActions = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+`;
 
-  return (
-    <ModalOverlay onClick={onClose}>
-      <ModalContent onClick={(e) => e.stopPropagation()}>
-        <CloseButton onClick={onClose}>&times;</CloseButton>
-        <EventHeader>
-          <h2>{event.name || 'Untitled Event'}</h2>
-          <p>{event.tagline || 'No tagline provided'}</p>
-        </EventHeader>
-
-        <Section>
-          <SectionTitle>About</SectionTitle>
-          <InfoItem>
-            <p className="value">{event.about || 'No description provided.'}</p>
-          </InfoItem>
-        </Section>
-        
-        <Section>
-          <SectionTitle>Contact Persons</SectionTitle>
-          <InfoGrid>
-            <PersonDetail title="Secretary 1" person={event.details?.secretary1} />
-            <PersonDetail title="Secretary 2" person={event.details?.secretary2} />
-            <PersonDetail title="Convenor 1" person={event.details?.convenor1} />
-            <PersonDetail title="Convenor 2" person={event.details?.convenor2} />
-            <PersonDetail title="Volunteer 1" person={event.details?.volunteer1} />
-            <PersonDetail title="Volunteer 2" person={event.details?.volunteer2} />
-            <PersonDetail title="Faculty Advisor" person={event.details?.faculty_advisor} />
-            <PersonDetail title="Judge" person={event.details?.judge} />
-          </InfoGrid>
-        </Section>
-
-        {event.rounds && event.rounds.length > 0 && (
-          <Section>
-            <SectionTitle>Rounds ({event.round_count || event.rounds.length})</SectionTitle>
-            {event.rounds.map((round, index) => (
-              <RoundDetails key={round._id || index}>
-                <h4>{round.name || `Round ${index + 1}`}</h4>
-                {round.description && <p>{round.description}</p>}
-                {round.rules && round.rules.length > 0 && (
-                  <>
-                    <strong>Rules:</strong>
-                    <ul>
-                      {round.rules.map((rule, rIndex) => (
-                        <li key={rIndex}>{rule}</li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-              </RoundDetails>
-            ))}
-          </Section>
-        )}
-
-        <Section>
-          <SectionTitle>Event Logistics</SectionTitle>
-          <InfoGrid>
-            <InfoItem><div className="label">Day(s)</div><div className="value">{event.form?.day}{event.form?.two_days === 'true' && ' (2 days)'}</div></InfoItem>
-            <InfoItem><div className="label">Slot</div><div className="value">{event.form?.slot}</div></InfoItem>
-            <InfoItem><div className="label">Duration</div><div className="value">{event.form?.duration}</div></InfoItem>
-            <InfoItem><div className="label">Rounds</div><div className="value">{event.form?.rounds}</div></InfoItem>
-            <InfoItem><div className="label">Participant Type</div><div className="value">{event.form?.participant_type}</div></InfoItem>
-            <InfoItem>
-              <div className="label">Participants</div>
-              <div className="value">
-                {event.form?.participant_type === 'team' 
-                  ? `Min: ${event.form?.team_min || 'N/A'}, Max: ${event.form?.team_max || 'N/A'}` 
-                  : event.form?.participants}
-              </div>
-            </InfoItem>
-            <InfoItem><div className="label">Halls Required</div><div className="value">{event.form?.halls_required}</div></InfoItem>
-            <InfoItem><div className="label">Preferred Halls</div><div className="value">{event.form?.preferred_halls || 'N/A'}</div></InfoItem>
-            <InfoItem><div className="label">Reason for Hall</div><div className="value">{event.form?.hall_reason || 'N/A'}</div></InfoItem>
-            <InfoItem><div className="label">Extension Boxes</div><div className="value">{event.form?.extension_boxes || 'N/A'}</div></InfoItem>
-            <InfoItem><div className="label">Reason for Extension</div><div className="value">{event.form?.extension_reason || 'N/A'}</div></InfoItem>
-          </InfoGrid>
-        </Section>
-
-        {event.items && event.items.length > 0 && (
-          <Section>
-            <SectionTitle>Budget & Items</SectionTitle>
-            <ItemsTable>
-              <thead>
-                <tr><th>Item Name</th><th>Quantity</th><th>Price per Unit</th><th>Total</th></tr>
-              </thead>
-              <tbody>
-                {event.items.map((item, index) => (
-                  <tr key={index}>
-                    <td>{item.item_name}</td>
-                    <td>{item.quantity}</td>
-                    <td>₹{item.price_per_unit?.toLocaleString()}</td>
-                    <td>₹{item.total_price?.toLocaleString()}</td>
-                  </tr>
-                ))}
-                <tr className="total-row">
-                  <td colSpan="3">Grand Total</td>
-                  <td>₹{event.items.reduce((sum, item) => sum + item.total_price, 0).toLocaleString()}</td>
-                </tr>
-              </tbody>
-            </ItemsTable>
-          </Section>
-        )}
-      </ModalContent>
-    </ModalOverlay>
-  );
-};
-
-// =====================================================================
-// The Main ViewEvents Component
-// =====================================================================
+const OverlayInput = styled.textarea`
+  width: 100%;
+  min-height: 60px;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  padding: 0.75rem;
+  font-size: 1rem;
+  resize: vertical;
+`;
 
 export default function EditView() {
   const [events, setEvents] = useState([]);
@@ -457,6 +358,10 @@ export default function EditView() {
   const [err, setErr] = useState('');
   const [query, setQuery] = useState('');
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [overlay, setOverlay] = useState({ open: false, event: null, status: '', msg: '' });
+  const [requestLoading, setRequestLoading] = useState(false);
+  const [requestError, setRequestError] = useState('');
+  const [refreshEvents, setRefreshEvents] = useState(0);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -467,20 +372,15 @@ export default function EditView() {
       try {
         const payload = await listEvents();
         const list = Array.isArray(payload) ? payload : payload?.data || [];
-        console.log('Fetched events:', list);
         if (active) setEvents(list);
       } catch (e) {
-        if (e?.response?.status === 401) {
-          navigate('/login');
-          return;
-        }
         if (active) setErr(e?.response?.data?.message || e?.message || 'Failed to load events');
       } finally {
         if (active) setLoading(false);
       }
     })();
     return () => { active = false; };
-  }, [navigate]);
+  }, [navigate, refreshEvents]);
 
   const filteredEvents = useMemo(() => {
     if (!query.trim()) return events;
@@ -494,44 +394,192 @@ export default function EditView() {
   if (loading) return <PageWrapper><Container>Loading events...</Container></PageWrapper>;
   if (err) return <PageWrapper><Container>Error: {err}</Container></PageWrapper>;
 
+  const handlePreviewClick = (event) => {
+    if (event.edit_req_status === 'idle' || event.edit_req_status === 'rejected') {
+      setOverlay({ open: true, event, status: 'idle', msg: '' });
+    } else if (event.edit_req_status === 'approved') {
+      navigate(`/edit/${event._id}`);
+    } else if (event.edit_req_status === 'requested') {
+      setOverlay({ open: true, event, status: 'Requested', msg: '' });
+    }
+  };
+
+  // Call this to close overlay and refresh events
+  const closeOverlayAndRefresh = () => {
+    setOverlay({ open: false, event: null, status: '', msg: '' });
+    setRefreshEvents(r => r + 1);
+  };
+
+  const handleRequestEdit = async () => {
+    setRequestLoading(true);
+    setRequestError('');
+    try {
+      await requestEditAccess({
+        eventId: overlay.event._id,
+        msg: overlay.msg
+      });
+      closeOverlayAndRefresh();
+    } catch (err) {
+      setRequestError(err?.response?.data?.message || err?.message || 'Failed to send request');
+    } finally {
+      setRequestLoading(false);
+    }
+  };
+
   return (
     <div>
-  <Container>
-    <BackButton onClick={() => navigate('/home')}>← Back</BackButton>
+      <Container>
+        <BackButton onClick={() => navigate('/home')}>← Back</BackButton>
+        <Header>
+          <h1>Edit Events</h1>
+          <p>Click on the Events to edit that particular event</p>
+        </Header>
+        <SearchBar>
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search events by name or description..."
+          />
+          <span>{filteredEvents.length} event(s) found</span>
+        </SearchBar>
+        {filteredEvents.length > 0 ? (
+          <EventsGrid>
+  {filteredEvents.map(event => (
+    <PreviewCard
+      key={event._id}
+      onClick={e => {
+        e.stopPropagation();
+        handlePreviewClick(event);
+      }}
+      style={{ position: 'relative' }}
+    >
+      {/* Status badge */}
+      {(event.edit_req_status === 'requested' || event.edit_req_status === 'rejected') && (
+        <span
+          style={{
+            position: 'absolute',
+            top: 12,
+            right: 16,
+            background: '#fbbf24',
+            color: '#92400e',
+            borderRadius: 8,
+            padding: '0.25rem 0.75rem',
+            fontWeight: 600,
+            fontSize: '0.50rem',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
+          }}
+        >
+          {event.edit_req_status === 'requested'?'Requested':'Declined'}
+        </span>
+      )}
+      {event.edit_req_status === 'approved' && (
+        <span
+          style={{
+            position: 'absolute',
+            top: 12,
+            right: 16,
+            background: '#34d399',
+            color: '#065f46',
+            borderRadius: 8,
+            padding: '0.25rem 0.75rem',
+            fontWeight: 600,
+            fontSize: '0.50rem',
+            boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
+          }}
+        >
+          Approved
+        </span>
+      )}
+      <h2>{event.name || 'Untitled Event'}</h2>
+      <p>{event.about || 'No description provided.'}</p>
+    </PreviewCard>
+  ))}
+</EventsGrid>
+        ) : (
+          <p>No events found.</p>
+        )}
+      </Container>
 
-    <Header>
-      <h1>Edit Events</h1>
-      <p>Click on the Events to edit that particular event</p>
-    </Header>
-
-    <SearchBar>
-      <input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search events by name or description..."
-      />
-      <span>{filteredEvents.length} event(s) found</span>
-    </SearchBar>
-
-    {filteredEvents.length > 0 ? (
-      <EventsGrid>
-        {filteredEvents.map(event => (
-          <PreviewCard
-            key={event._id}
-            onClick={e => {
-              e.stopPropagation();
-              navigate(`/edit/${event._id}`);
-            }}
-          >
-            <h2>{event.name || 'Untitled Event'}</h2>
-            <p>{event.about || 'No description provided.'}</p>
-          </PreviewCard>
-        ))}
-      </EventsGrid>
-    ) : (
-      <p>No events found.</p>
-    )}
-  </Container>
-</div>
+      {/* Overlay for edit request */}
+      {overlay.open && (
+        <OverlayBg>
+          <OverlayCard>
+            {overlay.status === 'idle' && (
+              <>
+                <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#b45309' }}>
+                  Request edit access to the ERM Team
+                </div>
+                <OverlayInput
+                  placeholder="Enter your request message..."
+                  value={overlay.msg}
+                  onChange={e => setOverlay(o => ({ ...o, msg: e.target.value }))}
+                  disabled={requestLoading}
+                />
+                {requestError && <div style={{ color: '#dc2626', fontSize: '0.95rem' }}>{requestError}</div>}
+                <OverlayActions>
+                  <button
+                    type="button"
+                    style={{
+                      background: '#e5e7eb',
+                      color: '#374151',
+                      border: 'none',
+                      borderRadius: 8,
+                      padding: '0.5rem 1.25rem',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => setOverlay({ open: false, event: null, status: '', msg: '' })}
+                    disabled={requestLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    style={{
+                      background: '#d97706',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: 8,
+                      padding: '0.5rem 1.25rem',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                    onClick={handleRequestEdit}
+                    disabled={requestLoading || !overlay.msg.trim()}
+                  >
+                    {requestLoading ? 'Requesting...' : 'Request'}
+                  </button>
+                </OverlayActions>
+              </>
+            )}
+            {overlay.status === 'Requested' && (
+              <>
+                <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#b45309' }}>
+                  Already requested to edit.<br />
+                  Waiting for approval from ERM team to edit the event details.
+                </div>
+                <OverlayActions>
+                  <button
+                    type="button"
+                    style={{
+                      background: '#e5e7eb',
+                      color: '#374151',
+                      border: 'none',
+                      borderRadius: 8,
+                      padding: '0.5rem 1.25rem',
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                    onClick={() => setOverlay({ open: false, event: null, status: '', msg: '' })}
+                  >
+                    Close
+                  </button>
+                </OverlayActions>
+              </>
+            )}
+          </OverlayCard>
+        </OverlayBg>
+      )}
+    </div>
   );
 }

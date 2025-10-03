@@ -534,10 +534,7 @@ export default function ViewEvents() {
         const list = Array.isArray(payload) ? payload : payload?.data || [];
         if (active) setEvents(list);
       } catch (e) {
-        if (e?.response?.status === 401) {
-          navigate('/login');
-          return;
-        }
+
         if (active) setErr(e?.response?.data?.message || e?.message || 'Failed to load events');
       } finally {
         if (active) setLoading(false);

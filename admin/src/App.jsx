@@ -9,7 +9,7 @@ import { AuthProvider } from './context/AuthContext';
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import InfoDeep from './components/info-deep';
-
+import EditAccess from './components/editaccess';
 //import './App.css'
 
 function App() {
@@ -62,6 +62,10 @@ function App() {
                 </ProtectedRoute>
               }
             />
+              <Route 
+                path='/edit-access' 
+                element={<EditAccess />} 
+              />
             {/* Redirect root to login */}
             <Route path='/' element={<Navigate to="/login" replace />}/>
           </Routes>
