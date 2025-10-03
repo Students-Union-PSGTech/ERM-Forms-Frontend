@@ -19,6 +19,7 @@ export default function Layout({ children }) {
     { to: '/add', icon: Code, label: 'Add User' },
     { to: '/items', icon: Package, label: 'Items' },
     { to: '/stats', icon: TrendingUp, label: 'Statistics' },
+    { to: '/edit-access', icon: Code, label: 'Edit Access' }
   ];
 
   const NavItem = ({ to, icon: Icon, label, mobile = false }) => (

@@ -11,6 +11,7 @@ export default function UpdateEventController() {
   const [saving, setSaving] = useState(false);
   const [availableItems, setAvailableItems] = useState([]);
   const [loadingItems, setLoadingItems] = useState(true);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   useEffect(() => {
     async function fetchEvent() {
@@ -66,7 +67,7 @@ export default function UpdateEventController() {
       const res = await updateEvent(id, formData);
       if (res.data.success) {
         alert('Event updated successfully!');
-        navigate('/my-events');
+        navigate('/edit');
       } else {
         alert('Failed to update event.');
       }
@@ -103,11 +104,93 @@ export default function UpdateEventController() {
     marginBottom: '1rem',
     fontSize: '1rem',
   };
+  const confirmOverlayStyle = {
+    position: 'fixed',
+    inset: 0,
+    background: 'rgba(17,24,39,0.75)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '1.5rem',
+    zIndex: 1000,
+  };
+
+  const confirmCardStyle = {
+    background: 'white',
+    borderRadius: 20,
+    boxShadow: '0 25px 60px -15px rgba(17, 24, 39, 0.35)',
+    padding: '2.5rem 2rem',
+    maxWidth: 520,
+    width: '100%',
+    textAlign: 'center',
+  };
+
+  const confirmButtonRowStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    marginTop: '2rem',
+  };
+
+  const confirmPrimaryButtonStyle = {
+    padding: '0.9rem 1.25rem',
+    borderRadius: 12,
+    border: 'none',
+    fontWeight: 600,
+    background: 'linear-gradient(135deg, #f97316 0%, #f59e0b 100%)',
+    color: 'white',
+    cursor: 'pointer',
+    fontSize: '1rem',
+  };
+
+  const confirmSecondaryButtonStyle = {
+    padding: '0.85rem 1.25rem',
+    borderRadius: 12,
+    border: '1px solid #d1d5db',
+    fontWeight: 600,
+    background: 'white',
+    color: '#374151',
+    cursor: 'pointer',
+    fontSize: '0.95rem',
+  };
+
+  const radioGroupStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '0.75rem',
+    marginBottom: '1.25rem',
+  };
+
+  const radioGroupInlineStyle = {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: '1rem',
+    marginBottom: '1.25rem',
+  };
+
+  const radioOptionStyle = (selected) => ({
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.75rem',
+    padding: '0.85rem 1rem',
+    borderRadius: 10,
+    border: selected ? '2px solid #f97316' : '1px solid #e5e7eb',
+    background: selected ? 'rgba(249, 115, 22, 0.08)' : '#f9fafb',
+    color: selected ? '#b45309' : '#374151',
+    fontWeight: selected ? 600 : 500,
+    transition: 'all 0.2s ease',
+  });
 
   return (
     <div style={{ maxWidth: 900, margin: '0 auto', padding: '2rem' }}>
       <h2 style={{ textAlign: 'center', marginBottom: '2rem', color: '#d97706' }}>Edit Event</h2>
-      <form onSubmit={e => { e.preventDefault(); handleUpdate(); }}>
+      <form
+        onSubmit={e => {
+          e.preventDefault();
+          if (saving) return;
+          setShowConfirm(true);
+        }}
+      >
         {/* Event Data Section */}
         <div style={cardStyle}>
           <h3 style={{ color: '#b45309', marginBottom: '1rem' }}>Event Information</h3>
@@ -164,8 +247,17 @@ export default function UpdateEventController() {
             role !== '_id' ? (
               <div key={role} style={{ marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid #eee' }}>
                 <strong style={{ color: '#d97706', fontSize: '1.1rem' }}>{role.replace(/_/g, ' ')}</strong>
-                {['name','roll_number','mobile','designation'].map(field => (
-                  ((field !== 'designation') || (role === 'faculty_advisor') || (role === 'judge')) ? (
+                {['name','roll_number','mobile','designation'].map(field => {
+                  const isDesignationField = field === 'designation';
+                  const allowDesignation = role === 'faculty_advisor' || role === 'judge';
+                  const isRollNumberField = field === 'roll_number';
+                  const disallowRollNumber = role === 'faculty_advisor' || role === 'judge';
+
+                  if ((isDesignationField && !allowDesignation) || (isRollNumberField && disallowRollNumber)) {
+                    return null;
+                  }
+
+                  return (
                     <div key={field}>
                       <label style={labelStyle}>{field.replace(/_/g, ' ')}:</label>
                       <input
@@ -175,8 +267,8 @@ export default function UpdateEventController() {
                         style={inputStyle}
                       />
                     </div>
-                  ) : null
-                ))}
+                  );
+                })}
               </div>
             ) : null
           ))}
@@ -273,7 +365,7 @@ export default function UpdateEventController() {
                   <input
                     type="radio"
                     name="day"
-                    value="Day 1"
+                    value="day1"
                     checked={formData.form.day === 'day1'}
                     onChange={e =>
                       setFormData(prev => ({
@@ -288,7 +380,7 @@ export default function UpdateEventController() {
                   <input
                     type="radio"
                     name="day"
-                    value="Day 2"
+                    value="day2"
                     checked={formData.form.day === 'day2'}
                     onChange={e =>
                       setFormData(prev => ({
@@ -303,7 +395,7 @@ export default function UpdateEventController() {
                   <input
                     type="radio"
                     name="day"
-                    value="Two Days"
+                    value="twoDays"
                     checked={formData.form.day === 'twoDays'}
                     onChange={e =>
                       setFormData(prev => ({
@@ -316,17 +408,73 @@ export default function UpdateEventController() {
                 </label>
               </div>
               <label style={labelStyle}>Rounds</label>
-              <input type="text" value={formData.form.rounds || ''} onChange={e => setFormData(prev => ({ ...prev, form: { ...prev.form, rounds: e.target.value } }))} style={inputStyle} />
+              <input type="number" value={formData.form.rounds || ''} onChange={e => setFormData(prev => ({ ...prev, form: { ...prev.form, rounds: e.target.value } }))} style={inputStyle} />
               <label style={labelStyle}>Participants</label>
-              <input type="text" value={formData.form.participants || ''} onChange={e => setFormData(prev => ({ ...prev, form: { ...prev.form, participants: e.target.value } }))} style={inputStyle} />
+              <input type="number" value={formData.form.participants || ''} onChange={e => setFormData(prev => ({ ...prev, form: { ...prev.form, participants: e.target.value } }))} style={inputStyle} />
               <label style={labelStyle}>Duration</label>
               <input type="text" value={formData.form.duration || ''} onChange={e => setFormData(prev => ({ ...prev, form: { ...prev.form, duration: e.target.value } }))} style={inputStyle} />
               <label style={labelStyle}>Participant Type</label>
-              <input type="text" value={formData.form.participant_type || ''} onChange={e => setFormData(prev => ({ ...prev, form: { ...prev.form, participant_type: e.target.value } }))} style={inputStyle} />
-              <label style={labelStyle}>Team Min</label>
-              <input type="text" value={formData.form.team_min || ''} onChange={e => setFormData(prev => ({ ...prev, form: { ...prev.form, team_min: e.target.value } }))} style={inputStyle} />
-              <label style={labelStyle}>Team Max</label>
-              <input type="text" value={formData.form.team_max || ''} onChange={e => setFormData(prev => ({ ...prev, form: { ...prev.form, team_max: e.target.value } }))} style={inputStyle} />
+              <div style={radioGroupInlineStyle}>
+                {[
+                  { value: 'individual', label: 'Individual' },
+                  { value: 'team', label: 'Team' },
+                ].map(({ value, label }) => {
+                  const selected = formData.form.participant_type === value;
+                  return (
+                    <label key={value} style={radioOptionStyle(selected)}>
+                      <input
+                        type="radio"
+                        name="participant_type"
+                        value={value}
+                        checked={selected}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            form: { ...prev.form, participant_type: e.target.value },
+                          }))
+                        }
+                        style={{ accentColor: '#f97316' }}
+                      />
+                      {label}
+                    </label>
+                  );
+                })}
+              </div>
+
+              {formData.form.participant_type === 'team' && (
+                <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+                  <div style={{ flex: '1 1 200px' }}>
+                    <label style={labelStyle}>Team Min</label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={formData.form.team_min || ''}
+                      onChange={e =>
+                        setFormData(prev => ({
+                          ...prev,
+                          form: { ...prev.form, team_min: e.target.value },
+                        }))
+                      }
+                      style={inputStyle}
+                    />
+                  </div>
+                  <div style={{ flex: '1 1 200px' }}>
+                    <label style={labelStyle}>Team Max</label>
+                    <input
+                      type="number"
+                      min={formData.form.team_min || 1}
+                      value={formData.form.team_max || ''}
+                      onChange={e =>
+                        setFormData(prev => ({
+                          ...prev,
+                          form: { ...prev.form, team_max: e.target.value },
+                        }))
+                      }
+                      style={inputStyle}
+                    />
+                  </div>
+                </div>
+              )}
               <label style={labelStyle}>Halls Required</label>
               <input type="text" value={formData.form.halls_required || ''} onChange={e => setFormData(prev => ({ ...prev, form: { ...prev.form, halls_required: e.target.value } }))} style={inputStyle} />
               <label style={labelStyle}>Preferred Halls</label>
@@ -334,7 +482,33 @@ export default function UpdateEventController() {
               <label style={labelStyle}>Reason for Hall</label>
               <input type="text" value={formData.form.hall_reason || ''} onChange={e => setFormData(prev => ({ ...prev, form: { ...prev.form, hall_reason: e.target.value } }))} style={inputStyle} />
               <label style={labelStyle}>Slot</label>
-              <input type="text" value={formData.form.slot || ''} onChange={e => setFormData(prev => ({ ...prev, form: { ...prev.form, slot: e.target.value } }))} style={inputStyle} />
+              <div style={radioGroupStyle}>
+                {[
+                  { value: 'slot1', label: 'Slot 1 (9:30 AM - 12:30 PM)' },
+                  { value: 'slot2', label: 'Slot 2 (1:30 PM - 4:30 PM)' },
+                  { value: 'fullDay', label: 'Full Day' },
+                ].map(({ value, label }) => {
+                  const selected = formData.form.slot === value;
+                  return (
+                    <label key={value} style={radioOptionStyle(selected)}>
+                      <input
+                        type="radio"
+                        name="slot"
+                        value={value}
+                        checked={selected}
+                        onChange={(e) =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            form: { ...prev.form, slot: e.target.value },
+                          }))
+                        }
+                        style={{ accentColor: '#f97316' }}
+                      />
+                      {label}
+                    </label>
+                  );
+                })}
+              </div>
               <label style={labelStyle}>Extension Boxes</label>
               <input type="text" value={formData.form.extension_boxes || ''} onChange={e => setFormData(prev => ({ ...prev, form: { ...prev.form, extension_boxes: e.target.value } }))} style={inputStyle} />
               <label style={labelStyle}>Reason for Extension</label>
@@ -347,6 +521,48 @@ export default function UpdateEventController() {
           {saving ? 'Saving...' : 'Save Changes'}
         </button>
       </form>
+
+      {showConfirm && (
+        <div style={confirmOverlayStyle}>
+          <div style={confirmCardStyle}>
+            <div style={{ marginBottom: '1.5rem', color: '#b45309', fontWeight: 700, fontSize: '1.15rem' }}>
+              Final Confirmation
+            </div>
+            <p style={{ color: '#374151', lineHeight: 1.6, fontSize: '1rem', marginBottom: '0.5rem' }}>
+              Check all the changes and submit.
+            </p>
+            <p style={{ color: '#6b7280', fontSize: '0.95rem' }}>
+              If you need to edit again, you'll need to wait until the ERM team approves your access.
+            </p>
+
+            <div style={confirmButtonRowStyle}>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowConfirm(false);
+                  handleUpdate();
+                }}
+                style={{
+                  ...confirmPrimaryButtonStyle,
+                  opacity: saving ? 0.7 : 1,
+                  cursor: saving ? 'not-allowed' : 'pointer',
+                }}
+                disabled={saving}
+              >
+                {saving ? 'Submitting...' : 'Confirm & Submit'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowConfirm(false)}
+                style={confirmSecondaryButtonStyle}
+                disabled={saving}
+              >
+                Review Again
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

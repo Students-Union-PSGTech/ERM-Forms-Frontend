@@ -313,143 +313,6 @@ const BackButton = styled.button`
   }
 `;
 
-// =====================================================================
-// Helper Component for displaying a person's details
-// =====================================================================
-
-const PersonDetail = ({ title, person }) => (
-  <InfoItem>
-    <div className="label">{title}</div>
-    {person && person.name ? (
-      <div className="value">
-        {person.name}<br />
-        <small>
-          {person.roll_number && `Roll: ${person.roll_number} | `}
-          {person.mobile && `Mobile: ${person.mobile}`}
-          {person.designation && `Designation: ${person.designation}`}
-        </small>
-      </div>
-    ) : (
-      <div className="value">Not Specified</div>
-    )}
-  </InfoItem>
-);
-
-// =====================================================================
-// New Modal Component for Full Event Details
-// =====================================================================
-
-const EventDetailModal = ({ event, onClose }) => {
-  if (!event) return null;
-
-  return (
-    <ModalOverlay onClick={onClose}>
-      <ModalContent onClick={(e) => e.stopPropagation()}>
-        <CloseButton onClick={onClose}>&times;</CloseButton>
-        <EventHeader>
-          <h2>{event.name || 'Untitled Event'}</h2>
-          <p>{event.tagline || 'No tagline provided'}</p>
-        </EventHeader>
-
-        <Section>
-          <SectionTitle>About</SectionTitle>
-          <InfoItem>
-            <p className="value">{event.about || 'No description provided.'}</p>
-          </InfoItem>
-        </Section>
-        
-        <Section>
-          <SectionTitle>Contact Persons</SectionTitle>
-          <InfoGrid>
-            <PersonDetail title="Secretary 1" person={event.details?.secretary1} />
-            <PersonDetail title="Secretary 2" person={event.details?.secretary2} />
-            <PersonDetail title="Convenor 1" person={event.details?.convenor1} />
-            <PersonDetail title="Convenor 2" person={event.details?.convenor2} />
-            <PersonDetail title="Volunteer 1" person={event.details?.volunteer1} />
-            <PersonDetail title="Volunteer 2" person={event.details?.volunteer2} />
-            <PersonDetail title="Faculty Advisor" person={event.details?.faculty_advisor} />
-            <PersonDetail title="Judge" person={event.details?.judge} />
-          </InfoGrid>
-        </Section>
-
-        {event.rounds && event.rounds.length > 0 && (
-          <Section>
-            <SectionTitle>Rounds ({event.round_count || event.rounds.length})</SectionTitle>
-            {event.rounds.map((round, index) => (
-              <RoundDetails key={round._id || index}>
-                <h4>{round.name || `Round ${index + 1}`}</h4>
-                {round.description && <p>{round.description}</p>}
-                {round.rules && round.rules.length > 0 && (
-                  <>
-                    <strong>Rules:</strong>
-                    <ul>
-                      {round.rules.map((rule, rIndex) => (
-                        <li key={rIndex}>{rule}</li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-              </RoundDetails>
-            ))}
-          </Section>
-        )}
-
-        <Section>
-          <SectionTitle>Event Logistics</SectionTitle>
-          <InfoGrid>
-            <InfoItem><div className="label">Day(s)</div><div className="value">{event.form?.day}{event.form?.two_days === 'true' && ' (2 days)'}</div></InfoItem>
-            <InfoItem><div className="label">Slot</div><div className="value">{event.form?.slot}</div></InfoItem>
-            <InfoItem><div className="label">Duration</div><div className="value">{event.form?.duration}</div></InfoItem>
-            <InfoItem><div className="label">Rounds</div><div className="value">{event.form?.rounds}</div></InfoItem>
-            <InfoItem><div className="label">Participant Type</div><div className="value">{event.form?.participant_type}</div></InfoItem>
-            <InfoItem>
-              <div className="label">Participants</div>
-              <div className="value">
-                {event.form?.participant_type === 'team' 
-                  ? `Min: ${event.form?.team_min || 'N/A'}, Max: ${event.form?.team_max || 'N/A'}` 
-                  : event.form?.participants}
-              </div>
-            </InfoItem>
-            <InfoItem><div className="label">Halls Required</div><div className="value">{event.form?.halls_required}</div></InfoItem>
-            <InfoItem><div className="label">Preferred Halls</div><div className="value">{event.form?.preferred_halls || 'N/A'}</div></InfoItem>
-            <InfoItem><div className="label">Reason for Hall</div><div className="value">{event.form?.hall_reason || 'N/A'}</div></InfoItem>
-            <InfoItem><div className="label">Extension Boxes</div><div className="value">{event.form?.extension_boxes || 'N/A'}</div></InfoItem>
-            <InfoItem><div className="label">Reason for Extension</div><div className="value">{event.form?.extension_reason || 'N/A'}</div></InfoItem>
-          </InfoGrid>
-        </Section>
-
-        {event.items && event.items.length > 0 && (
-          <Section>
-            <SectionTitle>Budget & Items</SectionTitle>
-            <ItemsTable>
-              <thead>
-                <tr><th>Item Name</th><th>Quantity</th><th>Price per Unit</th><th>Total</th></tr>
-              </thead>
-              <tbody>
-                {event.items.map((item, index) => (
-                  <tr key={index}>
-                    <td>{item.item_name}</td>
-                    <td>{item.quantity}</td>
-                    <td>₹{item.price_per_unit?.toLocaleString()}</td>
-                    <td>₹{item.total_price?.toLocaleString()}</td>
-                  </tr>
-                ))}
-                <tr className="total-row">
-                  <td colSpan="3">Grand Total</td>
-                  <td>₹{event.items.reduce((sum, item) => sum + item.total_price, 0).toLocaleString()}</td>
-                </tr>
-              </tbody>
-            </ItemsTable>
-          </Section>
-        )}
-      </ModalContent>
-    </ModalOverlay>
-  );
-};
-
-// =====================================================================
-// The Main ViewEvents Component
-// =====================================================================
 
 const OverlayBg = styled.div`
   position: fixed;
@@ -532,7 +395,7 @@ export default function EditView() {
   if (err) return <PageWrapper><Container>Error: {err}</Container></PageWrapper>;
 
   const handlePreviewClick = (event) => {
-    if (event.edit_req_status === 'idle') {
+    if (event.edit_req_status === 'idle' || event.edit_req_status === 'rejected') {
       setOverlay({ open: true, event, status: 'idle', msg: '' });
     } else if (event.edit_req_status === 'approved') {
       navigate(`/edit/${event._id}`);
@@ -591,7 +454,7 @@ export default function EditView() {
       style={{ position: 'relative' }}
     >
       {/* Status badge */}
-      {event.edit_req_status === 'requested' && (
+      {(event.edit_req_status === 'requested' || event.edit_req_status === 'rejected') && (
         <span
           style={{
             position: 'absolute',
@@ -606,7 +469,7 @@ export default function EditView() {
             boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
           }}
         >
-          Requested
+          {event.edit_req_status === 'requested'?'Requested':'Declined'}
         </span>
       )}
       {event.edit_req_status === 'approved' && (

@@ -52,6 +52,11 @@ export const adminAPI = {
 
   // Event PDF
   getEventPDF: (eventId) => API.get(`/api/admin/events/pdf/${eventId}`, { responseType: 'blob' }),
+  getRequestedEvents: () =>
+    API.get('/api/admin/requested-events'),
+
+  giveEditAccess: (id, access) =>
+    API.post(`/api/admin/give-edit-access/${id}`, { access }),
 };
 
 export default API;

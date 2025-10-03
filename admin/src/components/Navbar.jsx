@@ -8,7 +8,8 @@ const navItems = [
     { to: '/cards', icon: BarChart3, label: 'Dashboard' },
     { to: '/add', icon: Code, label: 'Add User' },
     { to: '/teams', icon: Users, label: 'Teams' },
-    { to: '/logs', icon: Activity, label: 'Server Logs' }
+    { to: '/logs', icon: Activity, label: 'Server Logs' },
+    { to: '/edit-access', icon: Code, label: 'Edit Access' }
 ];
 
 const Navbar = () => {
