@@ -217,7 +217,7 @@ const EditAccess = () => {
                 const tagline = req.tagline;
                 const eventName = req?.event_id?.name || req?.eventName || req?.name || 'Untitled event';
                 const associationName = req.association_name;
-
+                const type = (req.edit_req_status=='requested')?'Edit Event Request':'Edit Annexure Request';
                 return (
                   <div
                     key={req._id}
@@ -232,29 +232,29 @@ const EditAccess = () => {
                             <p className="text-sm text-gray-500">Club: {associationName}</p>
                           )}
                         </div>
-                          <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
+                        {/* Display type here */}
+                        <div className="flex items-center gap-2 text-xs font-semibold text-accent-orange">
+                          <span>Type:</span>
+                          <span>{type}</span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
                           <div className="flex items-center gap-2">
                             <span className="font-semibold">Tagline</span>
                             <span>{tagline}</span>
                           </div>
-                          
                         </div>
                         <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600">
                           <div className="flex items-center gap-2">
                             <span className="font-semibold">Request Message:</span>
                             <span>{requesterName}</span>
                           </div>
-                          
                         </div>
-                         
-
                         <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-500">
                           <span className={`inline-flex items-center rounded-full px-3 py-1 font-medium ${classes}`}>
                             {label}
                           </span>
                         </div>
                       </div>
-
                       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <button
                           onClick={() => handleViewEvent(req._id,req)}
@@ -262,7 +262,6 @@ const EditAccess = () => {
                         >
                           <Eye className="h-4 w-4" /> View Event
                         </button>
-
                         {label === 'Pending' && (
                           <div className="flex gap-2">
                             <button

@@ -42,6 +42,7 @@ function Stats() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [exporting, setExporting] = useState(false);
 
   // Fetch stats on mount
   useEffect(() => {
@@ -65,6 +66,54 @@ function Stats() {
     }
   };
 
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+      const response = await adminAPI.exportItemStats();
+      const contentType = response.headers['content-type'];
+
+      if (contentType && contentType.includes('application/json')) {
+        const text = await response.data.text();
+        const payload = JSON.parse(text || '{}');
+        throw new Error(payload.message || 'Export failed');
+      }
+
+      const blob = new Blob([response.data], {
+        type:
+          contentType || 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const timestamp = new Date().toISOString().split('T')[0];
+      const contentDisposition = response.headers['content-disposition'];
+      let fileName = `item-stats.xlsx`;
+
+      if (contentDisposition) {
+        const fileNameMatch = contentDisposition.match(/filename\*=UTF-8''([^;\n]*)/);
+        if (fileNameMatch && fileNameMatch[1]) {
+          fileName = decodeURIComponent(fileNameMatch[1]);
+        } else {
+          const simpleFileNameMatch = contentDisposition.match(/filename="?([^";]+)"?/);
+          if (simpleFileNameMatch && simpleFileNameMatch[1]) {
+            fileName = simpleFileNameMatch[1];
+          }
+        }
+      }
+
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to export item stats:', err);
+      alert(err.response?.data?.message || err.message || 'Failed to download Excel');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen relative bg-gradient-to-br from-accent-orange via-accent-yellow to-yellow-400 overflow-hidden">
       {/* Particles Background */}
@@ -75,12 +124,23 @@ function Stats() {
         className="absolute inset-0 z-0"
       />
 
-      <div className="elative z-10 w-full max-w-6xl mx-auto px-4 pt-24 sm:pt-8">
+      <div className="relative z-10 w-full max-w-6xl mx-auto px-4 pt-24 sm:pt-8">
         <div className="text-center mb-6 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 flex items-center justify-center gap-2 sm:gap-3">
             Item Statistics
           </h1>
-       </div>
+        </div>
+
+        <div className="flex justify-center sm:justify-end mb-6">
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={exporting}
+            className="inline-flex items-center gap-2 bg-white/90 text-accent-orange font-semibold px-4 sm:px-6 py-2 rounded-full shadow-lg border border-white/40 hover:bg-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {exporting ? 'Preparing...' : 'Download as Excel'}
+          </button>
+        </div>
 
         {loading && (
           <div className="text-center py-8 sm:py-12">

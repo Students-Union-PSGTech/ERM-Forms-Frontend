@@ -417,12 +417,17 @@ export default function EditView() {
   if (err) return <PageWrapper><Container>Error: {err}</Container></PageWrapper>;
 
   const handlePreviewClick = (event) => {
+    // Check annexure existence and length
+    const annexureLength = Array.isArray(event.annexure) ? event.annexure.length : 0;
     if (event.edit_req_status === 'idle' || event.edit_req_status === 'rejected') {
-      setOverlay({ open: true, event, status: 'idle', msg: '', requestType: 'event' });
-    } else if (event.edit_req_status === 'approved') {
+      // If no annexure, only show event request and add annexure button
+      setOverlay({ open: true, event, status: 'idle', msg: '', requestType: 'event', annexureLength });
+    } else if (event.edit_req_status === 'approve-annexure') {
+      navigate(`/annexure/${event._id}`);
+    }else if (event.edit_req_status === 'approved') {
       navigate(`/edit/${event._id}`);
-    } else if (event.edit_req_status === 'requested') {
-      setOverlay({ open: true, event, status: 'Requested', msg: '', requestType: 'event' });
+    } else if (event.edit_req_status === 'requested' || event.edit_req_status === 'request-annexure') {
+      setOverlay({ open: true, event, status: 'Requested', msg: '', requestType: 'event', annexureLength });
     }
   };
 
@@ -436,6 +441,7 @@ export default function EditView() {
     setRequestLoading(true);
     setRequestError('');
     try {
+      console.log('Requesting edit access with:', { overlay });
       await requestEditAccess({
         eventId: overlay.event._id,
         msg: overlay.msg,
@@ -477,7 +483,7 @@ export default function EditView() {
       style={{ position: 'relative' }}
     >
       {/* Status badge */}
-      {(event.edit_req_status === 'requested' || event.edit_req_status === 'rejected') && (
+      {(event.edit_req_status === 'requested' || event.edit_req_status === 'rejected' || event.edit_req_status === 'request-annexure') && (
         <span
           style={{
             position: 'absolute',
@@ -492,10 +498,10 @@ export default function EditView() {
             boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
           }}
         >
-          {event.edit_req_status === 'requested'?'Requested':'Declined'}
+          {(event.edit_req_status === 'requested' || event.edit_req_status === 'request-annexure' )?'Requested':'Declined'}
         </span>
       )}
-      {event.edit_req_status === 'approved' && (
+      {(event.edit_req_status === 'approved' ||event.edit_req_status === 'approve-annexure'  )&& (
         <span
           style={{
             position: 'absolute',
@@ -532,90 +538,205 @@ export default function EditView() {
                 <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#b45309' }}>
                   Request edit access to the ERM Team
                 </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#4b5563', fontSize: '0.95rem' }}>
-                    Request Type
-                  </label>
-                  <DropdownSelect
-                    value={overlay.requestType}
-                    onChange={e => setOverlay(o => ({ ...o, requestType: e.target.value }))}
-                    disabled={requestLoading}
-                  >
-                    <option value="event">Request to edit event</option>
-                    <option value="annexure">Request to edit Annexure</option>
-                  </DropdownSelect>
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#4b5563', fontSize: '0.95rem' }}>
-                    Message
-                  </label>
-                  <OverlayInput
-                    placeholder="Enter your request message..."
-                    value={overlay.msg}
-                    onChange={e => setOverlay(o => ({ ...o, msg: e.target.value }))}
-                    disabled={requestLoading}
-                  />
-                </div>
-                {requestError && <div style={{ color: '#dc2626', fontSize: '0.95rem' }}>{requestError}</div>}
-                <OverlayActions>
-                  <button
-                    type="button"
-                    style={{
-                      background: '#e5e7eb',
-                      color: '#374151',
-                      border: 'none',
-                      borderRadius: 8,
-                      padding: '0.5rem 1.25rem',
-                      fontWeight: 600,
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => setOverlay({ open: false, event: null, status: '', msg: '', requestType: 'event' })}
-                    disabled={requestLoading}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="button"
-                    style={{
-                      background: '#d97706',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: 8,
-                      padding: '0.5rem 1.25rem',
-                      fontWeight: 600,
-                      cursor: 'pointer'
-                    }}
-                    onClick={handleRequestEdit}
-                    disabled={requestLoading || !overlay.msg.trim()}
-                  >
-                    {requestLoading ? 'Requesting...' : 'Request'}
-                  </button>
-                </OverlayActions>
+                {/* If annexure is empty, only show event request and add annexure button */}
+                {overlay.annexureLength === 0 ? (
+                  <>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#4b5563', fontSize: '0.95rem' }}>
+                        Request Type
+                      </label>
+                      <DropdownSelect value="event" disabled>
+                        <option value="event">Request to edit event</option>
+                      </DropdownSelect>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#4b5563', fontSize: '0.95rem' }}>
+                        Message
+                      </label>
+                      <OverlayInput
+                        placeholder="Enter your request message..."
+                        value={overlay.msg}
+                        onChange={e => setOverlay(o => ({ ...o, msg: e.target.value }))}
+                        disabled={requestLoading}
+                      />
+                    </div>
+                    {requestError && <div style={{ color: '#dc2626', fontSize: '0.95rem' }}>{requestError}</div>}
+                    <OverlayActions>
+                      <button
+                        type="button"
+                        style={{
+                          background: '#e5e7eb',
+                          color: '#374151',
+                          border: 'none',
+                          borderRadius: 8,
+                          padding: '0.5rem 1.25rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => setOverlay({ open: false, event: null, status: '', msg: '', requestType: 'event' })}
+                        disabled={requestLoading}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        style={{
+                          background: '#d97706',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 8,
+                          padding: '0.5rem 1.25rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                        onClick={handleRequestEdit}
+                        disabled={requestLoading || !overlay.msg.trim()}
+                      >
+                        {requestLoading ? 'Requesting...' : 'Request'}
+                      </button>
+                      <button
+                        type="button"
+                        style={{
+                          background: '#2563eb',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 8,
+                          padding: '0.5rem 1.25rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => navigate(`/annexure/${overlay.event._id}`)}
+                        disabled={requestLoading}
+                      >
+                        Add Annexure
+                      </button>
+                    </OverlayActions>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#4b5563', fontSize: '0.95rem' }}>
+                        Request Type
+                      </label>
+                      <DropdownSelect
+                        value={overlay.requestType}
+                        onChange={e => setOverlay(o => ({ ...o, requestType: e.target.value }))}
+                        disabled={requestLoading}
+                      >
+                        <option value="event">Request to edit event</option>
+                        <option value="annexure">Request to edit Annexure</option>
+                      </DropdownSelect>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#4b5563', fontSize: '0.95rem' }}>
+                        Message
+                      </label>
+                      <OverlayInput
+                        placeholder="Enter your request message..."
+                        value={overlay.msg}
+                        onChange={e => setOverlay(o => ({ ...o, msg: e.target.value }))}
+                        disabled={requestLoading}
+                      />
+                    </div>
+                    {requestError && <div style={{ color: '#dc2626', fontSize: '0.95rem' }}>{requestError}</div>}
+                    <OverlayActions>
+                      <button
+                        type="button"
+                        style={{
+                          background: '#e5e7eb',
+                          color: '#374151',
+                          border: 'none',
+                          borderRadius: 8,
+                          padding: '0.5rem 1.25rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => setOverlay({ open: false, event: null, status: '', msg: '', requestType: 'event' })}
+                        disabled={requestLoading}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        style={{
+                          background: '#d97706',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 8,
+                          padding: '0.5rem 1.25rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                        onClick={handleRequestEdit}
+                        disabled={requestLoading || !overlay.msg.trim()}
+                      >
+                        {requestLoading ? 'Requesting...' : 'Request'}
+                      </button>
+                    </OverlayActions>
+                  </>
+                )}
               </>
             )}
+            
             {overlay.status === 'Requested' && (
               <>
                 <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#b45309' }}>
                   Already requested to edit.<br />
                   Waiting for approval from ERM team to edit the event details.
                 </div>
-                <OverlayActions>
-                  <button
-                    type="button"
-                    style={{
-                      background: '#e5e7eb',
-                      color: '#374151',
-                      border: 'none',
-                      borderRadius: 8,
-                      padding: '0.5rem 1.25rem',
-                      fontWeight: 600,
-                      cursor: 'pointer'
-                    }}
-                    onClick={() => setOverlay({ open: false, event: null, status: '', msg: '', requestType: 'event' })}
-                  >
-                    Close
-                  </button>
-                </OverlayActions>
+                {overlay.annexureLength === 0 ? (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+                    <button
+                      type="button"
+                      style={{
+                        background: '#e5e7eb',
+                        color: '#374151',
+                        border: 'none',
+                        borderRadius: 8,
+                        padding: '0.5rem 1.25rem',
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => setOverlay({ open: false, event: null, status: '', msg: '', requestType: 'event' })}
+                    >
+                      Close
+                    </button>
+                    <button
+                      type="button"
+                      style={{
+                        background: '#2563eb',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: 8,
+                        padding: '0.5rem 1.25rem',
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                      onClick={() => navigate(`/annexure/${overlay.event._id}`)}
+                      disabled={requestLoading}
+                    >
+                      Add Annexure
+                    </button>
+                  </div>
+                ) : (
+                  <OverlayActions>
+                    <button
+                      type="button"
+                      style={{
+                        background: '#e5e7eb',
+                        color: '#374151',
+                        border: 'none',
+                        borderRadius: 8,
+                        padding: '0.5rem 1.25rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        marginLeft: 'auto'
+                      }}
+                      onClick={() => setOverlay({ open: false, event: null, status: '', msg: '', requestType: 'event' })}
+                    >
+                      Close
+                    </button>
+                  </OverlayActions> )}
               </>
             )}
           </OverlayCard>

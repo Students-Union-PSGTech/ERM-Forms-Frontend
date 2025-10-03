@@ -49,6 +49,7 @@ export const adminAPI = {
 
   // Stats
   getItemStats: () => API.get('/api/admin/stats/items'),
+  exportItemStats: () => API.get('/api/admin/stats/items/export', { responseType: 'blob' }),
 
   // Event PDF
   getEventPDF: (eventId) => API.get(`/api/admin/events/pdf/${eventId}`, { responseType: 'blob' }),

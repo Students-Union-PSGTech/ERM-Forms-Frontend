@@ -2,7 +2,7 @@ import React from "react";
 import "../components_css/HomePage.css";
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-
+import intramsLogo from '../assets/intrams_logo.jpg';
 const HomePage = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
@@ -14,6 +14,9 @@ const HomePage = () => {
 
   return (
     <div className="home-container">
+      <div className="logo-container">
+        <img src={intramsLogo} alt="INTRAMS 2025" className="intrams-logo" />
+      </div>
       <button className="logout-button" onClick={handleLogout}>Logout</button>
       {/* Enhanced Background Elements */}
       <div className="particles">
