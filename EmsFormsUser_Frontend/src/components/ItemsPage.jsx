@@ -312,11 +312,10 @@ export default function ItemsPage({ formData: globalFormData, setFormData: setGl
       const list = Array.isArray(prev) ? [...prev] : [];
       const current = { ...(list[index] || {}) };
       if (field === 'item_name') {
-        const selected = availableItems.find(item => item._id === value);
-        current.item_name = selected?.item_name || '';
+        const selected = availableItems.find(item => item.item_name === value);
+        current.item_name = value || '';
         current.price_per_unit = selected?.price_per_unit || '';
-        console.log(selected);
-        current.item_id = value;
+        current.item_id = selected?._id || '';
       }
       if (field === 'quantity') current.quantity = toNumber(value);
       list[index] = current;
@@ -382,17 +381,18 @@ export default function ItemsPage({ formData: globalFormData, setFormData: setGl
               {items.map((item, i) => (
                 <ItemRow key={i}>
                   <Td>
-                    <select
-                      value={item.item_id || ''}
+                    <Input
+                      list={`items-datalist-${i}`}
+                      value={item.item_name || ''}
                       onChange={e => handleItemChange(i, 'item_name', e.target.value)}
-                      style={{ width: '100%', padding: '0.75rem', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fafafa', fontSize: '0.9rem' }}
+                      placeholder="Type or select an item..."
                       disabled={loadingItems}
-                    >
-                      <option value="">Select item...</option>
+                    />
+                    <datalist id={`items-datalist-${i}`}>
                       {availableItems.map(opt => (
-                        <option key={opt._id} value={opt._id}>{opt.item_name}</option>
+                        <option key={opt._id} value={opt.item_name} />
                       ))}
-                    </select>
+                    </datalist>
                   </Td>
                   <Td>
                     <Input

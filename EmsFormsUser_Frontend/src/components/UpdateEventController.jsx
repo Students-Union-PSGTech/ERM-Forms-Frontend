@@ -372,38 +372,35 @@ export default function UpdateEventController() {
           {formData.items && formData.items.map((item, idx) => (
             <div key={idx} style={{ marginBottom: '1.5rem', padding: '1.5rem', border: '1px solid #eee', borderRadius: '12px', background: '#fdfdfd', position: 'relative' }}>
               <label style={labelStyle}>Item Name</label>
-              <select
-                value={item.item_id || item._id || ''}
+              <input
+                list={`items-datalist-${idx}`}
+                value={item.item_name || ''}
                 onChange={e => {
-                  const selected = availableItems.find(opt => opt._id === e.target.value);
+                  const itemName = e.target.value;
+                  const selected = availableItems.find(opt => opt.item_name === itemName);
                   setFormData(prev => {
                     const items = [...prev.items];
+                    const currentItem = items[idx] || {};
                     items[idx] = {
-                      ...items[idx],
-                      _id: selected?._id || '',
-                      item_name: selected?.item_name || '',
+                      ...currentItem,
+                      item_id: selected?._id || '',
+                      _id: selected?._id || '', // Also update _id for consistency
+                      item_name: itemName,
                       price_per_unit: selected?.price_per_unit || '',
-                      total_price: (selected?.price_per_unit || 0) * (items[idx].quantity || 0)
+                      total_price: (selected?.price_per_unit || 0) * (currentItem.quantity || 0)
                     };
                     return { ...prev, items };
                   });
                 }}
-                style={{ width: '100%', padding: '0.75rem', borderRadius: 8, border: '1px solid #e5e7eb', background: '#fafafa', fontSize: '1rem', marginBottom: '1rem' }}
+                style={inputStyle}
+                placeholder="Type or select an item..."
                 disabled={loadingItems}
-              >
-                      {!item._id && <option value="">Select item...</option>}
-      {/* If item is selected, show it as the first option */}
-      {item._id && (
-        <option value={item._id}>
-          {item.item_name ||
-            (availableItems.find(opt => opt._id === item._id)?.item_name) ||
-            'Selected item'}
-        </option>
-      )}
+              />
+              <datalist id={`items-datalist-${idx}`}>
                 {availableItems.map(opt => (
-                  <option key={opt._id} value={opt._id}>{opt.item_name}</option>
+                  <option key={opt._id} value={opt.item_name} />
                 ))}
-              </select>
+              </datalist>
               <label style={labelStyle}>Quantity</label>
               <input type="number" value={item.quantity || ''} onChange={e => {
                 const val = Number(e.target.value);
