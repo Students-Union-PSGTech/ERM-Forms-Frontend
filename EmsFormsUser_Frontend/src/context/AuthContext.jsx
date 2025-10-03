@@ -82,7 +82,7 @@ export function AuthProvider({ children }) {
         // Return an object with success status and association_name (if available)
         return {
           success: true,
-          association_name: response.data.association_name || response.data.username || username
+          association_name: response.data.associationName || response.data.username || username
         };
       }
       
