@@ -352,24 +352,27 @@ const EventDetailModal = ({ event, onClose }) => {
     }
   };
 
-  const handleDownloadPDF = async () => {
-    if (!event?.event_id) return;
-    try {
-      const res = await getEventPDF(event.event_id);
-      const file = new Blob([res.data], { type: 'application/pdf' });
-      const fileURL = URL.createObjectURL(file);
+const handleDownloadPDF = async () => {
+  if (!event?.event_id) return;
+  try {
+    const res = await getEventPDF(event.event_id);
+    const file = new Blob([res.data], { type: 'application/pdf' });
+    const fileURL = URL.createObjectURL(file);
 
-      const link = document.createElement('a');
-      link.href = fileURL;
-      link.download = `${event.name || 'event'}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(fileURL);
-    } catch (err) {
-      alert('Failed to download PDF');
-    }
-  };
+    // Create filename with association_name_event_name format
+    const fileName = `${event.association_name || 'unknown'}_${event.name || 'event'}_${event.event_id}`.replace(/[^a-zA-Z0-9_-]/g, '_');
+    
+    const link = document.createElement('a');
+    link.href = fileURL;
+    link.download = `${fileName}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(fileURL);
+  } catch (err) {
+    alert('Failed to download PDF');
+  }
+};
 
   return (
     <ModalOverlay onClick={onClose}>

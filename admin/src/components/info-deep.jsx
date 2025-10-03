@@ -100,8 +100,10 @@ const InfoDeep = () => {
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
+      const fileName = `${event.association_name || 'unknown'}_${event.name || 'event'}_${event.event_id}`.replace(/[^a-zA-Z0-9_-]/g, '_');
+    
       link.href = url;
-      link.download = `event_${event.event_id}.pdf`;
+      link.download = `${fileName}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
