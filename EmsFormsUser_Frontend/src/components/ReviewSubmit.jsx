@@ -482,7 +482,8 @@ const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
     roll_number: p.rollNumber || p.roll_number || '',
     mobile: p.mobile || p.contact || '',
     designation: p.designation || '',
-    department: p.department || ''
+    department: p.department || '',
+    year: p.year || ''
   });
 
   const handleFileChange = (e) => {
@@ -685,14 +686,14 @@ const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
                 <div className="label">Secretary 1</div>
                 <div className="value">
                   {eventPreview.secretary1?.name || "Not specified"}<br/>
-                  <small>Roll: {eventPreview.secretary1?.rollNumber || "N/A"} | Mobile: {eventPreview.secretary1?.mobile || "N/A"} | Dept: {eventPreview.secretary1?.department || "N/A"}</small>
+                  <small>Roll: {eventPreview.secretary1?.rollNumber || "N/A"} | Mobile: {eventPreview.secretary1?.mobile || "N/A"} | Dept: {eventPreview.secretary1?.department || "N/A"} | Year: {eventPreview.secretary1?.year || "N/A"}</small>
                 </div>
               </InfoItem>
               <InfoItem>
                 <div className="label">Secretary 2</div>
                 <div className="value">
                   {eventPreview.secretary2?.name || "Not specified"}<br/>
-                  <small>Roll: {eventPreview.secretary2?.rollNumber || "N/A"} | Mobile: {eventPreview.secretary2?.mobile || "N/A"} | Dept: {eventPreview.secretary2?.department || "N/A"}</small>
+                  <small>Roll: {eventPreview.secretary2?.rollNumber || "N/A"} | Mobile: {eventPreview.secretary2?.mobile || "N/A"} | Dept: {eventPreview.secretary2?.department || "N/A"} | Year: {eventPreview.secretary2?.year || "N/A"}</small>
                 </div>
               </InfoItem>
             </InfoGrid>
@@ -703,14 +704,14 @@ const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
                 <div className="label">Convenor 1</div>
                 <div className="value">
                   {eventPreview.convenor1?.name || "Not specified"}<br/>
-                  <small>Roll: {eventPreview.convenor1?.rollNumber || "N/A"} | Mobile: {eventPreview.convenor1?.mobile || "N/A"} | Dept: {eventPreview.convenor1?.department || "N/A"}</small>
+                  <small>Roll: {eventPreview.convenor1?.rollNumber || "N/A"} | Mobile: {eventPreview.convenor1?.mobile || "N/A"} | Dept: {eventPreview.convenor1?.department || "N/A"} | Year: {eventPreview.convenor1?.year || "N/A"}</small>
                 </div>
               </InfoItem>
               <InfoItem>
                 <div className="label">Convenor 2</div>
                 <div className="value">
                   {eventPreview.convenor2?.name || "Not specified"}<br/>
-                  <small>Roll: {eventPreview.convenor2?.rollNumber || "N/A"} | Mobile: {eventPreview.convenor2?.mobile || "N/A"} | Dept: {eventPreview.convenor2?.department || "N/A"}</small>
+                  <small>Roll: {eventPreview.convenor2?.rollNumber || "N/A"} | Mobile: {eventPreview.convenor2?.mobile || "N/A"} | Dept: {eventPreview.convenor2?.department || "N/A"} | Year: {eventPreview.convenor2?.year || "N/A"}</small>
                 </div>
               </InfoItem>
             </InfoGrid>
@@ -721,14 +722,14 @@ const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
                 <div className="label">Volunteer 1</div>
                 <div className="value">
                   {eventPreview.volunteer1?.name || "Not specified"}<br/>
-                  <small>Roll: {eventPreview.volunteer1?.rollNumber || "N/A"} | Mobile: {eventPreview.volunteer1?.mobile || "N/A"} | Dept: {eventPreview.volunteer1?.department || "N/A"}</small>
+                  <small>Roll: {eventPreview.volunteer1?.rollNumber || "N/A"} | Mobile: {eventPreview.volunteer1?.mobile || "N/A"} | Dept: {eventPreview.volunteer1?.department || "N/A"} | Year: {eventPreview.volunteer1?.year || "N/A"}</small>
                 </div>
               </InfoItem>
               <InfoItem>
                 <div className="label">Volunteer 2</div>
                 <div className="value">
                   {eventPreview.volunteer2?.name || "Not specified"}<br/>
-                  <small>Roll: {eventPreview.volunteer2?.rollNumber || "N/A"} | Mobile: {eventPreview.volunteer2?.mobile || "N/A"} | Dept: {eventPreview.volunteer2?.department || "N/A"}</small>
+                  <small>Roll: {eventPreview.volunteer2?.rollNumber || "N/A"} | Mobile: {eventPreview.volunteer2?.mobile || "N/A"} | Dept: {eventPreview.volunteer2?.department || "N/A"} | Year: {eventPreview.volunteer2?.year || "N/A"}</small>
                 </div>
               </InfoItem>
             </InfoGrid>
