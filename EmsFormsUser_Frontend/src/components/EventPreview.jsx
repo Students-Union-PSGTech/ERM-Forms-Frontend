@@ -266,16 +266,16 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
     eventName: '',
     
     // Secretary Details
-    secretary1: { name: '', rollNumber: '', mobile: '' },
-    secretary2: { name: '', rollNumber: '', mobile: '' },
+    secretary1: { name: '', rollNumber: '', mobile: '', department: '' },
+    secretary2: { name: '', rollNumber: '', mobile: '', department: '' },
     
     // Convenor Details
-    convenor1: { name: '', rollNumber: '', mobile: '' },
-    convenor2: { name: '', rollNumber: '', mobile: '' },
+    convenor1: { name: '', rollNumber: '', mobile: '', department: '' },
+    convenor2: { name: '', rollNumber: '', mobile: '', department: '' },
     
     // Volunteer Details
-    volunteer1: { name: '', rollNumber: '', mobile: '' },
-    volunteer2: { name: '', rollNumber: '', mobile: '' },
+    volunteer1: { name: '', rollNumber: '', mobile: '', department: '' },
+    volunteer2: { name: '', rollNumber: '', mobile: '', department: '' },
     
     // Faculty Advisor Details
     facultyAdvisor: { name: '', designation: '', contact: '' },
@@ -330,11 +330,12 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
     name: p.name || '',
     rollNumber: p.rollNumber || p.roll_number || p.roll || '',
     mobile: p.mobile || p.contact || '',
-    designation: p.designation || ''
+    designation: p.designation || '',
+    department: p.department || ''
   });
 
   const handlePersonChange = (roleKey, field, value) => {
-    // field should be one of: 'name' | 'rollNumber' | 'mobile' | 'designation'
+    // field should be one of: 'name' | 'rollNumber' | 'mobile' | 'designation' | 'department'
     setFormData(prev => {
       const ep = prev.eventPreview || {};
       const person = normalizePerson(ep[roleKey] || {});
@@ -491,6 +492,15 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
                 />
                 {errors['secretary1.mobile'] && <ErrorMessage>{errors['secretary1.mobile']}</ErrorMessage>}
               </FormGroup>
+              <FormGroup>
+                <Label>Department</Label>
+                <Input 
+                  type="text" 
+                  placeholder="Enter department..."
+                  value={formData.secretary1.department}
+                  onChange={(e) => handleNestedChange('secretary1', 'department', e.target.value)}
+                />
+              </FormGroup>
             </PersonCard>
 
             <PersonCard>
@@ -527,6 +537,15 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
                   className={errors['secretary2.mobile'] ? 'error' : ''}
                 />
                 {errors['secretary2.mobile'] && <ErrorMessage>{errors['secretary2.mobile']}</ErrorMessage>}
+              </FormGroup>
+              <FormGroup>
+                <Label>Department</Label>
+                <Input 
+                  type="text" 
+                  placeholder="Enter department..."
+                  value={formData.secretary2.department}
+                  onChange={(e) => handleNestedChange('secretary2', 'department', e.target.value)}
+                />
               </FormGroup>
             </PersonCard>
           </PersonGrid>
@@ -569,6 +588,15 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
                 />
                 {errors['convenor1.mobile'] && <ErrorMessage>{errors['convenor1.mobile']}</ErrorMessage>}
               </FormGroup>
+              <FormGroup>
+                <Label>Department</Label>
+                <Input 
+                  type="text" 
+                  placeholder="Enter department..."
+                  value={formData.convenor1.department}
+                  onChange={(e) => handleNestedChange('convenor1', 'department', e.target.value)}
+                />
+              </FormGroup>
             </PersonCard>
 
             <PersonCard>
@@ -605,6 +633,15 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
                   className={errors['convenor2.mobile'] ? 'error' : ''}
                 />
                 {errors['convenor2.mobile'] && <ErrorMessage>{errors['convenor2.mobile']}</ErrorMessage>}
+              </FormGroup>
+              <FormGroup>
+                <Label>Department</Label>
+                <Input 
+                  type="text" 
+                  placeholder="Enter department..."
+                  value={formData.convenor2.department}
+                  onChange={(e) => handleNestedChange('convenor2', 'department', e.target.value)}
+                />
               </FormGroup>
             </PersonCard>
           </PersonGrid>
@@ -647,6 +684,15 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
                 />
                 {errors['volunteer1.mobile'] && <ErrorMessage>{errors['volunteer1.mobile']}</ErrorMessage>}
               </FormGroup>
+              <FormGroup>
+                <Label>Department</Label>
+                <Input 
+                  type="text" 
+                  placeholder="Enter department..."
+                  value={formData.volunteer1.department}
+                  onChange={(e) => handleNestedChange('volunteer1', 'department', e.target.value)}
+                />
+              </FormGroup>
             </PersonCard>
 
             <PersonCard>
@@ -683,6 +729,15 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
                   className={errors['volunteer2.mobile'] ? 'error' : ''}
                 />
                 {errors['volunteer2.mobile'] && <ErrorMessage>{errors['volunteer2.mobile']}</ErrorMessage>}
+              </FormGroup>
+              <FormGroup>
+                <Label>Department</Label>
+                <Input 
+                  type="text" 
+                  placeholder="Enter department..."
+                  value={formData.volunteer2.department}
+                  onChange={(e) => handleNestedChange('volunteer2', 'department', e.target.value)}
+                />
               </FormGroup>
             </PersonCard>
           </PersonGrid>
@@ -766,12 +821,12 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
           <ButtonGroup>
             <Button type="button" onClick={() => {
               setFormData({
-                secretary1: { name: '', rollNumber: '', mobile: '' },
-                secretary2: { name: '', rollNumber: '', mobile: '' },
-                convenor1: { name: '', rollNumber: '', mobile: '' },
-                convenor2: { name: '', rollNumber: '', mobile: '' },
-                volunteer1: { name: '', rollNumber: '', mobile: '' },
-                volunteer2: { name: '', rollNumber: '', mobile: '' },
+                secretary1: { name: '', rollNumber: '', mobile: '', department: '' },
+                secretary2: { name: '', rollNumber: '', mobile: '', department: '' },
+                convenor1: { name: '', rollNumber: '', mobile: '', department: '' },
+                convenor2: { name: '', rollNumber: '', mobile: '', department: '' },
+                volunteer1: { name: '', rollNumber: '', mobile: '', department: '' },
+                volunteer2: { name: '', rollNumber: '', mobile: '', department: '' },
                 facultyAdvisor: { name: '', designation: '', contact: '' },
                 judge: { name: '', designation: '', contact: '' }
               });
