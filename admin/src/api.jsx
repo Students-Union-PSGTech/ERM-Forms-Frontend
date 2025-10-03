@@ -52,6 +52,7 @@ export const adminAPI = {
 
   // Event PDF
   getEventPDF: (eventId) => API.get(`/api/admin/events/pdf/${eventId}`, { responseType: 'blob' }),
+  getEventsSummaryPDF: () => API.get('/api/admin/events/pdf-report', { responseType: 'blob' }),
   getRequestedEvents: () =>
     API.get('/api/admin/requested-events'),
 

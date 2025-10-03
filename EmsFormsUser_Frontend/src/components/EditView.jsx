@@ -352,13 +352,35 @@ const OverlayInput = styled.textarea`
   resize: vertical;
 `;
 
+const DropdownSelect = styled.select`
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  padding: 0.75rem;
+  font-size: 1rem;
+  color: #374151;
+  background-color: white;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23374151' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1em;
+  
+  &:focus {
+    outline: none;
+    border-color: #d97706;
+    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
+  }
+`;
+
 export default function EditView() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
   const [query, setQuery] = useState('');
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [overlay, setOverlay] = useState({ open: false, event: null, status: '', msg: '' });
+  const [overlay, setOverlay] = useState({ open: false, event: null, status: '', msg: '', requestType: 'event' });
   const [requestLoading, setRequestLoading] = useState(false);
   const [requestError, setRequestError] = useState('');
   const [refreshEvents, setRefreshEvents] = useState(0);
@@ -396,17 +418,17 @@ export default function EditView() {
 
   const handlePreviewClick = (event) => {
     if (event.edit_req_status === 'idle' || event.edit_req_status === 'rejected') {
-      setOverlay({ open: true, event, status: 'idle', msg: '' });
+      setOverlay({ open: true, event, status: 'idle', msg: '', requestType: 'event' });
     } else if (event.edit_req_status === 'approved') {
       navigate(`/edit/${event._id}`);
     } else if (event.edit_req_status === 'requested') {
-      setOverlay({ open: true, event, status: 'Requested', msg: '' });
+      setOverlay({ open: true, event, status: 'Requested', msg: '', requestType: 'event' });
     }
   };
 
   // Call this to close overlay and refresh events
   const closeOverlayAndRefresh = () => {
-    setOverlay({ open: false, event: null, status: '', msg: '' });
+    setOverlay({ open: false, event: null, status: '', msg: '', requestType: 'event' });
     setRefreshEvents(r => r + 1);
   };
 
@@ -416,7 +438,8 @@ export default function EditView() {
     try {
       await requestEditAccess({
         eventId: overlay.event._id,
-        msg: overlay.msg
+        msg: overlay.msg,
+        requestType: overlay.requestType
       });
       closeOverlayAndRefresh();
     } catch (err) {
@@ -509,12 +532,30 @@ export default function EditView() {
                 <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#b45309' }}>
                   Request edit access to the ERM Team
                 </div>
-                <OverlayInput
-                  placeholder="Enter your request message..."
-                  value={overlay.msg}
-                  onChange={e => setOverlay(o => ({ ...o, msg: e.target.value }))}
-                  disabled={requestLoading}
-                />
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#4b5563', fontSize: '0.95rem' }}>
+                    Request Type
+                  </label>
+                  <DropdownSelect
+                    value={overlay.requestType}
+                    onChange={e => setOverlay(o => ({ ...o, requestType: e.target.value }))}
+                    disabled={requestLoading}
+                  >
+                    <option value="event">Request to edit event</option>
+                    <option value="annexure">Request to edit Annexure</option>
+                  </DropdownSelect>
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#4b5563', fontSize: '0.95rem' }}>
+                    Message
+                  </label>
+                  <OverlayInput
+                    placeholder="Enter your request message..."
+                    value={overlay.msg}
+                    onChange={e => setOverlay(o => ({ ...o, msg: e.target.value }))}
+                    disabled={requestLoading}
+                  />
+                </div>
                 {requestError && <div style={{ color: '#dc2626', fontSize: '0.95rem' }}>{requestError}</div>}
                 <OverlayActions>
                   <button
@@ -528,7 +569,7 @@ export default function EditView() {
                       fontWeight: 600,
                       cursor: 'pointer'
                     }}
-                    onClick={() => setOverlay({ open: false, event: null, status: '', msg: '' })}
+                    onClick={() => setOverlay({ open: false, event: null, status: '', msg: '', requestType: 'event' })}
                     disabled={requestLoading}
                   >
                     Cancel
@@ -570,7 +611,7 @@ export default function EditView() {
                       fontWeight: 600,
                       cursor: 'pointer'
                     }}
-                    onClick={() => setOverlay({ open: false, event: null, status: '', msg: '' })}
+                    onClick={() => setOverlay({ open: false, event: null, status: '', msg: '', requestType: 'event' })}
                   >
                     Close
                   </button>

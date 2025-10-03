@@ -525,8 +525,15 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
                   type="tel" 
                   placeholder="Enter mobile number..."
                   value={formData.secretary1.mobile}
-                  onChange={(e) => handleNestedChange('secretary1', 'mobile', e.target.value)}
-                  className={errors['secretary1.mobile'] ? 'error' : ''}
+    onChange={(e) => {
+      // Only allow digits
+      const value = e.target.value.replace(/\D/g, '');
+      // Limit to 10 digits
+      handleNestedChange('secretary1', 'mobile', value.slice(0, 10));
+    }}
+    pattern="[0-9]{10}"
+    maxLength="10"
+    className={errors['secretary1.mobile'] ? 'error' : ''}
                 />
                 {errors['secretary1.mobile'] && <ErrorMessage>{errors['secretary1.mobile']}</ErrorMessage>}
               </FormGroup>
@@ -582,11 +589,21 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
                 <Label>Mobile No</Label>
                 <Input 
                   type="tel" 
-                  placeholder="Enter mobile number..."
+                  placeholder="Enter 10-digit mobile number..."
                   value={formData.secretary2.mobile}
-                  onChange={(e) => handleNestedChange('secretary2', 'mobile', e.target.value)}
+                  onChange={(e) => {
+                    // Only allow digits
+                    const value = e.target.value.replace(/\D/g, '');
+                    // Limit to 10 digits
+                    handleNestedChange('secretary2', 'mobile', value.slice(0, 10));
+                  }}
+                  pattern="[0-9]{10}"
+                  maxLength="10"
                   className={errors['secretary2.mobile'] ? 'error' : ''}
                 />
+                {formData.secretary2.mobile && formData.secretary2.mobile.length !== 10 && (
+                  <ErrorMessage>Mobile number must be 10 digits</ErrorMessage>
+                )}
                 {errors['secretary2.mobile'] && <ErrorMessage>{errors['secretary2.mobile']}</ErrorMessage>}
               </FormGroup>
               <FormGroup>
@@ -645,11 +662,21 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
                 <Label>Mobile No</Label>
                 <Input 
                   type="tel" 
-                  placeholder="Enter mobile number..."
+                  placeholder="Enter 10-digit mobile number..."
                   value={formData.convenor1.mobile}
-                  onChange={(e) => handleNestedChange('convenor1', 'mobile', e.target.value)}
+                  onChange={(e) => {
+                    // Only allow digits
+                    const value = e.target.value.replace(/\D/g, '');
+                    // Limit to 10 digits
+                    handleNestedChange('convenor1', 'mobile', value.slice(0, 10));
+                  }}
+                  pattern="[0-9]{10}"
+                  maxLength="10"
                   className={errors['convenor1.mobile'] ? 'error' : ''}
                 />
+                {formData.convenor1.mobile && formData.convenor1.mobile.length !== 10 && (
+                  <ErrorMessage>Mobile number must be 10 digits</ErrorMessage>
+                )}
                 {errors['convenor1.mobile'] && <ErrorMessage>{errors['convenor1.mobile']}</ErrorMessage>}
               </FormGroup>
               <FormGroup>
@@ -704,11 +731,21 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
                 <Label>Mobile No</Label>
                 <Input 
                   type="tel" 
-                  placeholder="Enter mobile number..."
+                  placeholder="Enter 10-digit mobile number..."
                   value={formData.convenor2.mobile}
-                  onChange={(e) => handleNestedChange('convenor2', 'mobile', e.target.value)}
+                  onChange={(e) => {
+                    // Only allow digits
+                    const value = e.target.value.replace(/\D/g, '');
+                    // Limit to 10 digits
+                    handleNestedChange('convenor2', 'mobile', value.slice(0, 10));
+                  }}
+                  pattern="[0-9]{10}"
+                  maxLength="10"
                   className={errors['convenor2.mobile'] ? 'error' : ''}
                 />
+                {formData.convenor2.mobile && formData.convenor2.mobile.length !== 10 && (
+                  <ErrorMessage>Mobile number must be 10 digits</ErrorMessage>
+                )}
                 {errors['convenor2.mobile'] && <ErrorMessage>{errors['convenor2.mobile']}</ErrorMessage>}
               </FormGroup>
               <FormGroup>
@@ -767,11 +804,21 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
                 <Label>Mobile No</Label>
                 <Input 
                   type="tel" 
-                  placeholder="Enter mobile number..."
+                  placeholder="Enter 10-digit mobile number..."
                   value={formData.volunteer1.mobile}
-                  onChange={(e) => handleNestedChange('volunteer1', 'mobile', e.target.value)}
+                  onChange={(e) => {
+                    // Only allow digits
+                    const value = e.target.value.replace(/\D/g, '');
+                    // Limit to 10 digits
+                    handleNestedChange('volunteer1', 'mobile', value.slice(0, 10));
+                  }}
+                  pattern="[0-9]{10}"
+                  maxLength="10"
                   className={errors['volunteer1.mobile'] ? 'error' : ''}
                 />
+                {formData.volunteer1.mobile && formData.volunteer1.mobile.length !== 10 && (
+                  <ErrorMessage>Mobile number must be 10 digits</ErrorMessage>
+                )}
                 {errors['volunteer1.mobile'] && <ErrorMessage>{errors['volunteer1.mobile']}</ErrorMessage>}
               </FormGroup>
               <FormGroup>
@@ -826,11 +873,21 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
                 <Label>Mobile No</Label>
                 <Input 
                   type="tel" 
-                  placeholder="Enter mobile number..."
+                  placeholder="Enter 10-digit mobile number..."
                   value={formData.volunteer2.mobile}
-                  onChange={(e) => handleNestedChange('volunteer2', 'mobile', e.target.value)}
+                  onChange={(e) => {
+                    // Only allow digits
+                    const value = e.target.value.replace(/\D/g, '');
+                    // Limit to 10 digits
+                    handleNestedChange('volunteer2', 'mobile', value.slice(0, 10));
+                  }}
+                  pattern="[0-9]{10}"
+                  maxLength="10"
                   className={errors['volunteer2.mobile'] ? 'error' : ''}
                 />
+                {formData.volunteer2.mobile && formData.volunteer2.mobile.length !== 10 && (
+                  <ErrorMessage>Mobile number must be 10 digits</ErrorMessage>
+                )}
                 {errors['volunteer2.mobile'] && <ErrorMessage>{errors['volunteer2.mobile']}</ErrorMessage>}
               </FormGroup>
               <FormGroup>
@@ -886,12 +943,22 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
             <FormGroup>
               <Label>Contact Details</Label>
               <Input 
-                type="text" 
-                placeholder="Enter contact details..."
+                type="tel" 
+                placeholder="Enter 10-digit mobile number..."
                 value={formData.facultyAdvisor.contact}
-                onChange={(e) => handleNestedChange('facultyAdvisor', 'contact', e.target.value)}
+                onChange={(e) => {
+                  // Only allow digits
+                  const value = e.target.value.replace(/\D/g, '');
+                  // Limit to 10 digits
+                  handleNestedChange('facultyAdvisor', 'contact', value.slice(0, 10));
+                }}
+                pattern="[0-9]{10}"
+                maxLength="10"
                 className={errors['facultyAdvisor.contact'] ? 'error' : ''}
               />
+              {formData.facultyAdvisor.contact && formData.facultyAdvisor.contact.length !== 10 && (
+                <ErrorMessage>Mobile number must be 10 digits</ErrorMessage>
+              )}
               {errors['facultyAdvisor.contact'] && <ErrorMessage>{errors['facultyAdvisor.contact']}</ErrorMessage>}
             </FormGroup>
           </PersonCard>
@@ -924,12 +991,22 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
             <FormGroup>
               <Label>Contact Details</Label>
               <Input 
-                type="text" 
-                placeholder="Enter contact details..."
+                type="tel" 
+                placeholder="Enter 10-digit mobile number..."
                 value={formData.judge.contact}
-                onChange={(e) => handleNestedChange('judge', 'contact', e.target.value)}
+                onChange={(e) => {
+                  // Only allow digits
+                  const value = e.target.value.replace(/\D/g, '');
+                  // Limit to 10 digits
+                  handleNestedChange('judge', 'contact', value.slice(0, 10));
+                }}
+                pattern="[0-9]{10}"
+                maxLength="10"
                 className={errors['judge.contact'] ? 'error' : ''}
               />
+              {formData.judge.contact && formData.judge.contact.length !== 10 && (
+                <ErrorMessage>Mobile number must be 10 digits</ErrorMessage>
+              )}
               {errors['judge.contact'] && <ErrorMessage>{errors['judge.contact']}</ErrorMessage>}
             </FormGroup>
           </PersonCard>

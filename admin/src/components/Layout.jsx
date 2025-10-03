@@ -1,13 +1,28 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { LogOut, Code, BarChart3, Menu, X, Package, TrendingUp } from 'lucide-react';
+import { adminAPI } from '../api';
+import { LogOut, Code, BarChart3, Menu, X, Package, TrendingUp, FileText, Download, Loader2 } from 'lucide-react';
 
 export default function Layout({ children }) {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
+  const [summaryPdfUrl, setSummaryPdfUrl] = useState(null);
+  const [summaryPdfBlob, setSummaryPdfBlob] = useState(null);
+  const [summaryModalOpen, setSummaryModalOpen] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryError, setSummaryError] = useState('');
+  const [summaryFileName, setSummaryFileName] = useState('event_summary');
+
+  useEffect(() => {
+    return () => {
+      if (summaryPdfUrl) {
+        URL.revokeObjectURL(summaryPdfUrl);
+      }
+    };
+  }, [summaryPdfUrl]);
 
   const handleLogout = async () => {
     await logout();
@@ -21,6 +36,63 @@ export default function Layout({ children }) {
     { to: '/stats', icon: TrendingUp, label: 'Statistics' },
     { to: '/edit-access', icon: Code, label: 'Edit Access' }
   ];
+
+  const openSummaryModal = () => {
+    setSummaryModalOpen(true);
+  };
+
+  const closeSummaryModal = () => {
+    setSummaryModalOpen(false);
+    if (summaryPdfUrl) {
+      URL.revokeObjectURL(summaryPdfUrl);
+      setSummaryPdfUrl(null);
+    }
+    setSummaryPdfBlob(null);
+  };
+
+  const handleEventSummary = async () => {
+    if (summaryLoading) return;
+    setSummaryError('');
+    setSummaryLoading(true);
+
+    if (summaryPdfUrl) {
+      URL.revokeObjectURL(summaryPdfUrl);
+      setSummaryPdfUrl(null);
+    }
+
+    try {
+      const response = await adminAPI.getEventsSummaryPDF();
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+
+      setSummaryFileName('event_summary');
+
+      setSummaryPdfBlob(blob);
+      setSummaryPdfUrl(url);
+      setSidebarOpen(false);
+      openSummaryModal();
+    } catch (err) {
+      setSummaryError(err.response?.data?.message || err.message || 'Failed to load summary PDF');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
+  const handleDownloadSummary = () => {
+    if (!summaryPdfBlob) {
+      handleEventSummary();
+      return;
+    }
+
+    const url = URL.createObjectURL(summaryPdfBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${summaryFileName}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   const NavItem = ({ to, icon: Icon, label, mobile = false }) => (
     <NavLink
@@ -59,7 +131,25 @@ export default function Layout({ children }) {
               {navItems.map((item) => (
                 <NavItem key={item.to} {...item} />
               ))}
+              <button
+                onClick={handleEventSummary}
+                disabled={summaryLoading}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 mt-3 rounded-lg text-sm font-medium transition-all bg-white/10 text-white hover:bg-white/20 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {summaryLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <FileText className="w-5 h-5" />
+                )}
+                Event Summary
+              </button>
             </nav>
+
+            {summaryError && (
+              <div className="mt-3 px-3 py-2 text-xs text-white bg-white/10 border border-white/20 rounded-lg">
+                {summaryError}
+              </div>
+            )}
 
             <div className="mt-auto pt-4">
               <button
@@ -114,7 +204,25 @@ export default function Layout({ children }) {
               {navItems.map((item) => (
                 <NavItem key={item.to} {...item} mobile />
               ))}
+              <button
+                onClick={handleEventSummary}
+                disabled={summaryLoading}
+                className="flex items-center justify-center gap-2 px-4 py-2.5 mt-3 rounded-lg text-sm font-medium transition-all bg-white/10 text-white hover:bg-white/20 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {summaryLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <FileText className="w-5 h-5" />
+                )}
+                Event Summary
+              </button>
             </nav>
+
+            {summaryError && (
+              <div className="mt-3 px-3 py-2 text-xs text-white bg-white/10 border border-white/20 rounded-lg">
+                {summaryError}
+              </div>
+            )}
 
             <div className="mt-auto pt-4">
               <button
@@ -141,6 +249,58 @@ export default function Layout({ children }) {
         )}
         <main className="flex-1">{children}</main>
       </div>
+
+      {summaryModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 w-full max-w-6xl h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Event Summary Report
+              </h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleDownloadSummary}
+                  className="flex items-center gap-2 px-4 py-2 bg-accent-orange text-white rounded-lg hover:bg-accent-yellow transition-colors"
+                  disabled={summaryLoading}
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </button>
+                <button
+                  onClick={closeSummaryModal}
+                  className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 p-6">
+              {summaryPdfUrl ? (
+                <iframe
+                  src={summaryPdfUrl}
+                  className="w-full h-full border rounded-lg"
+                  title="Event Summary PDF"
+                  frameBorder="0"
+                  allowFullScreen
+                  style={{ minHeight: '500px' }}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  {summaryLoading ? (
+                    <div className="flex flex-col items-center gap-3 text-gray-500">
+                      <Loader2 className="w-8 h-8 animate-spin" />
+                      <p>Loading summary PDF...</p>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No PDF to display.</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

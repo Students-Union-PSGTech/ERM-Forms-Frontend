@@ -90,6 +90,7 @@ const Header = styled.div`
   padding: 2rem;
   border-radius: 20px 20px 0 0;
   text-align: center;
+  position: relative;
   
   h1 {
     font-size: 2rem;
@@ -189,6 +190,7 @@ const Button = styled.button`
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  min-width: 140px;
   
   ${props => props.primary ? css`
     background: var(--gradient-fire);
@@ -256,6 +258,38 @@ const EmailLink = styled.a`
   
   &:active {
     transform: translateY(1px);
+  }
+`;
+
+const BackButton = styled.button`
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  background: rgba(74, 60, 60, 0.2);
+  border: 1px white solid;
+  color: white;
+  width: 35px;
+  height: 35px;
+  border-radius: 40%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: translateX(-3px);
+  }
+  
+  &:active {
+    transform: scale(0.95);
+  }
+  
+  &::before {
+    content: '←';
+    font-size: 1.5rem;
+    font-weight: bold;
   }
 `;
 
