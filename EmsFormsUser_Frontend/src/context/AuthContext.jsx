@@ -78,7 +78,12 @@ export function AuthProvider({ children }) {
         setSessionActive(); // Mark this tab as having an active session
         setIsAuthenticated(true);
         setUser(response.data);
-        return true;
+        
+        // Return an object with success status and association_name (if available)
+        return {
+          success: true,
+          association_name: response.data.association_name || response.data.username || username
+        };
       }
       
       console.log('Login failed: Invalid response format');
@@ -88,6 +93,7 @@ export function AuthProvider({ children }) {
       const errorMessage = err.response?.data?.message || err.message || "Invalid username or password";
       setError(errorMessage);
       setIsAuthenticated(false);
+      return { success: false };
       setUser(null);
       clearSession(); // Clear any existing session
       return false;

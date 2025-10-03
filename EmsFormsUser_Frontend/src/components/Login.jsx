@@ -9,6 +9,7 @@ const LoginPage = () => {
     username: "",
     password: ""
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [loginError, setLoginError] = useState("");
   const { login, loading, error } = useAuth();
   const navigate = useNavigate();
@@ -30,8 +31,13 @@ const LoginPage = () => {
     }
 
     try {
-      const success = await login(formData.username, formData.password);
-      if (success) {
+      const response = await login(formData.username, formData.password);
+      console.log(response);
+      if (response && response.success) {
+        // Store association_name in localStorage if available
+        if (response.association_name) {
+          localStorage.setItem('association_name', response.association_name);
+        }
         navigate("/home");
       } else {
         setLoginError(error || "Invalid credentials");
@@ -109,15 +115,25 @@ const LoginPage = () => {
                   <span className="label-icon"></span>
                   Password
                 </label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  placeholder="Enter your password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  required
-                />
+                <div className="password-input-wrapper">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    required
+                  />
+                  <button 
+                    type="button" 
+                    className="password-toggle"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
               </div>
 
               {loginError && <div className="error-message">{loginError}</div>}

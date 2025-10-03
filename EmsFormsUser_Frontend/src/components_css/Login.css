@@ -140,6 +140,37 @@ html, body {
 .input-group label { font-size: 0.9rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--professional-darker); }
 .input-group input { width: 100%; padding: 14px 16px; background: var(--professional-light); border: 2px solid var(--professional-border); border-radius: 10px; font-size: 0.95rem; color: var(--professional-darker); transition: all 0.3s ease; }
 
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  width: 100%;
+}
+
+.password-input-wrapper input {
+  flex: 1;
+  border-right: none;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.password-toggle {
+  background: linear-gradient(to right, rgba(255, 112, 46, 0.1), rgba(255, 112, 46, 0.3));
+  border: 2px solid var(--professional-border);
+  border-left: none;
+  padding: 0 15px;
+  border-top-right-radius: 10px;
+  border-bottom-right-radius: 10px;
+  color: var(--professional-darker);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.password-toggle:hover {
+  background: linear-gradient(to right, rgba(255, 112, 46, 0.2), rgba(255, 112, 46, 0.4));
+}
+
 .login-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 16px 24px; font-size: 1rem; font-weight: 600; border-radius: 10px; cursor: pointer; transition: all 0.3s ease; display: flex; justify-content: center; gap: 0.5rem; }
 .login-btn:hover { background: linear-gradient(135deg, #764ba2 0%, #667eea 100%); transform: translateY(-2px); }
 

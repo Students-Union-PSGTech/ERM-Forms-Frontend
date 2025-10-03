@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext';
 const HomePage = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
-
+  const club_name = localStorage.getItem('association_name') || 'User';
   const handleLogout = async () => {
     await logout();
     navigate('/login');
@@ -27,7 +27,8 @@ const HomePage = () => {
       <main className="home-main">
         <div className="content-wrapper">
           <div className="header-section">
-            <h1>Event Portal</h1>
+            <h1>Event Portal - Intrams 2025</h1>
+            <h2>Welcome, {club_name}</h2>
             <p>PSG College of Technology, Coimbatore</p>
           </div>
 
