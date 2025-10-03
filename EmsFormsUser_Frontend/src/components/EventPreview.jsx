@@ -174,6 +174,28 @@ const TextArea = styled.textarea`
   }
 `;
 
+const Select = styled.select`
+  width: 100%;
+  padding: 1rem;
+  margin-top: 0.5rem;
+  border-radius: 10px;
+  border: 2px solid var(--border-light);
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: #fafafa;
+  
+  &:focus {
+    border-color: var(--flame-orange);
+    background: white;
+    box-shadow: 0 0 0 3px rgba(234, 88, 12, 0.1);
+    transform: translateY(-1px);
+  }
+  
+  &.error {
+    border-color: #dc2626;
+  }
+`;
+
 const ErrorMessage = styled.div`
   color: #dc2626;
   font-size: 0.875rem;
@@ -257,6 +279,15 @@ const Button = styled.button`
     }
   `}
 `;
+
+const departments = [
+  "BE AUTOMOBILE", "BE BIOMED", "BE CIVIL", "BE CSE", "BE CSE - AI & ML",
+  "BE EEE", "BE ECE", "BE I&CE", "BE MECH", "BE METLY", "BE PROD", "BE RAE",
+  "B.TECH BIOTECH", "B.TECH FASHION TECH", "B.TECH IT", "B.TECH TEXTILE TECH",
+  "BE EEE (SW)", "BE MECH (SW)", "BE PROD (SW)", "B.Sc APPLIED SCIENCE",
+  "B.Sc CSD", "M.Sc DATA SCIENCE", "M.Sc APPLIED MATHEMATICS", "M.Sc CYBER SECURITY",
+  "M.Sc FDM", "M.Sc Software Systems", "M.Sc TCS", "MCA"
+];
 
 const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData }) => {
   const navigate = useNavigate();
@@ -494,12 +525,13 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
               </FormGroup>
               <FormGroup>
                 <Label>Department</Label>
-                <Input 
-                  type="text" 
-                  placeholder="Enter department..."
+                <Select
                   value={formData.secretary1.department}
                   onChange={(e) => handleNestedChange('secretary1', 'department', e.target.value)}
-                />
+                >
+                  <option value="">Select department...</option>
+                  {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                </Select>
               </FormGroup>
             </PersonCard>
 
@@ -540,12 +572,13 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
               </FormGroup>
               <FormGroup>
                 <Label>Department</Label>
-                <Input 
-                  type="text" 
-                  placeholder="Enter department..."
+                <Select
                   value={formData.secretary2.department}
                   onChange={(e) => handleNestedChange('secretary2', 'department', e.target.value)}
-                />
+                >
+                  <option value="">Select department...</option>
+                  {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                </Select>
               </FormGroup>
             </PersonCard>
           </PersonGrid>
@@ -590,12 +623,13 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
               </FormGroup>
               <FormGroup>
                 <Label>Department</Label>
-                <Input 
-                  type="text" 
-                  placeholder="Enter department..."
+                <Select
                   value={formData.convenor1.department}
                   onChange={(e) => handleNestedChange('convenor1', 'department', e.target.value)}
-                />
+                >
+                  <option value="">Select department...</option>
+                  {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                </Select>
               </FormGroup>
             </PersonCard>
 
@@ -636,12 +670,13 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
               </FormGroup>
               <FormGroup>
                 <Label>Department</Label>
-                <Input 
-                  type="text" 
-                  placeholder="Enter department..."
+                <Select
                   value={formData.convenor2.department}
                   onChange={(e) => handleNestedChange('convenor2', 'department', e.target.value)}
-                />
+                >
+                  <option value="">Select department...</option>
+                  {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                </Select>
               </FormGroup>
             </PersonCard>
           </PersonGrid>
@@ -686,12 +721,13 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
               </FormGroup>
               <FormGroup>
                 <Label>Department</Label>
-                <Input 
-                  type="text" 
-                  placeholder="Enter department..."
+                <Select
                   value={formData.volunteer1.department}
                   onChange={(e) => handleNestedChange('volunteer1', 'department', e.target.value)}
-                />
+                >
+                  <option value="">Select department...</option>
+                  {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                </Select>
               </FormGroup>
             </PersonCard>
 
@@ -732,12 +768,13 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
               </FormGroup>
               <FormGroup>
                 <Label>Department</Label>
-                <Input 
-                  type="text" 
-                  placeholder="Enter department..."
+                <Select
                   value={formData.volunteer2.department}
                   onChange={(e) => handleNestedChange('volunteer2', 'department', e.target.value)}
-                />
+                >
+                  <option value="">Select department...</option>
+                  {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                </Select>
               </FormGroup>
             </PersonCard>
           </PersonGrid>

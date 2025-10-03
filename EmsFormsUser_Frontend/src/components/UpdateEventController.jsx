@@ -2,6 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { getItems } from '../api/api';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getEvent, updateEvent } from '../api/api';
+
+const departments = [
+  "BE AUTOMOBILE", "BE BIOMED", "BE CIVIL", "BE CSE", "BE CSE - AI & ML",
+  "BE EEE", "BE ECE", "BE I&CE", "BE MECH", "BE METLY", "BE PROD", "BE RAE",
+  "B.TECH BIOTECH", "B.TECH FASHION TECH", "B.TECH IT", "B.TECH TEXTILE TECH",
+  "BE EEE (SW)", "BE MECH (SW)", "BE PROD (SW)", "B.Sc APPLIED SCIENCE",
+  "B.Sc CSD", "M.Sc DATA SCIENCE", "M.Sc APPLIED MATHEMATICS", "M.Sc CYBER SECURITY",
+  "M.Sc FDM", "M.Sc Software Systems", "M.Sc TCS", "MCA"
+];
+
 export default function UpdateEventController() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -58,6 +68,47 @@ export default function UpdateEventController() {
           [field]: value
         }
       }
+    }));
+  };
+
+  const handleRoundChange = (index, field, value, isTieBreaker = false) => {
+    setFormData(prev => {
+      const rounds = [...prev.rounds];
+      if (!isTieBreaker) {
+        rounds[index] = { ...rounds[index], [field]: value };
+      } else {
+        rounds[index].tieBreaker = { ...rounds[index].tieBreaker, [field]: value };
+      }
+      return { ...prev, rounds };
+    });
+  };
+
+  const addRound = () => {
+    setFormData(prev => ({
+      ...prev,
+      rounds: [
+        ...(prev.rounds || []),
+        {
+          name: `Round ${prev.rounds.length + 1}`,
+          description: "",
+          rules: [],
+          participants: 1,
+          hasTieBreaker: false,
+          tieBreaker: {
+            name: `Tie-Breaker for Round ${prev.rounds.length + 1}`,
+            description: "",
+            rules: [],
+            participants: 1,
+          }
+        }
+      ]
+    }));
+  };
+
+  const deleteRound = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      rounds: prev.rounds.filter((_, i) => i !== index)
     }));
   };
 
@@ -208,36 +259,59 @@ export default function UpdateEventController() {
         <div style={cardStyle}>
           <h3 style={{ color: '#b45309', marginBottom: '1rem' }}>Rounds</h3>
           {formData.rounds && formData.rounds.map((round, idx) => (
-            <div key={idx} style={{ marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid #eee' }}>
+            <div key={idx} style={{ marginBottom: '1.5rem', padding: '1.5rem', border: '1px solid #eee', borderRadius: '12px', background: '#fdfdfd', position: 'relative' }}>
+              <h4 style={{ marginTop: 0, color: '#d97706' }}>{round.name || `Round ${idx + 1}`}</h4>
               <label style={labelStyle}>Round Name</label>
-              <input type="text" value={round.name || ''} onChange={e => {
-                const val = e.target.value;
-                setFormData(prev => {
-                  const rounds = [...prev.rounds];
-                  rounds[idx] = { ...rounds[idx], name: val };
-                  return { ...prev, rounds };
-                });
-              }} style={inputStyle} />
+              <input type="text" value={round.name || ''} onChange={e => handleRoundChange(idx, 'name', e.target.value)} style={inputStyle} />
+              
               <label style={labelStyle}>Description</label>
-              <textarea value={round.description || ''} onChange={e => {
-                const val = e.target.value;
-                setFormData(prev => {
-                  const rounds = [...prev.rounds];
-                  rounds[idx] = { ...rounds[idx], description: val };
-                  return { ...prev, rounds };
-                });
-              }} style={{ ...inputStyle, minHeight: 60 }} />
-              <label style={labelStyle}>Rules</label>
-              <textarea value={round.rules?.join('\n') || ''} onChange={e => {
-                const val = e.target.value.split('\n');
-                setFormData(prev => {
-                  const rounds = [...prev.rounds];
-                  rounds[idx] = { ...rounds[idx], rules: val };
-                  return { ...prev, rounds };
-                });
-              }} style={{ ...inputStyle, minHeight: 60 }} />
+              <textarea value={round.description || ''} onChange={e => handleRoundChange(idx, 'description', e.target.value)} style={{ ...inputStyle, minHeight: 60 }} />
+              
+              <label style={labelStyle}>Rules (one per line)</label>
+              <textarea value={round.rules?.join('\n') || ''} onChange={e => handleRoundChange(idx, 'rules', e.target.value.split('\n'))} style={{ ...inputStyle, minHeight: 60 }} />
+
+              <label style={labelStyle}>Participants</label>
+              <input type="number" value={round.participants || ''} onChange={e => handleRoundChange(idx, 'participants', Number(e.target.value))} style={inputStyle} />
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '1rem 0' }}>
+                <input
+                  type="checkbox"
+                  id={`tie-check-${idx}`}
+                  checked={round.hasTieBreaker || false}
+                  onChange={e => handleRoundChange(idx, 'hasTieBreaker', e.target.checked)}
+                  style={{ width: 18, height: 18, accentColor: '#f97316' }}
+                />
+                <label htmlFor={`tie-check-${idx}`} style={{ fontWeight: 500, color: '#374151' }}>Has Tie-Breaker</label>
+              </div>
+
+              {round.hasTieBreaker && (
+                <div style={{ marginTop: '1.5rem', padding: '1rem', border: '1px solid #fbbf24', borderRadius: '8px', background: '#fffbeb' }}>
+                  <h5 style={{ marginTop: 0, color: '#b45309' }}>Tie-Breaker Details</h5>
+                  <label style={labelStyle}>Tie-Breaker Name</label>
+                  <input type="text" value={round.tieBreaker?.name || ''} onChange={e => handleRoundChange(idx, 'name', e.target.value, true)} style={inputStyle} />
+                  
+                  <label style={labelStyle}>Description</label>
+                  <textarea value={round.tieBreaker?.description || ''} onChange={e => handleRoundChange(idx, 'description', e.target.value, true)} style={{ ...inputStyle, minHeight: 60 }} />
+                  
+                  <label style={labelStyle}>Rules (one per line)</label>
+                  <textarea value={round.tieBreaker?.rules?.join('\n') || ''} onChange={e => handleRoundChange(idx, 'rules', e.target.value.split('\n'), true)} style={{ ...inputStyle, minHeight: 60 }} />
+
+                  <label style={labelStyle}>Participants</label>
+                  <input type="number" value={round.tieBreaker?.participants || ''} onChange={e => handleRoundChange(idx, 'participants', Number(e.target.value), true)} style={inputStyle} />
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={() => deleteRound(idx)}
+                style={{ position: 'absolute', top: 12, right: 12, padding: '0.5rem 1rem', borderRadius: 8, background: '#ef4444', color: 'white', border: 'none', fontWeight: 600, cursor: 'pointer' }}
+                disabled={formData.rounds.length <= 1}
+              >
+                Delete Round
+              </button>
             </div>
           ))}
+          <button type="button" onClick={addRound} style={{ marginTop: '1rem', padding: '0.75rem 1.5rem', borderRadius: 8, background: '#16a34a', color: 'white', border: 'none', fontWeight: 600 }}>Add Round</button>
         </div>
 
         {/* Event Details Section */}
@@ -247,14 +321,29 @@ export default function UpdateEventController() {
             role !== '_id' ? (
               <div key={role} style={{ marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid #eee' }}>
                 <strong style={{ color: '#d97706', fontSize: '1.1rem' }}>{role.replace(/_/g, ' ')}</strong>
-                {['name','roll_number','mobile','designation'].map(field => {
+                {['name','roll_number','mobile','department','designation'].map(field => {
                   const isDesignationField = field === 'designation';
                   const allowDesignation = role === 'faculty_advisor' || role === 'judge';
-                  const isRollNumberField = field === 'roll_number';
-                  const disallowRollNumber = role === 'faculty_advisor' || role === 'judge';
+                  const isStudentField = ['roll_number', 'department'].includes(field);
+                  const isStudentRole = ['secretary1', 'secretary2', 'convenor1', 'convenor2', 'volunteer1', 'volunteer2'].includes(role);
 
-                  if ((isDesignationField && !allowDesignation) || (isRollNumberField && disallowRollNumber)) {
-                    return null;
+                  if (isDesignationField && !allowDesignation) return null;
+                  if (isStudentField && !isStudentRole) return null;
+
+                  if (field === 'department') {
+                    return (
+                      <div key={field}>
+                        <label style={labelStyle}>{field.replace(/_/g, ' ')}:</label>
+                        <select
+                          value={person?.[field] || ''}
+                          onChange={e => handleDetailsChange(role, field, e.target.value)}
+                          style={inputStyle}
+                        >
+                          <option value="">Select department...</option>
+                          {departments.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+                        </select>
+                      </div>
+                    );
                   }
 
                   return (
@@ -281,10 +370,10 @@ export default function UpdateEventController() {
             <div style={{ color: '#b91c1c', marginBottom: '1rem' }}>No items added yet.</div>
           )}
           {formData.items && formData.items.map((item, idx) => (
-            <div key={idx} style={{ marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid #eee', background: '#f9fafb', borderRadius: 8, position: 'relative' }}>
+            <div key={idx} style={{ marginBottom: '1.5rem', padding: '1.5rem', border: '1px solid #eee', borderRadius: '12px', background: '#fdfdfd', position: 'relative' }}>
               <label style={labelStyle}>Item Name</label>
               <select
-                value={item._id || ''}
+                value={item.item_id || item._id || ''}
                 onChange={e => {
                   const selected = availableItems.find(opt => opt._id === e.target.value);
                   setFormData(prev => {
