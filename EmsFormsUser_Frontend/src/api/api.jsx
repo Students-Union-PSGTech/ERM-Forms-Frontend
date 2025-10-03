@@ -45,4 +45,20 @@ export const getItems = () => API.get('/api/items');
 export const updateEvent = (id, data) => API.put(`/api/events/${id}`, data);
 export const requestEditAccess = (body) =>
   API.post('/api/events/request-edit', body);
+
+// Update event annexures
+export const updateEventAnnexures = async (id, formData) => {
+  try {
+    const res = await API.put(`/api/events/annexure/${id}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    });
+    return res.data;
+  } catch (error) {
+    console.error('Error updating event annexures:', error);
+    throw error;
+  }
+};
+
 export { API };

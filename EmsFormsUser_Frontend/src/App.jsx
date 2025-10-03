@@ -11,6 +11,7 @@ import HomePage from './components/HomePage';
 import Login from './components/Login';
 import CreateEventLayout from './components/CreateEventLayout';
 import UpdateEventController from './components/UpdateEventController';
+import UpdateAnnexureController from './components/UpdateAnnexureController';
 import ViewEvents from './components/ViewEvents';
 import './App.css';
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -65,7 +66,8 @@ function App() {
           <Route element={<ProtectedRoute><ViewEvents /></ProtectedRoute>} path="/my-events" />
           <Route element={<ProtectedRoute><EditView /></ProtectedRoute>} path="/edit" />
           <Route element={<ProtectedRoute><UpdateEventController /></ProtectedRoute>} path="/edit/:id" />
-          
+          <Route element={<ProtectedRoute><UpdateAnnexureController /></ProtectedRoute>} path="/annexure/:id" />
+
           <Route element={<ProtectedRoute><CreateEventLayout /></ProtectedRoute>} path="/create-event">
             <Route index element={<Instructions />} />
             <Route path="instructions" element={<Instructions />} />
