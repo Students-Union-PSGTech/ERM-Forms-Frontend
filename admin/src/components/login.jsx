@@ -250,15 +250,7 @@ function Login() {
               </button>
             </form>
 
-            {/* Forgot Password Link */}
-            <div className="mt-3 text-center">
-              <span
-                className="text-accent-orange hover:text-accent-yellow font-medium text-sm transition-colors duration-200 cursor-pointer underline"
-                onClick={() => navigate('/forgot-password')}
-              >
-                Forgot your password?
-              </span>
-            </div>
+
           </div>
         </div>
 
