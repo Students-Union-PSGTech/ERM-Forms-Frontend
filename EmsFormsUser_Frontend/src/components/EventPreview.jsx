@@ -432,10 +432,12 @@ const EventPreview = ({ formData: globalFormData, setFormData: setGlobalFormData
     if (!formData.facultyAdvisor.designation.trim()) newErrors['facultyAdvisor.designation'] = 'Faculty advisor designation is required';
     if (!formData.facultyAdvisor.contact.trim()) newErrors['facultyAdvisor.contact'] = 'Faculty advisor contact is required';
     
-    // Judge validation
+    // Judge validation (Now Optional)
+    /*
     if (!formData.judge.name.trim()) newErrors['judge.name'] = 'Judge name is required';
     if (!formData.judge.designation.trim()) newErrors['judge.designation'] = 'Judge designation is required';
     if (!formData.judge.contact.trim()) newErrors['judge.contact'] = 'Judge contact is required';
+    */
     
     return newErrors;
   };
