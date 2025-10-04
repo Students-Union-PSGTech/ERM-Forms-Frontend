@@ -231,10 +231,10 @@ function Stats() {
                           {item.item_name}
                         </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-500 whitespace-nowrap">
-                          {item.count?.toLocaleString()}
+                          {item.quantity?.toLocaleString()}
                         </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-500 whitespace-nowrap">
-                          ₹{(item.total_price / item.count)?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+                          ₹{(item.total_price / item.quantity)?.toLocaleString(undefined, { maximumFractionDigits: 2 })}
                         </td>
                         <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-semibold text-accent-orange whitespace-nowrap">
                           ₹{item.total_price?.toLocaleString()}
