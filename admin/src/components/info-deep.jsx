@@ -3,7 +3,7 @@ import Particles from "react-tsparticles";
 import { loadSlim } from "tsparticles-slim";
 import { useLocation, useNavigate } from "react-router-dom";
 import { adminAPI } from "../api";
-import { FileText, Download, X, Eye } from "lucide-react";
+import { FileText, Download, X, Eye, Trash2, Loader2 } from "lucide-react";
 
 const InfoDeep = () => {
   const particlesInit = React.useCallback(async (engine) => {
@@ -47,6 +47,18 @@ const InfoDeep = () => {
   const [showPdfViewer, setShowPdfViewer] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState(null);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteSecret, setDeleteSecret] = useState('');
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
+  const [deleteSuccess, setDeleteSuccess] = useState('');
+
+  const formatLabel = (label = '') =>
+    label
+      .replace(/_/g, ' ')
+      .replace(/\d+/g, (match) => ` ${match}`)
+      .replace(/\b\w/g, (char) => char.toUpperCase())
+      .trim();
 
   // Detect if device is mobile
   const isMobile = () => {
@@ -121,6 +133,58 @@ const InfoDeep = () => {
     }
   };
 
+  const openDeleteModal = () => {
+    setDeleteSecret('');
+    setDeleteError('');
+    setDeleteSuccess('');
+    setDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setDeleteModalOpen(false);
+    setDeleteSecret('');
+    setDeleteError('');
+    setDeleteSuccess('');
+    setDeleteLoading(false);
+  };
+
+  const handleDeleteEvent = async () => {
+    const SECRET_KEY = "Event Deletion Secret Key - Intrams 2025";
+    if (deleteSecret.trim() !== SECRET_KEY) {
+      setDeleteError('Invalid secret key. Please try again.');
+      setDeleteSuccess('');
+      return;
+    }
+
+    const eventIdentifier = event?._id || event?._id;
+    if (!eventIdentifier) {
+      setDeleteError('Event identifier is missing.');
+      return;
+    }
+
+    setDeleteLoading(true);
+    setDeleteError('');
+    setDeleteSuccess('');
+
+    try {
+      const res = await adminAPI.deleteEvent(eventIdentifier);
+      if (res.data?.success) {
+        setDeleteSuccess(res.data?.message || 'Event deleted successfully. Redirecting...');
+        setTimeout(() => {
+          setDeleteLoading(false);
+          closeDeleteModal();
+          navigate('/cards', { replace: true });
+        }, 1200);
+      } else {
+        setDeleteError(res.data?.message || 'Failed to delete event.');
+        setDeleteLoading(false);
+      }
+    } catch (err) {
+      setDeleteError(err?.response?.data?.message || err.message || 'Failed to delete event.');
+      setDeleteLoading(false);
+    }
+  };
+
   if (!event) {
     return (
       <div className="min-h-screen relative flex items-center justify-center bg-gradient-to-br from-accent-orange via-accent-yellow to-yellow-400 overflow-hidden">
@@ -163,6 +227,28 @@ const InfoDeep = () => {
           <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-3 sm:mb-4">{event.tagline}</p>
           <p className="text-sm sm:text-base lg:text-lg text-gray-700 mb-4 sm:mb-6">{event.about}</p>
 
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+              <h3 className="font-semibold text-gray-800 mb-2 text-sm sm:text-base">General Information</h3>
+              <p className="text-sm sm:text-base"><span className="font-medium">Association:</span> {event.association}</p>
+              <p className="text-sm sm:text-base"><span className="font-medium">Association Name:</span> {event.association_name}</p>
+              <p className="text-sm sm:text-base"><span className="font-medium">Event ID:</span> {event.event_id}</p>
+              <p className="text-sm sm:text-base"><span className="font-medium">Rounds Count:</span> {event.round_count}</p>
+              <p className="text-sm sm:text-base"><span className="font-medium">Edit Request Status:</span> {formatLabel(event.edit_req_status)}</p>
+              {event.req_message && (
+                <p className="text-sm sm:text-base"><span className="font-medium">Request Message:</span> {event.req_message}</p>
+              )}
+            </div>
+            <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+              <h3 className="font-semibold text-gray-800 mb-2 text-sm sm:text-base">Timestamps</h3>
+              <p className="text-sm sm:text-base"><span className="font-medium">Created At:</span> {event.createdAt ? new Date(event.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}</p>
+              <p className="text-sm sm:text-base"><span className="font-medium">Updated At:</span> {event.updatedAt ? new Date(event.updatedAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}</p>
+              {event.form?.rounds && (
+                <p className="text-sm sm:text-base"><span className="font-medium">Form Rounds:</span> {event.form.rounds}</p>
+              )}
+            </div>
+          </div>
+
           {/* PDF Actions */}
           <div className="flex flex-wrap gap-3 mb-6">
             <button
@@ -183,6 +269,13 @@ const InfoDeep = () => {
             >
               <Download className="w-4 h-4" />
               Download PDF
+            </button>
+            <button
+              onClick={openDeleteModal}
+              className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-all duration-200"
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete Event
             </button>
           </div>
 
@@ -208,6 +301,7 @@ const InfoDeep = () => {
             <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
               <h3 className="font-semibold text-gray-800 mb-2 text-sm sm:text-base">Form Details</h3>
               <p className="text-sm sm:text-base"><span className="font-medium">Day:</span> {event.form.day}</p>
+              <p className="text-sm sm:text-base"><span className="font-medium">Rounds Mentioned:</span> {event.form.rounds}</p>
               <p className="text-sm sm:text-base"><span className="font-medium">Two Days:</span> {event.form.two_days}</p>
               <p className="text-sm sm:text-base"><span className="font-medium">Participants:</span> {event.form.participants}</p>
               <p className="text-sm sm:text-base"><span className="font-medium">Duration:</span> {event.form.duration}</p>
@@ -228,12 +322,32 @@ const InfoDeep = () => {
               <div key={round._id} className="bg-gray-50 p-3 sm:p-4 rounded-lg mb-3 sm:mb-4">
                 <h3 className="font-semibold text-gray-800 text-sm sm:text-base">{round.name}</h3>
                 <p className="text-gray-700 mb-2 text-sm sm:text-base">{round.description}</p>
+                <p className="text-sm sm:text-base mb-2"><span className="font-medium">Participants:</span> {round.participants ?? '—'}</p>
+                <p className="text-sm sm:text-base mb-2"><span className="font-medium">Has Tie Breaker:</span> {round.hasTieBreaker ? 'Yes' : 'No'}</p>
                 <h4 className="font-medium text-gray-800 text-sm sm:text-base">Rules:</h4>
                 <ul className="list-disc list-inside text-gray-700 text-sm sm:text-base">
                   {round.rules.map((rule, i) => (
                     <li key={i}>{rule}</li>
                   ))}
                 </ul>
+                {round.hasTieBreaker && round.tieBreaker && (
+                  <div className="mt-3 bg-white border border-gray-200 rounded-lg p-3 sm:p-4">
+                    <h4 className="font-semibold text-gray-800 text-sm sm:text-base">Tie Breaker Round</h4>
+                    <p className="text-sm sm:text-base"><span className="font-medium">Name:</span> {round.tieBreaker.name || '—'}</p>
+                    <p className="text-sm sm:text-base"><span className="font-medium">Description:</span> {round.tieBreaker.description || '—'}</p>
+                    <p className="text-sm sm:text-base"><span className="font-medium">Participants:</span> {round.tieBreaker.participants ?? '—'}</p>
+                    {Array.isArray(round.tieBreaker.rules) && round.tieBreaker.rules.length > 0 && (
+                      <div className="mt-2">
+                        <h5 className="font-medium text-gray-800 text-sm">Rules:</h5>
+                        <ul className="list-disc list-inside text-gray-700 text-sm">
+                          {round.tieBreaker.rules.map((rule, idx) => (
+                            <li key={idx}>{rule}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -241,14 +355,16 @@ const InfoDeep = () => {
           <div className="mb-6 sm:mb-8">
             <h2 className="text-xl sm:text-2xl font-bold text-accent-orange mb-3 sm:mb-4">Team Details</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              {Object.entries(event.details).map(([key, person]) => (
-                person && typeof person === 'object' && person.name ? (
-                  <div key={person._id} className="bg-gray-50 p-3 sm:p-4 rounded-lg">
-                    <h3 className="font-semibold text-gray-800 capitalize text-sm sm:text-base">{key.replace('_', ' ')}</h3>
-                    <p className="text-sm sm:text-base"><span className="font-medium">Name:</span> {person.name}</p>
-                    <p className="text-sm sm:text-base"><span className="font-medium">Roll Number:</span> {person.roll_number}</p>
-                    <p className="text-sm sm:text-base"><span className="font-medium">Mobile:</span> {person.mobile}</p>
+              {Object.entries(event.details || {}).map(([key, person]) => (
+                person && typeof person === 'object' && (person.name || person.roll_number || person.mobile) ? (
+                  <div key={key} className="bg-gray-50 p-3 sm:p-4 rounded-lg">
+                    <h3 className="font-semibold text-gray-800 text-sm sm:text-base">{formatLabel(key)}</h3>
+                    {person.name && <p className="text-sm sm:text-base"><span className="font-medium">Name:</span> {person.name}</p>}
+                    {person.roll_number && <p className="text-sm sm:text-base"><span className="font-medium">Roll Number:</span> {person.roll_number}</p>}
+                    {person.mobile && <p className="text-sm sm:text-base"><span className="font-medium">Mobile:</span> {person.mobile}</p>}
                     {person.designation && <p className="text-sm sm:text-base"><span className="font-medium">Designation:</span> {person.designation}</p>}
+                    {person.department && <p className="text-sm sm:text-base"><span className="font-medium">Department:</span> {person.department}</p>}
+                    {person.year && <p className="text-sm sm:text-base"><span className="font-medium">Year:</span> {person.year}</p>}
                   </div>
                 ) : null
               ))}
@@ -280,6 +396,32 @@ const InfoDeep = () => {
               </table>
             </div>
           </div>
+
+          {Array.isArray(event.annexure) && event.annexure.length > 0 && (
+            <div className="mb-6 sm:mb-8">
+              <h2 className="text-xl sm:text-2xl font-bold text-accent-orange mb-3 sm:mb-4">Annexures</h2>
+              <div className="bg-gray-50 rounded-lg p-4">
+                <ul className="space-y-3">
+                  {event.annexure.map((file) => (
+                    <li key={file.public_id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-white rounded-lg border border-gray-200 p-3">
+                      <div>
+                        <p className="font-medium text-gray-800">{file.original_name}</p>
+                        <p className="text-sm text-gray-500">Public ID: {file.public_id}</p>
+                      </div>
+                      <a
+                        href={file.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-accent-orange rounded-lg hover:bg-accent-yellow transition-colors"
+                      >
+                        View Annexure
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* PDF Viewer Modal */}
@@ -322,6 +464,63 @@ const InfoDeep = () => {
                     <p className="text-gray-500">Loading PDF...</p>
                   </div>
                 )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {deleteModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 w-full max-w-md p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                  <Trash2 className="w-5 h-5 text-red-500" />
+                  Confirm Event Deletion
+                </h2>
+                <button
+                  onClick={closeDeleteModal}
+                  className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mb-3">
+                This action cannot be undone. Please enter the deletion secret key to confirm removal of <span className="font-semibold text-gray-800">{event.name}</span>.
+              </p>
+              <input
+                type="text"
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400"
+                placeholder="Enter deletion secret key"
+                value={deleteSecret}
+                onChange={(e) => setDeleteSecret(e.target.value)}
+                disabled={deleteLoading}
+              />
+              {deleteError && (
+                <div className="mt-3 text-sm text-red-600 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                  {deleteError}
+                </div>
+              )}
+              {deleteSuccess && (
+                <div className="mt-3 text-sm text-emerald-600 bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
+                  {deleteSuccess}
+                </div>
+              )}
+              <div className="mt-4 flex items-center justify-end gap-3">
+                <button
+                  onClick={closeDeleteModal}
+                  className="px-4 py-2 text-sm font-medium text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  disabled={deleteLoading}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteEvent}
+                  className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors disabled:opacity-60"
+                  disabled={deleteLoading}
+                >
+                  {deleteLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+                  {deleteLoading ? 'Deleting...' : 'Confirm Delete'}
+                </button>
               </div>
             </div>
           </div>

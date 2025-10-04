@@ -5,7 +5,7 @@ import { adminAPI } from '../api';
 import { LogOut, Code, BarChart3, Menu, X, Package, TrendingUp, FileText, Download, Loader2 } from 'lucide-react';
 
 export default function Layout({ children }) {
-  const { logout } = useAuth();
+  const { logout, user } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
@@ -35,7 +35,7 @@ export default function Layout({ children }) {
     { to: '/items', icon: Package, label: 'Items' },
     { to: '/stats', icon: TrendingUp, label: 'Statistics' },
     { to: '/edit-access', icon: Code, label: 'Edit Access' },
-    { to: '/logs', icon: FileText, label: 'Server Logs' }
+    ...(user?.role === 'admin' ? [{ to: '/logs', icon: FileText, label: 'Server Logs' }] : [])
   ];
 
   const openSummaryModal = () => {

@@ -64,6 +64,8 @@ export const adminAPI = {
 
   giveEditAccess: (id, access) =>
     API.post(`/api/admin/give-edit-access/${id}`, { access }),
+
+  deleteEvent: (eventId) => API.get(`/api/admin/delete/event/${eventId}`),
 };
 
 export default API;

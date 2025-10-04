@@ -46,11 +46,13 @@ function Login() {
     setIsLoading(true); // For ProtectedRoute
     try {
       const res = await adminAPI.verifyOtp(email, otp);
-
+      console.log(res.data.user);
 
       if (res.data.success) {
+        const userRole = res.data.user?.role || 'member';
+        localStorage.setItem('role', userRole);
         setIsAuthenticated(true);
-        setUser({ role: 'admin', email });
+        setUser({ role: userRole, email });
         setTimeout(() => {
           setIsLoading(false);
           setLoading(false);

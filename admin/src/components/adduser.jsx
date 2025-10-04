@@ -169,8 +169,8 @@ function Add() {
 
       <div className="relative z-10 w-full max-w-6xl mx-auto px-4 pt-24 sm:pt-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Association Management</h1>
-          <p className="text-white/80">Manage associations, create new ones, and update credentials</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Clubs Management</h1>
+          <p className="text-white/80">Manage Clubs, create new ones, and update credentials</p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
@@ -178,7 +178,7 @@ function Add() {
           <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
             <div className="bg-gradient-to-r from-accent-orange to-accent-yellow px-6 py-4">
               <h2 className="text-xl font-semibold text-white">
-                All Associations {filteredAssociations.length > 0 && `(${filteredAssociations.length})`}
+                All Clubs {filteredAssociations.length > 0 && `(${filteredAssociations.length})`}
               </h2>
             </div>
             <div className="p-6">
@@ -187,7 +187,7 @@ function Add() {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
-                  placeholder="Search by association name or username..."
+                  placeholder="Search by club name or username..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-accent-orange focus:border-accent-orange transition-all duration-200 bg-gray-50 focus:bg-white text-gray-900 placeholder-gray-500"
@@ -195,7 +195,7 @@ function Add() {
               </div>
               {loading && (
                 <div className="text-center py-8">
-                  <p className="text-gray-600">Loading associations...</p>
+                  <p className="text-gray-600">Loading clubs...</p>
                 </div>
               )}
               {error && (
@@ -205,7 +205,7 @@ function Add() {
               )}
               {!loading && !error && filteredAssociations.length === 0 && associations.length > 0 && (
                 <div className="text-center py-8">
-                  <p className="text-gray-600">No associations match your search</p>
+                  <p className="text-gray-600">No Clubs match your search</p>
                   <button
                     onClick={() => setSearchTerm("")}
                     className="mt-2 text-accent-orange hover:text-accent-yellow underline"
@@ -216,7 +216,7 @@ function Add() {
               )}
               {!loading && !error && associations.length === 0 && (
                 <div className="text-center py-8">
-                  <p className="text-gray-600">No associations found</p>
+                  <p className="text-gray-600">No Clubs found</p>
                 </div>
               )}
               {!loading && !error && filteredAssociations.length > 0 && (
@@ -257,7 +257,7 @@ function Add() {
             <div className="bg-gradient-to-r from-accent-orange to-accent-yellow px-6 py-4">
               <h2 className="text-xl font-semibold text-white flex items-center gap-2">
                 <Plus className="w-5 h-5" />
-                Create Association
+                Create Club
               </h2>
             </div>
             <div className="p-6">
@@ -296,7 +296,7 @@ function Add() {
                   type="submit"
                   className="w-full bg-gradient-to-r from-accent-orange to-accent-yellow text-white py-3 px-4 rounded-xl font-semibold text-lg shadow-lg hover:from-orange-500 hover:to-yellow-500 focus:ring-4 focus:ring-accent-yellow disabled:opacity-50 disabled:cursor-not-allowed transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
                 >
-                  Create Association
+                  Create Club
                 </button>
               </form>
             </div>
@@ -308,7 +308,7 @@ function Add() {
               <div className="bg-gradient-to-r from-accent-orange to-accent-yellow px-6 py-4 rounded-t-3xl">
                 <h2 className="text-xl font-semibold text-white flex items-center gap-2">
                   <Edit className="w-5 h-5" />
-                  Edit Association
+                  Edit Club
                 </h2>
               </div>
               <div className="p-6">
