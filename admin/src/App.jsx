@@ -11,6 +11,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import InfoDeep from './components/info-deep';
 import EditAccess from './components/editaccess';
 import Logs from './components/Logs';
+import RolePdf from './components/rolePdf';
 //import './App.css'
 
 function App() {
@@ -60,6 +61,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Logs/>
+                </ProtectedRoute>
+              }
+            />
+            <Route 
+              path='/role-pdf' 
+              element={
+                <ProtectedRoute>
+                  <RolePdf/>
                 </ProtectedRoute>
               }
             />

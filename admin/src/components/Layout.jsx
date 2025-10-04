@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { adminAPI } from '../api';
-import { LogOut, Code, BarChart3, Menu, X, Package, TrendingUp, FileText, Download, Loader2 } from 'lucide-react';
+import { LogOut, Code, BarChart3, Menu, X, Package, TrendingUp, FileText, Download, Loader2, Users } from 'lucide-react';
 
 export default function Layout({ children }) {
   const { logout, user } = useAuth();
@@ -35,7 +35,12 @@ export default function Layout({ children }) {
     { to: '/items', icon: Package, label: 'Items' },
     { to: '/stats', icon: TrendingUp, label: 'Statistics' },
     { to: '/edit-access', icon: Code, label: 'Edit Access' },
-    ...(user?.role === 'admin' ? [{ to: '/logs', icon: FileText, label: 'Server Logs' }] : [])
+    { to: '/role-pdf', icon: Users, label: 'Role PDFs' },
+    ...(user?.role === 'admin'
+      ? [
+          { to: '/logs', icon: FileText, label: 'Server Logs' },
+        ]
+      : [])
   ];
 
   const openSummaryModal = () => {
