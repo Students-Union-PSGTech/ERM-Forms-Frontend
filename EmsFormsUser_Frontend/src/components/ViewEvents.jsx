@@ -485,22 +485,45 @@ const handleDownloadPDF = async () => {
         {event.rounds && event.rounds.length > 0 && (
           <Section>
             <SectionTitle>Rounds ({event.round_count || event.rounds.length})</SectionTitle>
-            {event.rounds.map((round, index) => (
-              <RoundDetails key={round._id || index}>
-                <h4>{round.name || `Round ${index + 1}`}</h4>
-                {round.description && <p>{round.description}</p>}
-                {round.rules && round.rules.length > 0 && (
-                  <>
-                    <strong>Rules:</strong>
-                    <ul>
-                      {round.rules.map((rule, rIndex) => (
-                        <li key={rIndex}>{rule}</li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-              </RoundDetails>
-            ))}
+            {event.rounds.flatMap((round, index) => {
+              const roundElements = [
+                <RoundDetails key={round._id || index}>
+                  <h4>{round.name || `Round ${index + 1}`}</h4>
+                  {round.description && <p>{round.description}</p>}
+                  {round.rules && round.rules.length > 0 && (
+                    <>
+                      <strong>Rules:</strong>
+                      <ul>
+                        {round.rules.map((rule, rIndex) => (
+                          <li key={rIndex}>{rule}</li>
+                        ))}
+                      </ul>
+                    </>
+                  )}
+                </RoundDetails>
+              ];
+
+              if (round.hasTieBreaker && round.tieBreaker) {
+                roundElements.push(
+                  <RoundDetails key={`${round._id || index}-tiebreaker`} style={{ marginLeft: '2rem', borderLeft: '3px solid var(--flame-gold)', paddingLeft: '1rem' }}>
+                    <h4>{round.tieBreaker.name || 'Tie-Breaker Round'}</h4>
+                    {round.tieBreaker.description && <p>{round.tieBreaker.description}</p>}
+                    {round.tieBreaker.rules && round.tieBreaker.rules.length > 0 && (
+                      <>
+                        <strong>Rules:</strong>
+                        <ul>
+                          {round.tieBreaker.rules.map((rule, rIndex) => (
+                            <li key={rIndex}>{rule}</li>
+                          ))}
+                        </ul>
+                      </>
+                    )}
+                  </RoundDetails>
+                );
+              }
+
+              return roundElements;
+            })}
           </Section>
         )}
 

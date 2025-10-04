@@ -82,6 +82,33 @@ const SearchBar = styled.div`
   }
 `;
 
+const RefreshButton = styled.button`
+  flex-shrink: 0;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 50%;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #6b7280;
+
+  &:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    transform: rotate(90deg);
+    color: #111827;
+  }
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+`;
+
 const EventCard = styled.div`
   background: white;
   border-radius: 16px;
@@ -470,6 +497,11 @@ export default function EditView() {
             placeholder="Search events by name or description..."
           />
           <span>{filteredEvents.length} event(s) found</span>
+          <RefreshButton onClick={() => setRefreshEvents(r => r + 1)} title="Refresh Events">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 11.664 0l3.18-3.183m-3.181-4.992-3.182-3.182a8.25 8.25 0 0 0-11.664 0l-3.18 3.183" />
+            </svg>
+          </RefreshButton>
         </SearchBar>
         {filteredEvents.length > 0 ? (
           <EventsGrid>

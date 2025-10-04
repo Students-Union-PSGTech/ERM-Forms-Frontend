@@ -582,7 +582,10 @@ const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
         rounds: (rounds || []).map(r => ({
           name: r?.name || '',
           description: r?.description || '',
-          rules: Array.isArray(r?.rules) ? r.rules.filter(Boolean) : []
+          rules: Array.isArray(r?.rules) ? r.rules.filter(Boolean) : [],
+          participants: r?.participants || 0,
+          hasTieBreaker: r?.hasTieBreaker || false,
+          tieBreaker: r?.hasTieBreaker ? r.tieBreaker : undefined
         })),
 
         // Event details (people) with snake_case keys
