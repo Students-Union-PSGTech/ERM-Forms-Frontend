@@ -488,7 +488,6 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
         tieBreaker: round?.hasTieBreaker
           ? {
               ...round.tieBreaker,
-              participants: Math.max(1, Number(round?.tieBreaker?.participants) || 1),
             }
           : round.tieBreaker,
       }));
@@ -508,7 +507,6 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
         name: `Tie-Breaker for Round ${i + 1}`,
         description: "",
         rules: [],
-        participants: 1, // default to 1 so it’s valid by default
       }
     }));
     setRounds(initial);
@@ -537,8 +535,6 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
         if (!r.tieBreaker?.name?.trim()) e.tieBreaker.name = 'Tie-breaker name is required.';
         if (!r.tieBreaker?.description?.trim()) e.tieBreaker.description = 'Tie-breaker description is required.';
         if (!Array.isArray(r.tieBreaker?.rules) || r.tieBreaker.rules.length === 0) e.tieBreaker.rules = 'Add at least one tie-breaker rule.';
-        const tbP = Number(r.tieBreaker?.participants);
-        if (!Number.isFinite(tbP) || tbP < 1) e.tieBreaker.participants = 'Participants must be at least 1.';
       }
 
       return e;
@@ -585,7 +581,6 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
       else if (e.tieBreaker?.name) idsInOrder.push(`tiebreaker-${i}-name`);
       else if (e.tieBreaker?.description) idsInOrder.push(`tiebreaker-${i}-description`);
       else if (e.tieBreaker?.rules) idsInOrder.push(`tiebreaker-${i}-rule-input`);
-      else if (e.tieBreaker?.participants) idsInOrder.push(`tiebreaker-${i}-participants`);
     });
 
     const id = idsInOrder[0];
@@ -611,9 +606,8 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
           name: `Tie-Breaker for Round ${index + 1}`,
           description: "",
           rules: [],
-          participants: 1
         };
-        copy[index].tieBreaker = { ...tb, participants: Math.max(1, Number(tb.participants) || 1) };
+        copy[index].tieBreaker = { ...tb };
       }
       return copy;
     });
@@ -705,7 +699,6 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
           name: `Tie-Breaker for Round ${prev.length + 1}`,
           description: "",
           rules: [],
-          participants: 1, // default to 1
         }
       }
     ]);
@@ -715,32 +708,23 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
     setRounds(prev => prev.filter((_, i) => i !== index));
   };
 
-  const updateParticipants = (index, delta, isTieBreaker = false) => {
+  const updateParticipants = (index, delta) => {
     setRounds(prev => {
       const copy = [...prev];
       if (!copy[index]) return prev;
-      if (isTieBreaker) {
-        const current = Number(copy[index].tieBreaker.participants) || 0;
-        copy[index].tieBreaker.participants = Math.max(1, current + delta);
-      } else {
-        const current = Number(copy[index].participants) || 0;
-        copy[index].participants = Math.max(1, current + delta);
-      }
+      const current = Number(copy[index].participants) || 0;
+      copy[index].participants = Math.max(1, current + delta);
       return copy;
     });
   };
 
-  const handleParticipantInputChange = (index, value, isTieBreaker = false) => {
+  const handleParticipantInputChange = (index, value) => {
     const num = parseInt(value, 10);
     const finalValue = isNaN(num) ? 1 : Math.max(1, num);
     setRounds(prev => {
       const copy = [...prev];
       if (!copy[index]) return prev;
-      if (isTieBreaker) {
-        copy[index].tieBreaker.participants = finalValue;
-      } else {
-        copy[index].participants = finalValue;
-      }
+      copy[index].participants = finalValue;
       return copy;
     });
   };
@@ -989,33 +973,6 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
                         </AddRuleButton>
                       </RuleInput>
                     </RulesSection>
-                    <FormGroup style={{marginTop: '2rem'}}>
-                      <Label>Number of Participants *</Label>
-                      <ParticipantCounter>
-                        <CounterButton 
-                          type="button"
-                          onClick={() => updateParticipants(i, -1, true)}
-                          disabled={round.tieBreaker.participants <= 1}
-                          aria-label="Decrease tie-breaker participants"
-                        >
-                          −
-                        </CounterButton>
-                        <ParticipantInput
-                          id={`tiebreaker-${i}-participants`}
-                          type="number"
-                          min="1"
-                          value={round.tieBreaker.participants}
-                          onChange={(e) => handleParticipantInputChange(i, e.target.value, true)}
-                          placeholder="1"
-                          $invalid={!!tbErr.participants}
-                          aria-invalid={!!tbErr.participants}
-                        />
-                        <CounterButton type="button" onClick={() => updateParticipants(i, 1, true)} aria-label="Increase tie-breaker participants">
-                          +
-                        </CounterButton>
-                      </ParticipantCounter>
-                      {tbErr.participants && <ErrorText>{tbErr.participants}</ErrorText>}
-                    </FormGroup>
                   </RoundContent>
                 </RoundCard>
               );

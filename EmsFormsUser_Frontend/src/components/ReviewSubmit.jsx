@@ -509,10 +509,10 @@ const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
         continue;
       }
       
-      // Validate file type (only allow PDF and DOC files)
+      // Validate file type (only allow PDF files)
       const fileExtension = file.name.split('.').pop().toLowerCase();
-      if (!['pdf', 'doc', 'docx'].includes(fileExtension)) {
-        setFileError(`File "${file.name}" has invalid format. Only PDF and DOC files are allowed.`);
+      if (!['pdf'].includes(fileExtension)) {
+        setFileError(`File "${file.name}" has invalid format. Only PDF files are allowed.`);
         continue;
       }
       
@@ -891,28 +891,59 @@ const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
           <SectionContent>
             {rounds && rounds.length > 0 ? (
               <>
-                {rounds.map((round, idx) => (
-                  <RoundCard key={idx}>
-                    <div className="round-name">{round.name}</div>
-                    <div className="round-info">
-                      <div className="description">
-                        <strong>Description:</strong><br/>
-                        {round.description || "No description provided"}
-                        {round.rules && round.rules.length > 0 && (
-                          <>
-                            <br/><br/><strong>Rules:</strong>
-                            <ul style={{margin: '0.5rem 0', paddingLeft: '1.5rem'}}>
-                              {round.rules.map((rule, ruleIdx) => (
-                                <li key={ruleIdx} style={{marginBottom: '0.25rem'}}>{rule}</li>
-                              ))}
-                            </ul>
-                          </>
-                        )}
+                {rounds.flatMap((round, idx) => {
+                  const roundCards = [(
+                    <RoundCard key={idx}>
+                      <div className="round-name">{round.name}</div>
+                      <div className="round-info">
+                        <div className="description">
+                          <strong>Description:</strong><br/>
+                          {round.description || "No description provided"}
+                          {round.rules && round.rules.length > 0 && (
+                            <>
+                              <br/><br/><strong>Rules:</strong>
+                              <ul style={{margin: '0.5rem 0', paddingLeft: '1.5rem'}}>
+                                {round.rules.map((rule, ruleIdx) => (
+                                  <li key={ruleIdx} style={{marginBottom: '0.25rem'}}>{rule}</li>
+                                ))}
+                              </ul>
+                            </>
+                          )}
+                        </div>
+                        <div className="participants">
+                          <div className="count">{round.participants}</div>
+                          <div className="label">Participants</div>
+                        </div>
                       </div>
+                    </RoundCard>
+                  )];
 
-                    </div>
-                  </RoundCard>
-                ))}
+                  if (round.hasTieBreaker && round.tieBreaker) {
+                    roundCards.push(
+                      <RoundCard key={`${idx}-tiebreaker`} style={{borderColor: 'var(--flame-gold)', marginLeft: '2rem'}}>
+                        <div className="round-name">{round.tieBreaker.name}</div>
+                        <div className="round-info">
+                          <div className="description">
+                            <strong>Description:</strong><br/>
+                            {round.tieBreaker.description || "No description provided"}
+                            {round.tieBreaker.rules && round.tieBreaker.rules.length > 0 && (
+                              <>
+                                <br/><br/><strong>Rules:</strong>
+                                <ul style={{margin: '0.5rem 0', paddingLeft: '1.5rem'}}>
+                                  {round.tieBreaker.rules.map((rule, ruleIdx) => (
+                                    <li key={ruleIdx} style={{marginBottom: '0.25rem'}}>{rule}</li>
+                                  ))}
+                                </ul>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </RoundCard>
+                    );
+                  }
+                  
+                  return roundCards;
+                })}
                 <TotalSummary>
                   <div className="amount">{totalParticipants}</div>
                   <div className="label">Total Expected Participants</div>
@@ -943,13 +974,13 @@ const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
                 type="file"
                 multiple
                 onChange={handleFileChange}
-                accept=".pdf,.doc,.docx"
+                accept=".pdf"
               />
               <UploadIcon>📄</UploadIcon>
               <UploadText>
                 <h4>Drag and drop or click to upload</h4>
                 <p>Upload up to 5 documents (Max 10MB each)</p>
-                <p>Accepted formats: PDF, DOC, DOCX</p>
+                <p>Accepted format: PDF</p>
               </UploadText>
               <UploadButton>Choose Files</UploadButton>
             </FileUploadArea>

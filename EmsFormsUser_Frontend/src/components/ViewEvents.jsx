@@ -199,6 +199,40 @@ const ItemsTable = styled.table`
   }
 `;
 
+const AnnexureList = styled.ul`
+  list-style: none;
+  padding: 0;
+  margin-top: 1rem;
+`;
+
+const AnnexureItem = styled.li`
+  margin-bottom: 0.75rem;
+  
+  a {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    color: var(--flame-orange);
+    text-decoration: none;
+    font-weight: 500;
+    transition: background 0.2s ease, border-color 0.2s ease;
+
+    &:hover {
+      background: #f3f4f6;
+      border-color: #d1d5db;
+    }
+
+    &::before {
+      content: '📄';
+      font-size: 1.2rem;
+    }
+  }
+`;
+
 // =====================================================================
 // New Modal Styled Components
 // =====================================================================
@@ -516,6 +550,21 @@ const handleDownloadPDF = async () => {
                 </tr>
               </tbody>
             </ItemsTable>
+          </Section>
+        )}
+
+        {event.annexure && event.annexure.length > 0 && (
+          <Section>
+            <SectionTitle>Annexures</SectionTitle>
+            <AnnexureList>
+              {event.annexure.map((file) => (
+                <AnnexureItem key={file.public_id}>
+                  <a href={file.url} target="_blank" rel="noopener noreferrer">
+                    {file.original_name}
+                  </a>
+                </AnnexureItem>
+              ))}
+            </AnnexureList>
           </Section>
         )}
       </ModalContent>
