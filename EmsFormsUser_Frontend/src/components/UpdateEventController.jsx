@@ -251,8 +251,6 @@ export default function UpdateEventController() {
           <input type="text" value={formData.tagline || ''} onChange={e => handleChange('tagline', e.target.value)} style={inputStyle} />
           <label style={labelStyle}>About</label>
           <textarea value={formData.about || ''} onChange={e => handleChange('about', e.target.value)} style={{ ...inputStyle, minHeight: 80 }} />
-          <label style={labelStyle}>Round Count</label>
-          <input type="number" value={formData.round_count || ''} onChange={e => handleChange('round_count', e.target.value)} style={inputStyle} />
         </div>
 
         {/* Rounds Section */}
@@ -270,8 +268,6 @@ export default function UpdateEventController() {
               <label style={labelStyle}>Rules (one per line)</label>
               <textarea value={round.rules?.join('\n') || ''} onChange={e => handleRoundChange(idx, 'rules', e.target.value.split('\n'))} style={{ ...inputStyle, minHeight: 60 }} />
 
-              <label style={labelStyle}>Participants</label>
-              <input type="number" value={round.participants || ''} onChange={e => handleRoundChange(idx, 'participants', Number(e.target.value))} style={inputStyle} />
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', margin: '1rem 0' }}>
                 <input

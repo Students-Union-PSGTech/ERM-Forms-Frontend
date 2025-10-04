@@ -175,6 +175,10 @@ const RoundHeader = styled.div`
   padding: 1.5rem;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
   border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   
   h3 {
     display: flex;
@@ -192,7 +196,28 @@ const RoundHeader = styled.div`
     border-radius: 12px;
     font-size: 0.8rem;
     font-weight: 600;
-    margin-left: auto;
+  }
+`;
+
+const DeleteRoundButton = styled.button`
+  background: #dc2626;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.45rem 0.9rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    background: #b91c1c;
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: 3px solid rgba(220, 38, 38, 0.4);
+    outline-offset: 2px;
   }
 `;
 
@@ -457,7 +482,17 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
 
     // Load rounds if already present
     if (Array.isArray(globalFormData?.rounds) && globalFormData.rounds.length > 0) {
-      setRounds(globalFormData.rounds);
+  const sanitized = globalFormData.rounds.map((round) => ({
+        ...round,
+        participants: Math.max(1, Number(round?.participants) || 1),
+        tieBreaker: round?.hasTieBreaker
+          ? {
+              ...round.tieBreaker,
+              participants: Math.max(1, Number(round?.tieBreaker?.participants) || 1),
+            }
+          : round.tieBreaker,
+      }));
+      setRounds(sanitized);
       return;
     }
 
@@ -467,7 +502,7 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
       name: `Round ${i + 1}`,
       description: "",
       rules: [],
-      participants: 0,
+  participants: 1,
       hasTieBreaker: false,
       tieBreaker: {
         name: `Tie-Breaker for Round ${i + 1}`,
@@ -664,7 +699,7 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
         name: `Round ${prev.length + 1}`,
         description: "",
         rules: [],
-        participants: 0,
+        participants: 1,
         hasTieBreaker: false,
         tieBreaker: {
           name: `Tie-Breaker for Round ${prev.length + 1}`,
@@ -803,7 +838,13 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
                     {round.name}
                     <span className="round-number">#{i + 1}</span>
                   </h3>
-                  
+                  <DeleteRoundButton
+                    type="button"
+                    onClick={() => removeRound(i)}
+                    aria-label={`Delete ${round.name || `round ${i + 1}`}`}
+                  >
+                    Delete
+                  </DeleteRoundButton>
                 </RoundHeader>
                 
                 <RoundContent>
@@ -868,34 +909,6 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
                     </RuleInput>
                   </RulesSection>
                   
-                  <FormGroup style={{marginTop: '2rem'}}>
-                    <Label>Number of Participants *</Label>
-                    <ParticipantCounter>
-                      <CounterButton 
-                        type="button"
-                        onClick={() => updateParticipants(i, -1)}
-                        disabled={round.participants <= 1}
-                        aria-label="Decrease participants"
-                      >
-                        −
-                      </CounterButton>
-                      <ParticipantInput
-                        id={`round-${i}-participants`}
-                        type="number"
-                        min="1"
-                        value={round.participants}
-                        onChange={(e) => handleParticipantInputChange(i, e.target.value)}
-                        placeholder="1"
-                        $invalid={!!rErr.participants}
-                        aria-invalid={!!rErr.participants}
-                      />
-                      <CounterButton type="button" onClick={() => updateParticipants(i, 1)} aria-label="Increase participants">
-                        +
-                      </CounterButton>
-                    </ParticipantCounter>
-                    {rErr.participants && <ErrorText>{rErr.participants}</ErrorText>}
-                  </FormGroup>
-
                   <TieBreakerToggle>
                     <input
                       type="checkbox"
@@ -985,6 +998,7 @@ const RoundsPage = ({ formData: globalFormData, setFormData: setGlobalFormData }
                           disabled={round.tieBreaker.participants <= 1}
                           aria-label="Decrease tie-breaker participants"
                         >
+                          −
                         </CounterButton>
                         <ParticipantInput
                           id={`tiebreaker-${i}-participants`}

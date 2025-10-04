@@ -23,6 +23,7 @@ const UpdateAnnexureController = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [eventName, setEventName] = useState('');
+  const [isBackHovered, setIsBackHovered] = useState(false);
 
   useEffect(() => {
     const fetchEventData = async () => {
@@ -143,6 +144,18 @@ const UpdateAnnexureController = () => {
   return (
     <div style={styles.container}>
       <GlobalStyles />
+      <button
+        type="button"
+        onClick={() => navigate(-1)}
+        onMouseEnter={() => setIsBackHovered(true)}
+        onMouseLeave={() => setIsBackHovered(false)}
+        style={{
+          ...styles.backButton,
+          ...(isBackHovered ? styles.backButtonHover : {}),
+        }}
+      >
+        ← Back
+      </button>
       <h2 style={styles.header}>Update Annexures for {eventName}</h2>
       {error && <p style={styles.error}>{error}</p>}
 
@@ -259,10 +272,29 @@ const UpdateAnnexureController = () => {
 
 const styles = {
   container: {
-    padding: '2rem',
+    padding: '4rem 2rem 2rem',
     maxWidth: '800px',
     margin: '0 auto',
     fontFamily: 'sans-serif',
+    position: 'relative',
+  },
+  backButton: {
+    position: 'absolute',
+    top: '1rem',
+    left: '1rem',
+    background: '#b45309',
+    color: 'white',
+    border: 'none',
+    borderRadius: '6px',
+    padding: '0.5rem 1rem',
+    cursor: 'pointer',
+    fontSize: '0.9rem',
+    fontWeight: 600,
+    transition: 'background 0.2s ease',
+    zIndex: 10,
+  },
+  backButtonHover: {
+    background: '#92400e',
   },
   header: {
     textAlign: 'center',

@@ -474,7 +474,7 @@ const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
   const items = formData.items || [];
 
   const totalCost = items?.reduce((sum, item) => sum + (item.price_per_unit * item.quantity), 0) || 0;
-  const totalParticipants = rounds?.reduce((sum, round) => sum + (round.participants || 0), 0) || 0;
+  const totalParticipants = formData.eventDetails.expectedParticipants;
 
   // Helper to map frontend person fields to backend schema (snake_case)
   const toPerson = (p = {}) => ({
@@ -650,7 +650,7 @@ const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
       await createEvent(uploadFormData);
       
       sessionStorage.removeItem("createEventFormData");
-      navigate('/home', { state: { success: true, message: 'Event created successfully!' } });
+      navigate('/my-events', { state: { success: true, message: 'Event created successfully!' } });
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to submit form. Please try again.');
       console.error('Submission error:', err);
@@ -909,10 +909,7 @@ const ReviewSubmit = ({ formData, setFormData /* ...existing props... */ }) => {
                           </>
                         )}
                       </div>
-                      <div className="participants">
-                        <div className="count">{round.participants || 0}</div>
-                        <div className="label">Participants</div>
-                      </div>
+
                     </div>
                   </RoundCard>
                 ))}

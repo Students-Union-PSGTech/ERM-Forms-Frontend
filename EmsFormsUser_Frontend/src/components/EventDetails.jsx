@@ -255,7 +255,7 @@ export default function EventDetails({ formData: globalFormData, setFormData: se
     dayPreferred: '', // 'day1', 'day2', 'twoDays'
     
     // Number of rounds
-    numberOfRounds: '',
+  numberOfRounds: '1',
     
     // Expected number of participants
     expectedParticipants: '',
@@ -294,7 +294,16 @@ export default function EventDetails({ formData: globalFormData, setFormData: se
   // Load data from global state on mount
   useEffect(() => {
     if (globalFormData?.eventDetails) {
-      setDetails(globalFormData.eventDetails);
+      setDetails(prev => {
+        const fromGlobal = { ...prev, ...globalFormData.eventDetails };
+        const parsed = parseInt(fromGlobal.numberOfRounds, 10);
+        if (!Number.isFinite(parsed) || parsed < 1) {
+          fromGlobal.numberOfRounds = '1';
+        } else {
+          fromGlobal.numberOfRounds = String(parsed);
+        }
+        return fromGlobal;
+      });
     }
     
     // Check if Event Preview is completed (compulsory)
@@ -411,6 +420,7 @@ export default function EventDetails({ formData: globalFormData, setFormData: se
         </Header>
         
         <Form onSubmit={handleSubmit}>
+          <input type="hidden" value={details.numberOfRounds} readOnly />
           <SectionTitle>Event Details</SectionTitle>
           
           <FormGrid>
@@ -450,20 +460,6 @@ export default function EventDetails({ formData: globalFormData, setFormData: se
                 </RadioOption>
               </RadioGroup>
               {errors.dayPreferred && <ErrorMessage>{errors.dayPreferred}</ErrorMessage>}
-            </FormGroup>
-            
-            {/* Number of Rounds */}
-            <FormGroup>
-              <Label>Number of Rounds *</Label>
-              <Input 
-                type="number" 
-                min="1"
-                placeholder="e.g., 3"
-                value={details.numberOfRounds}
-                onChange={(e) => handleChange('numberOfRounds', e.target.value)}
-                className={errors.numberOfRounds ? 'error' : ''}
-              />
-              {errors.numberOfRounds && <ErrorMessage>{errors.numberOfRounds}</ErrorMessage>}
             </FormGroup>
             
             {/* Expected Participants */}
@@ -658,7 +654,7 @@ export default function EventDetails({ formData: globalFormData, setFormData: se
             <Button type="button" onClick={() => {
               setDetails({
                 dayPreferred: '',
-                numberOfRounds: '',
+                numberOfRounds: '1',
                 expectedParticipants: '',
                 duration: '',
                 eventType: '',
