@@ -52,6 +52,7 @@ const InfoDeep = () => {
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [deleteError, setDeleteError] = useState('');
   const [deleteSuccess, setDeleteSuccess] = useState('');
+  const [currentPdfType, setCurrentPdfType] = useState('event');
 
   const formatLabel = (label = '') =>
     label
@@ -73,8 +74,14 @@ const InfoDeep = () => {
     }
 
     try {
+      setCurrentPdfType('event');
       setPdfLoading(true);
       setPdfError(null);
+
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+        setPdfUrl(null);
+      }
 
       const response = await adminAPI.getEventPDF(event.event_id);
 
@@ -99,6 +106,41 @@ const InfoDeep = () => {
     }
   };
 
+  const handleViewItemsPDF = async () => {
+    if (!event?.event_id) {
+      setPdfError("Event ID not found");
+      return;
+    }
+
+    try {
+      setCurrentPdfType('items');
+      setPdfLoading(true);
+      setPdfError(null);
+
+      if (pdfUrl) {
+        URL.revokeObjectURL(pdfUrl);
+        setPdfUrl(null);
+      }
+
+      const response = await adminAPI.getEventItemsPDF(event.event_id);
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+
+      if (isMobile()) {
+        window.open(url, '_blank');
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      } else {
+        setPdfUrl(url);
+        setShowPdfViewer(true);
+      }
+    } catch (err) {
+      setPdfError(err.response?.data?.message || err.message || "Failed to load Items PDF");
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
   const handleDownloadPDF = async () => {
     if (!event?.event_id) {
       setPdfError("Event ID not found");
@@ -106,13 +148,16 @@ const InfoDeep = () => {
     }
 
     try {
-      const response = await adminAPI.getEventPDF(event.event_id);
+      const response = currentPdfType === 'items'
+        ? await adminAPI.getEventItemsPDF(event.event_id)
+        : await adminAPI.getEventPDF(event.event_id);
 
       // Create download link
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      const fileName = `${event.association_name || 'unknown'}_${event.name || 'event'}_${event.event_id}`.replace(/[^a-zA-Z0-9_-]/g, '_');
+      const suffix = currentPdfType === 'items' ? 'items' : 'event';
+      const fileName = `${event.association_name || 'unknown'}_${event.name || 'event'}_${event.event_id}_${suffix}`.replace(/[^a-zA-Z0-9_-]/g, '_');
     
       link.href = url;
       link.download = `${fileName}.pdf`;
@@ -256,12 +301,24 @@ const InfoDeep = () => {
               disabled={pdfLoading}
               className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-accent-orange to-accent-yellow text-white rounded-lg hover:from-orange-500 hover:to-yellow-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {pdfLoading ? (
+              {pdfLoading && currentPdfType === 'event' ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               ) : (
                 <Eye className="w-4 h-4" />
               )}
-              {pdfLoading ? 'Loading PDF...' : (isMobile() ? 'Open PDF' : 'View PDF')}
+              {pdfLoading && currentPdfType === 'event' ? 'Loading PDF...' : (isMobile() ? 'Open PDF' : 'View PDF')}
+            </button>
+            <button
+              onClick={handleViewItemsPDF}
+              disabled={pdfLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-accent-orange text-white rounded-lg hover:bg-accent-yellow transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {pdfLoading && currentPdfType === 'items' ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <FileText className="w-4 h-4" />
+              )}
+              {pdfLoading && currentPdfType === 'items' ? 'Loading Items PDF...' : (isMobile() ? 'Open Items PDF' : 'Items PDF')}
             </button>
             <button
               onClick={handleDownloadPDF}
@@ -431,7 +488,7 @@ const InfoDeep = () => {
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
                 <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
                   <FileText className="w-5 h-5" />
-                  Event PDF - {event.name}
+                  {currentPdfType === 'items' ? `Items PDF - ${event.name}` : `Event PDF - ${event.name}`}
                 </h2>
                 <div className="flex gap-2">
                   <button
