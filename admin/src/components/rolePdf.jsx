@@ -13,6 +13,12 @@ const RolePdf = () => {
   const [pdfBlob, setPdfBlob] = useState(null);
   const [loadingRole, setLoadingRole] = useState('');
   const [error, setError] = useState('');
+  const [summaryOptionsOpen, setSummaryOptionsOpen] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [summaryPdfModalOpen, setSummaryPdfModalOpen] = useState(false);
+  const [summaryPdfUrl, setSummaryPdfUrl] = useState(null);
+  const [summaryPdfBlob, setSummaryPdfBlob] = useState(null);
+  const [summaryError, setSummaryError] = useState('');
 
   const particlesInit = useCallback(async (engine) => {
     await loadSlim(engine);
@@ -55,6 +61,14 @@ const RolePdf = () => {
       }
     };
   }, [pdfUrl]);
+
+  useEffect(() => {
+    return () => {
+      if (summaryPdfUrl) {
+        URL.revokeObjectURL(summaryPdfUrl);
+      }
+    };
+  }, [summaryPdfUrl]);
 
   const closeModal = () => {
     setModalOpen(false);
@@ -110,6 +124,78 @@ const RolePdf = () => {
     URL.revokeObjectURL(url);
   };
 
+  const openSummaryOptions = () => {
+    setSummaryError('');
+    setSummaryOptionsOpen(true);
+  };
+
+  const closeSummaryOptions = () => {
+    setSummaryOptionsOpen(false);
+  };
+
+  const closeSummaryPdfModal = () => {
+    setSummaryPdfModalOpen(false);
+    if (summaryPdfUrl) {
+      URL.revokeObjectURL(summaryPdfUrl);
+      setSummaryPdfUrl(null);
+    }
+    setSummaryPdfBlob(null);
+  };
+
+  const fetchSummaryReport = async (type) => {
+    setSummaryError('');
+    setSummaryLoading(true);
+
+    if (summaryPdfUrl) {
+      URL.revokeObjectURL(summaryPdfUrl);
+      setSummaryPdfUrl(null);
+    }
+
+    try {
+      const response = await adminAPI.getEventSummaryReport(type);
+
+      if (type === 'excel') {
+        const url = URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'event-summary.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        setSummaryOptionsOpen(false);
+      } else {
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        setSummaryPdfBlob(blob);
+        setSummaryPdfUrl(url);
+        setSummaryPdfModalOpen(true);
+        setSummaryOptionsOpen(false);
+      }
+    } catch (err) {
+      const message = err?.response?.data?.message || err?.message || 'Failed to load event summary.';
+      setSummaryError(message);
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
+  const handleSummaryPdfDownload = async () => {
+    if (!summaryPdfBlob) {
+      await fetchSummaryReport('pdf');
+      return;
+    }
+
+    const url = URL.createObjectURL(summaryPdfBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'event-summary.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen relative bg-gradient-to-br from-accent-orange via-accent-yellow to-yellow-400 overflow-hidden">
       <Particles id="role-pdf-particles" init={particlesInit} options={particlesOptions} className="absolute inset-0 z-0" />
@@ -127,6 +213,19 @@ const RolePdf = () => {
             <FileText className="w-5 h-5 text-accent-orange" />
             Select a role to load the PDF report
           </h2>
+
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+            <div className="text-sm text-gray-500">
+              Generate reports by role or download the consolidated event summary.
+            </div>
+            <button
+              onClick={openSummaryOptions}
+              className="inline-flex items-center gap-2 rounded-xl bg-accent-orange text-white px-4 py-2 text-sm font-semibold hover:bg-accent-yellow transition-colors"
+            >
+              <FileText className="w-4 h-4" />
+              Event Report
+            </button>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {ROLES.map((role) => {
@@ -152,6 +251,12 @@ const RolePdf = () => {
           {error && (
             <div className="mt-6 p-4 rounded-xl border border-red-200 bg-red-50 text-red-600 text-sm">
               {error}
+            </div>
+          )}
+
+          {summaryError && (
+            <div className="mt-4 p-4 rounded-xl border border-red-200 bg-red-50 text-red-600 text-sm">
+              {summaryError}
             </div>
           )}
 
@@ -204,6 +309,106 @@ const RolePdf = () => {
                     <div className="flex flex-col items-center gap-3 text-gray-500">
                       <Loader2 className="w-8 h-8 animate-spin" />
                       <p>Loading {activeRole} PDF...</p>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No PDF to display.</p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {summaryOptionsOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 w-full max-w-md flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Event Summary Report
+              </h2>
+              <button
+                onClick={closeSummaryOptions}
+                className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-sm text-gray-600">
+                Choose how you want to retrieve the consolidated event summary.
+              </p>
+              <button
+                onClick={() => fetchSummaryReport('excel')}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-accent-orange text-white px-4 py-3 text-sm font-semibold hover:bg-accent-yellow transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={summaryLoading}
+              >
+                {summaryLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+                Download as Excel
+              </button>
+              <button
+                onClick={() => fetchSummaryReport('pdf')}
+                className="w-full flex items-center justify-center gap-2 rounded-xl border border-accent-orange text-accent-orange px-4 py-3 text-sm font-semibold hover:bg-accent-orange hover:text-white transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                disabled={summaryLoading}
+              >
+                {summaryLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <FileText className="w-4 h-4" />
+                )}
+                View PDF
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {summaryPdfModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 w-full max-w-6xl h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Event Summary Report
+              </h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSummaryPdfDownload}
+                  className="flex items-center gap-2 px-4 py-2 bg-accent-orange text-white rounded-lg hover:bg-accent-yellow transition-colors"
+                  disabled={summaryLoading}
+                >
+                  <Download className="w-4 h-4" />
+                  Download
+                </button>
+                <button
+                  onClick={closeSummaryPdfModal}
+                  className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 p-6">
+              {summaryPdfUrl ? (
+                <iframe
+                  src={summaryPdfUrl}
+                  className="w-full h-full border rounded-lg"
+                  title="Event Summary PDF"
+                  frameBorder="0"
+                  allowFullScreen
+                  style={{ minHeight: '500px' }}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  {summaryLoading ? (
+                    <div className="flex flex-col items-center gap-3 text-gray-500">
+                      <Loader2 className="w-8 h-8 animate-spin" />
+                      <p>Loading event summary PDF...</p>
                     </div>
                   ) : (
                     <p className="text-gray-500">No PDF to display.</p>
