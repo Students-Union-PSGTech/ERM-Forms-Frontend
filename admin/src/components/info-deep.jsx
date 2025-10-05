@@ -272,6 +272,8 @@ const InfoDeep = () => {
           <p className="text-base sm:text-lg lg:text-xl text-gray-600 mb-3 sm:mb-4">{event.tagline}</p>
           <p className="text-sm sm:text-base lg:text-lg text-gray-700 mb-4 sm:mb-6">{event.about}</p>
 
+
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8">
             <div className="bg-gray-50 p-3 sm:p-4 rounded-lg">
               <h3 className="font-semibold text-gray-800 mb-2 text-sm sm:text-base">General Information</h3>
@@ -335,7 +337,35 @@ const InfoDeep = () => {
               Delete Event
             </button>
           </div>
-
+          <div className="mb-6 sm:mb-8">
+            <h2 className="text-xl sm:text-2xl font-bold text-accent-orange mb-3 sm:mb-4">Annexures</h2>
+            <div className="bg-gray-50 rounded-lg p-4">
+              {Array.isArray(event.annexure) && event.annexure.length > 0 ? (
+                <ul className="space-y-3">
+                  {event.annexure.map((file) => (
+                    <li key={file.public_id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-white rounded-lg border border-gray-200 p-3">
+                      <div>
+                        <p className="font-medium text-gray-800">{file.original_name}</p>
+                        <p className="text-sm text-gray-500">Public ID: {file.public_id}</p>
+                      </div>
+                      <a
+                        href={file.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-accent-orange rounded-lg hover:bg-accent-yellow transition-colors"
+                      >
+                        View Annexure
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm sm:text-base text-gray-500 text-center">
+                  No annexures available.
+                </p>
+              )}
+            </div>
+          </div>
           {isMobile() && (
             <p className="text-sm text-gray-600 mb-4">
               📱 On mobile devices, PDFs will open in a new tab for better viewing experience.
@@ -410,25 +440,6 @@ const InfoDeep = () => {
           </div>
 
           <div className="mb-6 sm:mb-8">
-            <h2 className="text-xl sm:text-2xl font-bold text-accent-orange mb-3 sm:mb-4">Team Details</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              {Object.entries(event.details || {}).map(([key, person]) => (
-                person && typeof person === 'object' && (person.name || person.roll_number || person.mobile) ? (
-                  <div key={key} className="bg-gray-50 p-3 sm:p-4 rounded-lg">
-                    <h3 className="font-semibold text-gray-800 text-sm sm:text-base">{formatLabel(key)}</h3>
-                    {person.name && <p className="text-sm sm:text-base"><span className="font-medium">Name:</span> {person.name}</p>}
-                    {person.roll_number && <p className="text-sm sm:text-base"><span className="font-medium">Roll Number:</span> {person.roll_number}</p>}
-                    {person.mobile && <p className="text-sm sm:text-base"><span className="font-medium">Mobile:</span> {person.mobile}</p>}
-                    {person.designation && <p className="text-sm sm:text-base"><span className="font-medium">Designation:</span> {person.designation}</p>}
-                    {person.department && <p className="text-sm sm:text-base"><span className="font-medium">Department:</span> {person.department}</p>}
-                    {person.year && <p className="text-sm sm:text-base"><span className="font-medium">Year:</span> {person.year}</p>}
-                  </div>
-                ) : null
-              ))}
-            </div>
-          </div>
-
-          <div className="mb-6 sm:mb-8">
             <h2 className="text-xl sm:text-2xl font-bold text-accent-orange mb-3 sm:mb-4">Items Required</h2>
             <div className="overflow-x-auto">
               <table className="w-full bg-gray-50 rounded-lg text-sm sm:text-base">
@@ -453,32 +464,6 @@ const InfoDeep = () => {
               </table>
             </div>
           </div>
-
-          {Array.isArray(event.annexure) && event.annexure.length > 0 && (
-            <div className="mb-6 sm:mb-8">
-              <h2 className="text-xl sm:text-2xl font-bold text-accent-orange mb-3 sm:mb-4">Annexures</h2>
-              <div className="bg-gray-50 rounded-lg p-4">
-                <ul className="space-y-3">
-                  {event.annexure.map((file) => (
-                    <li key={file.public_id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 bg-white rounded-lg border border-gray-200 p-3">
-                      <div>
-                        <p className="font-medium text-gray-800">{file.original_name}</p>
-                        <p className="text-sm text-gray-500">Public ID: {file.public_id}</p>
-                      </div>
-                      <a
-                        href={file.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-accent-orange rounded-lg hover:bg-accent-yellow transition-colors"
-                      >
-                        View Annexure
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* PDF Viewer Modal */}
