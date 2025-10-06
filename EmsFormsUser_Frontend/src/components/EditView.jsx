@@ -610,7 +610,7 @@ export default function EditView() {
                       >
                         Cancel
                       </button>
-                      <button
+                      {/* <button
                         type="button"
                         style={{
                           background: '#d97706',
@@ -625,7 +625,7 @@ export default function EditView() {
                         disabled={requestLoading || !overlay.msg.trim()}
                       >
                         {requestLoading ? 'Requesting...' : 'Request'}
-                      </button>
+                      </button> */}
                       <button
                         type="button"
                         style={{
@@ -688,7 +688,7 @@ export default function EditView() {
                       >
                         Cancel
                       </button>
-                      <button
+                      {/* <button
                         type="button"
                         style={{
                           background: '#d97706',
@@ -703,7 +703,7 @@ export default function EditView() {
                         disabled={requestLoading || !overlay.msg.trim()}
                       >
                         {requestLoading ? 'Requesting...' : 'Request'}
-                      </button>
+                      </button> */}
                     </OverlayActions>
                   </>
                 )}
