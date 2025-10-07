@@ -446,17 +446,15 @@ export default function EditView() {
   const handlePreviewClick = (event) => {
     // Check annexure existence and length
     const annexureLength = Array.isArray(event.annexure) ? event.annexure.length : 0;
-    const defaultRequestType = annexureLength > 0 ? 'annexure' : 'event';
-
     if (event.edit_req_status === 'idle' || event.edit_req_status === 'rejected') {
-      // If no annexure, only show add annexure option
-      setOverlay({ open: true, event, status: 'idle', msg: '', requestType: defaultRequestType, annexureLength });
+      // If no annexure, only show event request and add annexure button
+      setOverlay({ open: true, event, status: 'idle', msg: '', requestType: 'event', annexureLength });
     } else if (event.edit_req_status === 'approve-annexure') {
       navigate(`/annexure/${event._id}`);
     }else if (event.edit_req_status === 'approved') {
       navigate(`/edit/${event._id}`);
     } else if (event.edit_req_status === 'requested' || event.edit_req_status === 'request-annexure') {
-      setOverlay({ open: true, event, status: 'Requested', msg: '', requestType: defaultRequestType, annexureLength });
+      setOverlay({ open: true, event, status: 'Requested', msg: '', requestType: 'event', annexureLength });
     }
   };
 
@@ -572,55 +570,15 @@ export default function EditView() {
                 <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#b45309' }}>
                   Request edit access to the ERM Team
                 </div>
-                {/* If annexure is empty, only show cancel and add annexure button */}
+                {/* If annexure is empty, only show event request and add annexure button */}
                 {overlay.annexureLength === 0 ? (
-                  <>
-                    <div style={{ fontSize: '0.95rem', color: '#4b5563', lineHeight: 1.6 }}>
-                      You need to add at least one annexure before requesting edits.
-                    </div>
-                    <OverlayActions>
-                      <button
-                        type="button"
-                        style={{
-                          background: '#e5e7eb',
-                          color: '#374151',
-                          border: 'none',
-                          borderRadius: 8,
-                          padding: '0.5rem 1.25rem',
-                          fontWeight: 600,
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => setOverlay({ open: false, event: null, status: '', msg: '', requestType: 'event' })}
-                        disabled={requestLoading}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        style={{
-                          background: '#2563eb',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: 8,
-                          padding: '0.5rem 1.25rem',
-                          fontWeight: 600,
-                          cursor: 'pointer'
-                        }}
-                        onClick={() => navigate(`/annexure/${overlay.event._id}`)}
-                        disabled={requestLoading}
-                      >
-                        Add Annexure
-                      </button>
-                    </OverlayActions>
-                  </>
-                ) : (
                   <>
                     <div>
                       <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#4b5563', fontSize: '0.95rem' }}>
                         Request Type
                       </label>
-                      <DropdownSelect value="annexure" disabled>
-                        <option value="annexure">Request to edit annexure</option>
+                      <DropdownSelect value="event" disabled>
+                        <option value="event">Request to edit event</option>
                       </DropdownSelect>
                     </div>
                     <div>
@@ -667,7 +625,85 @@ export default function EditView() {
                         disabled={requestLoading || !overlay.msg.trim()}
                       >
                         {requestLoading ? 'Requesting...' : 'Request'}
-                      </button> 
+                      </button>
+                      <button
+                        type="button"
+                        style={{
+                          background: '#2563eb',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 8,
+                          padding: '0.5rem 1.25rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => navigate(`/annexure/${overlay.event._id}`)}
+                        disabled={requestLoading}
+                      >
+                        Add Annexure
+                      </button>
+                    </OverlayActions>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#4b5563', fontSize: '0.95rem' }}>
+                        Request Type
+                      </label>
+                      <DropdownSelect
+                        value={overlay.requestType}
+                        onChange={e => setOverlay(o => ({ ...o, requestType: e.target.value }))}
+                        disabled={requestLoading}
+                      >
+                        <option value="event">Request to edit event</option>
+                        <option value="annexure">Request to edit Annexure</option>
+                      </DropdownSelect>
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#4b5563', fontSize: '0.95rem' }}>
+                        Message
+                      </label>
+                      <OverlayInput
+                        placeholder="Enter your request message..."
+                        value={overlay.msg}
+                        onChange={e => setOverlay(o => ({ ...o, msg: e.target.value }))}
+                        disabled={requestLoading}
+                      />
+                    </div>
+                    {requestError && <div style={{ color: '#dc2626', fontSize: '0.95rem' }}>{requestError}</div>}
+                    <OverlayActions>
+                      <button
+                        type="button"
+                        style={{
+                          background: '#e5e7eb',
+                          color: '#374151',
+                          border: 'none',
+                          borderRadius: 8,
+                          padding: '0.5rem 1.25rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => setOverlay({ open: false, event: null, status: '', msg: '', requestType: 'event' })}
+                        disabled={requestLoading}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        style={{
+                          background: '#d97706',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: 8,
+                          padding: '0.5rem 1.25rem',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                        onClick={handleRequestEdit}
+                        disabled={requestLoading || !overlay.msg.trim()}
+                      >
+                        {requestLoading ? 'Requesting...' : 'Request'}
+                      </button>
                     </OverlayActions>
                   </>
                 )}
