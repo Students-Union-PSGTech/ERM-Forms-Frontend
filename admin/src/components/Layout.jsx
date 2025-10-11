@@ -36,6 +36,9 @@ export default function Layout({ children }) {
     { to: '/stats', icon: TrendingUp, label: 'Statistics' },
     { to: '/edit-access', icon: Code, label: 'Edit Access' },
     { to: '/role-pdf', icon: Users, label: 'Role PDFs' },
+    { to: '/stocks', icon: Users, label: 'Stocks' },
+    { to: '/grant-items', icon: Package, label: 'Grant Items' },
+    { to: '/grant-logs', icon: Package, label: 'Past Grants' },
     ...(user?.role === 'admin'
       ? [
           { to: '/logs', icon: FileText, label: 'Server Logs' },
