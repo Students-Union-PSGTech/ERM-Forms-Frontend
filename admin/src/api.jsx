@@ -63,6 +63,8 @@ export const adminAPI = {
   revertGrant: (grantId) => API.delete(`/api/grant/${grantId}`),
   getAllGrants: () => API.get('/api/grant/all'),
   updateSuSource: (data) => API.post('/api/grant/update-su-source', data),
+  getProcurementPDF: (eventId) => API.get(`/api/grant/procurement-pdf/${eventId}`, { responseType: 'blob', transformResponse: [(data) => data], }),
+  
 
   // Stocks
   getStocks: () => API.get('/api/items'),

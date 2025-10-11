@@ -19,6 +19,8 @@ import {
   RotateCcw,
   Save, // Add Save icon
   Pencil, // Add Pencil icon
+  FileDown,
+  Eye,
 } from "lucide-react";
 
 function GrantEventItems() {
@@ -65,6 +67,9 @@ function GrantEventItems() {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   
+  // PDF generation state
+  const [pdfLoading, setPdfLoading] = useState(false);
+
   // Modal states
   const [showGrantModal, setShowGrantModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -342,6 +347,37 @@ function GrantEventItems() {
     }
   };
 
+  const handlePdfAction = async (action) => {
+    setPdfLoading(true);
+    try {
+      // Assuming getProcurementPDF returns response with data as blob
+      const response = await adminAPI.getProcurementPDF(id);
+      
+      const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
+      const pdfUrl = URL.createObjectURL(pdfBlob);
+
+      if (action === 'view') {
+        window.open(pdfUrl, '_blank');
+      } else if (action === 'download') {
+        const link = document.createElement('a');
+        link.href = pdfUrl;
+        const eventName = eventData?.eventDetails?.eventName || 'procurement-form';
+        link.setAttribute('download', `${eventName.replace(/\s+/g, '_')}_${id}.pdf`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
+      // Revoke URL after a short delay to ensure it's used
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 100);
+
+    } catch (err) {
+      const errorMessage = err.response?.data?.message || 'Failed to generate PDF.';
+      alert(`Error generating PDF: ${errorMessage}`);
+    } finally {
+      setPdfLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen relative flex items-center justify-center bg-gradient-to-br from-accent-orange via-accent-yellow to-yellow-400 overflow-hidden">
@@ -431,13 +467,31 @@ function GrantEventItems() {
               </div>
             </div>
             
-            <button
-              onClick={handleViewGrantHistory}
-              className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-            >
-              <History className="w-4 h-4" />
-              Revert Past Grants
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => handlePdfAction('view')}
+                disabled={pdfLoading}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:bg-gray-400"
+              >
+                {pdfLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Eye className="w-4 h-4" />}
+                View PDF
+              </button>
+              <button
+                onClick={() => handlePdfAction('download')}
+                disabled={pdfLoading}
+                className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:bg-gray-400"
+              >
+                {pdfLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileDown className="w-4 h-4" />}
+                Download PDF
+              </button>
+              <button
+                onClick={handleViewGrantHistory}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                <History className="w-4 h-4" />
+                Revert Past Grants
+              </button>
+            </div>
           </div>
 
           {/* Event Details */}
