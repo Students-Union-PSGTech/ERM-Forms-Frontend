@@ -16,7 +16,9 @@ import {
   Plus,
   Search,
   History,
-  RotateCcw
+  RotateCcw,
+  Save, // Add Save icon
+  Pencil, // Add Pencil icon
 } from "lucide-react";
 
 function GrantEventItems() {
@@ -70,6 +72,16 @@ function GrantEventItems() {
   const [grantedTo, setGrantedTo] = useState('');
   const [granting, setGranting] = useState(false);
   const [grantError, setGrantError] = useState('');
+  const [maxGrantQuantityForModal, setMaxGrantQuantityForModal] = useState(0);
+
+  // Confirmation modal state for soft threshold
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [confirmModalData, setConfirmModalData] = useState(null);
+
+  // State for inline editing of Sourced by SU
+  const [editingSuSource, setEditingSuSource] = useState(null); // Stores item._id
+  const [suSourceValue, setSuSourceValue] = useState('');
+  const [isSavingSuSource, setIsSavingSuSource] = useState(false);
 
   // Grant history modal states
   const [showGrantHistoryModal, setShowGrantHistoryModal] = useState(false);
@@ -130,19 +142,15 @@ function GrantEventItems() {
     return availableItem ? availableItem.available_quantity : 0;
   };
 
-  const getMaxGrantQuantity = (item) => {
-    const availableQuantity = getAvailableQuantity(item.item_name);
-    return Math.min(item.remaining_quantity_to_be_provided, availableQuantity);
-  };
-
-  const handleGrantClick = (item) => {
-    const maxQuantity = getMaxGrantQuantity(item);
+  const handleGrantClick = (item, maxQuantity) => {
     if (maxQuantity <= 0) {
-      setGrantError('No items available to grant for this item.');
+      // This case should ideally be prevented by the disabled button, but as a fallback:
+      alert('No items available to grant for this request.');
       return;
     }
     
     setSelectedItem(item);
+    setMaxGrantQuantityForModal(maxQuantity);
     setGrantQuantity('');
     setGrantedTo('');
     setGrantError('');
@@ -155,6 +163,33 @@ function GrantEventItems() {
     setGrantQuantity('');
     setGrantedTo('');
     setGrantError('');
+    setMaxGrantQuantityForModal(0);
+  };
+
+  const proceedWithGrant = async (grantData) => {
+    try {
+      setGranting(true);
+      setGrantError('');
+
+      // Always close confirmation modal before proceeding
+      setShowConfirmModal(false);
+      setConfirmModalData(null);
+
+      await adminAPI.grantItemsToEvent(grantData);
+
+      // Refresh event data after successful grant
+      await fetchEventData();
+      await fetchAvailableItems();
+
+      closeGrantModal();
+    } catch (err) {
+      setGrantError(err.response?.data?.message || 'Failed to grant items');
+    } finally {
+      setGranting(false);
+      // Ensure modal states are reset after grant
+      setShowConfirmModal(false);
+      setConfirmModalData(null);
+    }
   };
 
   const handleGrantSubmit = async () => {
@@ -163,36 +198,82 @@ function GrantEventItems() {
       return;
     }
 
-    const quantity = parseInt(grantQuantity);
-    const maxQuantity = getMaxGrantQuantity(selectedItem);
+    const quantity = parseInt(grantQuantity, 10);
+    const maxQuantity = maxGrantQuantityForModal;
+    const availableStock = getAvailableQuantity(selectedItem.item_name);
 
-    if (quantity <= 0 || quantity > maxQuantity) {
+    if (isNaN(quantity) || quantity <= 0) {
+      setGrantError('Quantity must be a positive number.');
+      return;
+    }
+
+    if (quantity > availableStock) {
+      setGrantError(`Cannot grant more than the available stock of ${availableStock}.`);
+      return;
+    }
+
+    if (quantity > maxQuantity) {
       setGrantError(`Quantity must be between 1 and ${maxQuantity}.`);
       return;
     }
 
+    const totalProvidedAfterGrant = selectedItem.provided_quantity + quantity;
+    const sourcedBySu = selectedItem.sourced_by_su || 0;
+
+    const grantData = {
+      itemName: selectedItem.item_name,
+      quantity: quantity,
+      granted_to: grantedTo,
+      eventId: id
+    };
+
+    // Soft threshold check
+    if (totalProvidedAfterGrant > sourcedBySu) {
+      setConfirmModalData({
+        title: "Exceeds Sourced Quantity",
+        message: `You are about to grant ${quantity} ${selectedItem.item_name}, which brings the total provided (${totalProvidedAfterGrant}) above the quantity sourced by SU (${sourcedBySu}). Do you want to proceed?`,
+        onConfirm: () => proceedWithGrant(grantData),
+      });
+      setShowConfirmModal(true);
+      closeGrantModal(); // Close the main grant modal immediately
+      return; // Stop here and wait for user confirmation
+    }
+
+    // If no confirmation is needed, proceed directly
+    await proceedWithGrant(grantData);
+  };
+
+  const handleSuSourceEdit = (item) => {
+    setEditingSuSource(item._id);
+    setSuSourceValue(item.sourced_by_su || '0');
+  };
+
+  const handleSuSourceCancel = () => {
+    setEditingSuSource(null);
+    setSuSourceValue('');
+    setIsSavingSuSource(false);
+  };
+
+  const handleSuSourceSave = async (item) => {
+    const newValue = parseInt(suSourceValue, 10);
+    if (isNaN(newValue) || newValue < 0 || newValue > item.asked_quantity) {
+      alert(`Please enter a number between 0 and the asked quantity (${item.asked_quantity}).`);
+      return;
+    }
+
     try {
-      setGranting(true);
-      setGrantError('');
-
-      const grantData = {
-        itemName: selectedItem.item_name,
-        quantity: quantity,
-        granted_to: grantedTo,
-        eventId: id
-      };
-
-      await adminAPI.grantItemsToEvent(grantData);
-      
-      // Refresh event data after successful grant
-      await fetchEventData();
-      await fetchAvailableItems();
-      
-      closeGrantModal();
+      setIsSavingSuSource(true);
+      await adminAPI.updateSuSource({
+        eventId: id,
+        itemName: item.item_name,
+        sourcedBySu: newValue,
+      });
+      await fetchEventData(); // Refresh data to show the update
+      handleSuSourceCancel(); // Exit editing mode
     } catch (err) {
-      setGrantError(err.response?.data?.message || 'Failed to grant items');
+      alert(err.response?.data?.message || 'Failed to update SU source count.');
     } finally {
-      setGranting(false);
+      setIsSavingSuSource(false);
     }
   };
 
@@ -312,6 +393,15 @@ function GrantEventItems() {
     );
   }
 
+  // Derived summary counts
+  const fullyProvidedCount = eventData?.items?.filter(
+    item => item.provided_quantity >= item.asked_quantity
+  ).length || 0;
+
+  const partiallyProvidedCount = eventData?.items?.filter(
+    item => item.provided_quantity > 0 && item.provided_quantity < item.asked_quantity
+  ).length || 0;
+
   return (
     <div className="min-h-screen relative flex flex-col items-center justify-start bg-gradient-to-br from-accent-orange via-accent-yellow to-yellow-400 overflow-hidden">
       <Particles
@@ -370,32 +460,40 @@ function GrantEventItems() {
           </div>
 
           {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div className="flex flex-wrap gap-4 mb-6">
+            <div className="flex-1 bg-blue-50 border border-blue-200 rounded-lg p-4 min-w-[180px]">
               <div className="flex items-center gap-2">
                 <Package className="w-5 h-5 text-blue-600" />
                 <span className="text-blue-600 font-medium">Total Items</span>
               </div>
               <p className="text-2xl font-bold text-blue-800">{eventData?.summary?.totalItems || 0}</p>
             </div>
+
+            <div className="flex-1 bg-purple-50 border border-purple-200 rounded-lg p-4 min-w-[180px]">
+              <div className="flex items-center gap-2">
+                <Gift className="w-5 h-5 text-purple-600" />
+                <span className="text-purple-600 font-medium">Sourced by SU</span>
+              </div>
+              <p className="text-2xl font-bold text-purple-800">{eventData?.summary?.totalSourcedBySu || 0}</p>
+            </div>
             
-            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex-1 bg-green-50 border border-green-200 rounded-lg p-4 min-w-[180px]">
               <div className="flex items-center gap-2">
                 <CheckCircle className="w-5 h-5 text-green-600" />
                 <span className="text-green-600 font-medium">Fully Provided</span>
               </div>
-              <p className="text-2xl font-bold text-green-800">{eventData?.summary?.fullyProvidedItems || 0}</p>
+              <p className="text-2xl font-bold text-green-800">{fullyProvidedCount}</p>
             </div>
             
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+            <div className="flex-1 bg-yellow-50 border border-yellow-200 rounded-lg p-4 min-w-[180px]">
               <div className="flex items-center gap-2">
                 <Clock className="w-5 h-5 text-yellow-600" />
                 <span className="text-yellow-600 font-medium">Partially Provided</span>
               </div>
-              <p className="text-2xl font-bold text-yellow-800">{eventData?.summary?.partiallyProvidedItems || 0}</p>
+              <p className="text-2xl font-bold text-yellow-800">{partiallyProvidedCount}</p>
             </div>
             
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div className="flex-1 bg-red-50 border border-red-200 rounded-lg p-4 min-w-[180px]">
               <div className="flex items-center gap-2">
                 <XCircle className="w-5 h-5 text-red-600" />
                 <span className="text-red-600 font-medium">Pending</span>
@@ -432,6 +530,7 @@ function GrantEventItems() {
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Item Name</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Asked</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Sourced by SU</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Provided</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Remaining</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-gray-900">Available</th>
@@ -441,10 +540,26 @@ function GrantEventItems() {
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {filteredItems.map((item) => {
-                  const statusInfo = getItemStatus(item);
+                  // Correctly calculate remaining quantity for the event
+                  const remainingForEvent = Math.max(0, item.asked_quantity - item.provided_quantity);
+
+                  // Determine status based on the corrected remaining quantity
+                  const getCorrectedItemStatus = () => {
+                    if (remainingForEvent === 0) {
+                      return { status: 'Fully Provided', color: 'text-green-600', bgColor: 'bg-green-100', icon: CheckCircle };
+                    } else if (item.provided_quantity > 0) {
+                      return { status: 'Partially Provided', color: 'text-yellow-600', bgColor: 'bg-yellow-100', icon: Clock };
+                    } else {
+                      return { status: 'Pending', color: 'text-red-600', bgColor: 'bg-red-100', icon: XCircle };
+                    }
+                  };
+
+                  const statusInfo = getCorrectedItemStatus();
                   const StatusIcon = statusInfo.icon;
                   const availableQty = getAvailableQuantity(item.item_name);
-                  const maxGrantQty = getMaxGrantQuantity(item);
+                  
+                  // Max grantable quantity should be the minimum of what's remaining for the event and what's available in stock
+                  const maxGrantQty = Math.min(remainingForEvent, availableQty);
                   
                   return (
                     <tr key={item._id} className="hover:bg-gray-50 transition-colors">
@@ -454,11 +569,52 @@ function GrantEventItems() {
                       <td className="px-4 py-3 text-sm text-gray-600">
                         {item.asked_quantity}
                       </td>
+                      <td className="px-4 py-3 text-sm text-gray-600 relative group">
+                        {editingSuSource === item._id ? (
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              value={suSourceValue}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                // Allow empty string to clear the input
+                                if (value === '') {
+                                  setSuSourceValue('');
+                                  return;
+                                }
+                                const numValue = parseInt(value, 10);
+                                // Only update state if the new value is within the valid range
+                                if (!isNaN(numValue) && numValue >= 0 && numValue <= item.asked_quantity) {
+                                  setSuSourceValue(value);
+                                }
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleSuSourceSave(item);
+                                if (e.key === 'Escape') handleSuSourceCancel();
+                              }}
+                              className="w-20 px-2 py-1 border border-accent-orange rounded-md focus:outline-none focus:ring-2 focus:ring-accent-yellow"
+                              autoFocus
+                              disabled={isSavingSuSource}
+                            />
+                            <button onClick={() => handleSuSourceSave(item)} disabled={isSavingSuSource} className="text-green-600 hover:text-green-800 disabled:text-gray-400">
+                              {isSavingSuSource ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                            </button>
+                            <button onClick={handleSuSourceCancel} disabled={isSavingSuSource} className="text-red-500 hover:text-red-700 disabled:text-gray-400">
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-2 cursor-pointer" onClick={() => handleSuSourceEdit(item)}>
+                            <span>{item.sourced_by_su || 0}</span>
+                            <Pencil className="w-3 h-3 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                        )}
+                      </td>
                       <td className="px-4 py-3 text-sm text-gray-600">
                         {item.provided_quantity}
                       </td>
                       <td className="px-4 py-3 text-sm font-medium text-gray-900">
-                        {item.remaining_quantity_to_be_provided}
+                        {remainingForEvent}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">
                         {availableQty}
@@ -471,7 +627,7 @@ function GrantEventItems() {
                       </td>
                       <td className="px-4 py-3">
                         <button
-                          onClick={() => handleGrantClick(item)}
+                          onClick={() => handleGrantClick(item, maxGrantQty)}
                           disabled={maxGrantQty <= 0}
                           className="flex items-center gap-1 px-3 py-1 text-sm bg-accent-orange text-white rounded-lg hover:bg-accent-yellow transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                         >
@@ -530,9 +686,9 @@ function GrantEventItems() {
               <div className="mb-4">
                 <h3 className="font-medium text-gray-800 mb-2">{selectedItem.item_name}</h3>
                 <p className="text-sm text-gray-600">
-                  Max quantity: {getMaxGrantQuantity(selectedItem)} 
+                  Max quantity to grant: {maxGrantQuantityForModal} 
                   (Available: {getAvailableQuantity(selectedItem.item_name)}, 
-                  Remaining: {selectedItem.remaining_quantity_to_be_provided})
+                  Remaining for event: {Math.max(0, selectedItem.asked_quantity - selectedItem.provided_quantity)})
                 </p>
               </div>
 
@@ -544,7 +700,7 @@ function GrantEventItems() {
                   <input
                     type="number"
                     min="1"
-                    max={getMaxGrantQuantity(selectedItem)}
+                    max={maxGrantQuantityForModal}
                     value={grantQuantity}
                     onChange={(e) => setGrantQuantity(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-orange focus:border-accent-orange"
@@ -598,6 +754,49 @@ function GrantEventItems() {
                   )}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Modal for Soft Threshold */}
+      {showConfirmModal && confirmModalData && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 w-full max-w-md">
+            <div className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-yellow-100 sm:mx-0 sm:h-10 sm:w-10">
+                  <AlertTriangle className="h-6 w-6 text-yellow-600" aria-hidden="true" />
+                </div>
+                <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                  <h3 className="text-lg leading-6 font-medium text-gray-900" id="modal-title">
+                    {confirmModalData.title}
+                  </h3>
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-500">
+                      {confirmModalData.message}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse rounded-b-3xl">
+              <button
+                type="button"
+                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-accent-orange text-base font-medium text-white hover:bg-accent-yellow focus:outline-none sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50"
+                onClick={confirmModalData.onConfirm}
+                disabled={granting}
+              >
+                {granting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Proceed'}
+              </button>
+              <button
+                type="button"
+                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:w-auto sm:text-sm"
+                onClick={() => setShowConfirmModal(false)}
+                disabled={granting}
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>

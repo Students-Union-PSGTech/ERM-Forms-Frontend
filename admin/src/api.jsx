@@ -62,6 +62,7 @@ export const adminAPI = {
   getEventGrantHistory: (eventId) => API.get(`/api/grant/event/${eventId}`),
   revertGrant: (grantId) => API.delete(`/api/grant/${grantId}`),
   getAllGrants: () => API.get('/api/grant/all'),
+  updateSuSource: (data) => API.post('/api/grant/update-su-source', data),
 
   // Stocks
   getStocks: () => API.get('/api/items'),
