@@ -51,6 +51,7 @@ export const AuthProvider = ({ children }) => {
       console.error('Logout API error:', error);
     } finally {
       // Always clear local authentication state
+      localStorage.removeItem('role');
       setIsAuthenticated(false);
       setUser(null);
     }

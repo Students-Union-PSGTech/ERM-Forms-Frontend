@@ -16,7 +16,12 @@ function Login() {
 
   useEffect(() => {
     if (isAuthenticated) {
-      navigate("/cards", { replace: true });
+      const userRole = localStorage.getItem('role');
+      if (userRole === 'procurement') {
+        navigate("/grant-items", { replace: true });
+      } else {
+        navigate("/cards", { replace: true });
+      }
     }
   }, [isAuthenticated, navigate]);
 
@@ -56,7 +61,11 @@ function Login() {
         setTimeout(() => {
           setIsLoading(false);
           setLoading(false);
-          navigate("/cards", { replace: true });
+          if (userRole === 'procurement') {
+            navigate("/grant-items", { replace: true });
+          } else {
+            navigate("/cards", { replace: true });
+          }
         }, 1000);
       } else {
         setError(res.data.message || "Invalid OTP");
