@@ -347,29 +347,49 @@ function GrantEventItems() {
     }
   };
 
+  // Helper to match backend sanitize behavior
+  const sanitize = (str) => String(str || '')
+    .replace(/[^a-z0-9_\-]+/gi, '_')
+    .toLowerCase();
+
   const handlePdfAction = async (action) => {
     setPdfLoading(true);
     try {
-      // Assuming getProcurementPDF returns response with data as blob
+      // Ensure API returns a blob
       const response = await adminAPI.getProcurementPDF(id);
-      
+
+      // Build filename on frontend to mirror backend format:
+      // `${sanitize(clubName)}_${sanitize(eventName)}_${sanitize(customEventId)}_procurement.pdf`
+      const clubName = eventData?.eventDetails?.associationName || 'na';
+      const eventName = eventData?.eventDetails?.eventName || 'na';
+      const customEventId = eventData?.eventDetails?.eventId || 'na';
+      const filename = `${sanitize(clubName)}_${sanitize(eventName)}_${sanitize(customEventId)}_procurement.pdf`;
+
+      // Try to prefer backend header if present; otherwise use our constructed filename
+      const disposition = response.headers?.['content-disposition'];
+      let finalFilename = filename;
+      if (disposition) {
+        const m = disposition.match(/filename\*?=(?:UTF-8'')?["']?([^;"'\n]+)["']?/i);
+        if (m && m[1]) finalFilename = m[1].trim();
+      }
+
       const pdfBlob = new Blob([response.data], { type: 'application/pdf' });
       const pdfUrl = URL.createObjectURL(pdfBlob);
 
       if (action === 'view') {
-        window.open(pdfUrl, '_blank');
+        const win = window.open(pdfUrl, '_blank');
+        // Optional: set window title to filename (cannot force tab filename for inline view)
+        if (win) setTimeout(() => { try { win.document.title = finalFilename; } catch {} }, 300);
       } else if (action === 'download') {
         const link = document.createElement('a');
         link.href = pdfUrl;
-        const eventName = eventData?.eventDetails?.eventName || 'procurement-form';
-        link.setAttribute('download', `${eventName.replace(/\s+/g, '_')}_${id}.pdf`);
+        link.setAttribute('download', finalFilename);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
       }
-      // Revoke URL after a short delay to ensure it's used
-      setTimeout(() => URL.revokeObjectURL(pdfUrl), 100);
 
+      setTimeout(() => URL.revokeObjectURL(pdfUrl), 500);
     } catch (err) {
       const errorMessage = err.response?.data?.message || 'Failed to generate PDF.';
       alert(`Error generating PDF: ${errorMessage}`);
