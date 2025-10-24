@@ -23,7 +23,7 @@ import ViewEvents from "./components/ViewEvents";
 import "./App.css";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import EditView from "./components/EditView";
-import Attendance from "./components/attendance";
+import Attendance from "./components/Attendance";
 // Wrapper component for protected routes
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
