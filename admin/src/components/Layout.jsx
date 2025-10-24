@@ -29,18 +29,36 @@ export default function Layout({ children }) {
     navigate('/login');
   };
 
-  const navItems = [
+  console.log('Current user in Layout:', user);
+  
+  // Get user role from localStorage
+  const userRole = localStorage.getItem('role') || user?.role || 'member';
+  
+  // Role-based nav items
+    const navItems = [
+      ...(userRole !== 'procurement'
+      ? [
     { to: '/cards', icon: BarChart3, label: 'Dashboard' },
     { to: '/add', icon: Code, label: 'Add User' },
     { to: '/items', icon: Package, label: 'Items' },
     { to: '/stats', icon: TrendingUp, label: 'Statistics' },
     { to: '/edit-access', icon: Code, label: 'Edit Access' },
     { to: '/role-pdf', icon: Users, label: 'Role PDFs' },
-    ...(user?.role === 'admin'
+        ]
+      : []),
+    ...(userRole !== 'member'
+      ? [
+          { to: '/stocks', icon: Users, label: 'Stocks' },
+          { to: '/grant-items', icon: Package, label: 'Grant Items' },
+          { to: '/grant-logs', icon: Package, label: 'Past Grants' },
+        ]
+      : []),
+    ...(userRole === 'admin'
       ? [
           { to: '/logs', icon: FileText, label: 'Server Logs' },
         ]
       : [])
+    
   ];
 
   const openSummaryModal = () => {

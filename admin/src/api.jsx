@@ -45,12 +45,29 @@ export const adminAPI = {
   createAssociation: (data) => API.post('/api/associations', data),
   updateAssociation: (id, data) => API.put(`/api/associations/${id}`, data),
   deleteAssociation: (id) => API.delete(`/api/associations/${id}`),
+  
+  // Get events by association ID
+  getEventsByAssociation: (associationId) => API.get(`/api/events/association/${associationId}/event-ids`),
 
   // Items management
   getItems: () => API.get('/api/items'),
   createItem: (data) => API.post('/api/items', data),
   updateItem: (id, data) => API.put(`/api/items/${id}`, data),
   deleteItem: (id) => API.delete(`/api/items/${id}`),
+  updateItemQuantity: (id, quantity) => API.patch(`/api/items/${id}/quantity`, { available_quantity:quantity }),
+
+  // Grant items functionality
+  getEventQuantityToProvide: (eventId) => API.get(`/api/grant/${eventId}/quantity-to-provide`),
+  grantItemsToEvent: (data) => API.post('/api/grant', data),
+  getEventGrantHistory: (eventId) => API.get(`/api/grant/event/${eventId}`),
+  revertGrant: (grantId) => API.delete(`/api/grant/${grantId}`),
+  getAllGrants: () => API.get('/api/grant/all'),
+  updateSuSource: (data) => API.post('/api/grant/update-su-source', data),
+  getProcurementPDF: (eventId) => API.get(`/api/grant/procurement-pdf/${eventId}`, { responseType: 'blob', transformResponse: [(data) => data], }),
+  
+
+  // Stocks
+  getStocks: () => API.get('/api/items'),
 
   // Stats
   getItemStats: () => API.get('/api/admin/stats/items'),

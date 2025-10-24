@@ -650,7 +650,7 @@ export default function EditView() {
                 >
                   Request edit access to the ERM Team
                 </div>
-                {/* If annexure is empty, only show event request and add annexure button */}
+                {/* If annexure is empty, only show cancel and add annexure button */}
                 {overlay.annexureLength === 0 ? (
                   <>
                     <div>

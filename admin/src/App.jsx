@@ -5,6 +5,10 @@ import ForgotPassword from './components/ForgotPassword';
 import ProtectedRoute from './components/ProtectedRoute';
 import Items from './components/items';
 import Stats from './components/stats';
+import Stocks from './components/stocks';
+import GrantItems from './components/grantItems';
+import GrantEventItems from './components/grantEventItems';
+import GrantLogs from './components/grantLogs';
 import { AuthProvider } from './context/AuthContext';
 import { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
@@ -57,6 +61,14 @@ function App() {
               }
             />
             <Route 
+              path='/stocks' 
+              element={
+                <ProtectedRoute>
+                  <Stocks/>
+                </ProtectedRoute>
+              }
+            />
+            <Route 
               path='/logs' 
               element={
                 <ProtectedRoute>
@@ -69,6 +81,30 @@ function App() {
               element={
                 <ProtectedRoute>
                   <RolePdf/>
+                </ProtectedRoute>
+              }
+            />
+            <Route 
+              path='/grant-items' 
+              element={
+                <ProtectedRoute>
+                  <GrantItems/>
+                </ProtectedRoute>
+              }
+            />
+            <Route 
+              path='/grant-event-items/:id' 
+              element={
+                <ProtectedRoute>
+                  <GrantEventItems/>
+                </ProtectedRoute>
+              }
+            />
+            <Route 
+              path='/grant-logs' 
+              element={
+                <ProtectedRoute>
+                  <GrantLogs/>
                 </ProtectedRoute>
               }
             />
