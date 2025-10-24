@@ -1,15 +1,15 @@
 import React from "react";
 import "../components_css/HomePage.css";
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import intramsLogo from '../assets/intrams_logo.jpg';
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+import intramsLogo from "../assets/intrams_logo.jpg";
 const HomePage = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const club_name = localStorage.getItem('association_name') || 'User';
+  const club_name = localStorage.getItem("association_name") || "User";
   const handleLogout = async () => {
     await logout();
-    navigate('/login');
+    navigate("/login");
   };
 
   return (
@@ -17,7 +17,9 @@ const HomePage = () => {
       <div className="logo-container">
         <img src={intramsLogo} alt="INTRAMS 2025" className="intrams-logo" />
       </div>
-      <button className="logout-button" onClick={handleLogout}>Logout</button>
+      <button className="logout-button" onClick={handleLogout}>
+        Logout
+      </button>
       {/* Enhanced Background Elements */}
       <div className="particles">
         <div className="particle"></div>
@@ -26,7 +28,7 @@ const HomePage = () => {
         <div className="particle"></div>
         <div className="particle"></div>
       </div>
-      
+
       <main className="home-main">
         <div className="content-wrapper">
           <div className="header-section">
@@ -38,22 +40,28 @@ const HomePage = () => {
           <div className="buttons-section">
             <button
               className="action-button create-button"
-              onClick={() => navigate('/create-event')} // 3. Use navigate instead of window.location
+              onClick={() => navigate("/create-event")} // 3. Use navigate instead of window.location
             >
               Create Event
             </button>
-            
+
             <button
               className="action-button view-button"
-              onClick={() => navigate('/my-events')} // Also update this one
+              onClick={() => navigate("/my-events")} // Also update this one
             >
               View Events
             </button>
             <button
               className="action-button view-button"
-              onClick={() => navigate('/edit')}
+              onClick={() => navigate("/edit")}
             >
               Edit Events
+            </button>
+            <button
+              className="action-button view-button"
+              onClick={() => navigate("/attendance")}
+            >
+              Mark Attendance
             </button>
           </div>
         </div>

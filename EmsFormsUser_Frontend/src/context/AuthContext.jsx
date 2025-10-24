@@ -1,6 +1,11 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useState, useContext, useEffect } from "react";
 import { API, login as apiLogin } from "../api/api";
-import { setSessionActive, clearSession, isActiveSession } from "../utils/sessionManager";
+import {
+  setSessionActive,
+  clearSession,
+  isActiveSession,
+} from "../utils/sessionManager";
 
 const AuthContext = createContext();
 
@@ -21,12 +26,12 @@ export function AuthProvider({ children }) {
       try {
         setLoading(true);
         const response = await API.get("/api/auth/status");
-        
+
         if (response.status === 200 && response.data) {
           setIsAuthenticated(true);
           setUser(response.data);
         } else {
-          throw new Error('Session expired');
+          throw new Error("Session expired");
         }
       } catch (err) {
         console.log("Auth check failed:", err);
@@ -34,8 +39,8 @@ export function AuthProvider({ children }) {
         setIsAuthenticated(false);
         setUser(null);
         // Only redirect if not on login page
-        if (window.location.pathname !== '/login') {
-          window.location.href = '/login';
+        if (window.location.pathname !== "/login") {
+          window.location.href = "/login";
         }
       } finally {
         setLoading(false);
@@ -47,14 +52,14 @@ export function AuthProvider({ children }) {
 
     // Also check when tab becomes visible again
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === "visible") {
         checkAuthStatus();
       }
     };
 
-    document.addEventListener('visibilitychange', handleVisibilityChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, []);
 
@@ -63,40 +68,41 @@ export function AuthProvider({ children }) {
     try {
       setError(null);
       setLoading(true);
-      
+
       if (!username || !password) {
         throw new Error("Username and password are required");
       }
 
-      console.log('Attempting login with:', { username });
+      console.log("Attempting login with:", { username });
       const response = await apiLogin({ username, password });
-      console.log('Login response:', response);
-      
+      console.log("Login response:", response);
+
       // Accept any successful response with data
       if (response.status === 200 && response.data) {
-        console.log('Login successful:', response.data);
+        console.log("Login successful:", response.data);
         setSessionActive(); // Mark this tab as having an active session
         setIsAuthenticated(true);
         setUser(response.data);
-        
+
         // Return an object with success status and association_name (if available)
         return {
           success: true,
-          association_name: response.data.associationName || response.data.username || username
+          association_name:
+            response.data.associationName || response.data.username || username,
         };
       }
-      
-      console.log('Login failed: Invalid response format');
+
+      console.log("Login failed: Invalid response format");
       throw new Error("Invalid credentials");
     } catch (err) {
-      console.error('Login error:', err);
-      const errorMessage = err.response?.data?.message || err.message || "Invalid username or password";
+      console.error("Login error:", err);
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        "Invalid username or password";
       setError(errorMessage);
       setIsAuthenticated(false);
       return { success: false };
-      setUser(null);
-      clearSession(); // Clear any existing session
-      return false;
     } finally {
       setLoading(false);
     }
@@ -115,7 +121,7 @@ export function AuthProvider({ children }) {
       setUser(null);
       setLoading(false);
       // Force redirect to login page
-      window.location.href = '/login';
+      window.location.href = "/login";
     }
   };
 

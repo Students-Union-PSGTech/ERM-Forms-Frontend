@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { listEvents, requestEditAccess } from '../api/api'; // <-- import your API function
-import styled from 'styled-components';
+/* eslint-disable no-unused-vars */
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { listEvents, requestEditAccess } from "../api/api"; // <-- import your API function
+import styled from "styled-components";
 
 // =====================================================================
 // Styled Components (using the orange theme)
@@ -20,10 +21,10 @@ const Container = styled.div`
   border-radius: 16px;
   box-shadow: var(--shadow-medium);
   overflow: hidden;
-  position: relative;  /* key for absolute positioning */
-  padding: 50px; 
+  position: relative; /* key for absolute positioning */
+  padding: 50px;
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -33,18 +34,17 @@ const Container = styled.div`
   }
 `;
 
-
 const Header = styled.header`
   text-align: center;
   margin-bottom: 2.5rem;
-  
+
   h1 {
     font-size: 2.5rem;
     font-weight: 700;
     color: #111827;
     margin: 0;
   }
-  
+
   p {
     margin: 0.5rem 0 0 0;
     color: #6b7280;
@@ -116,9 +116,9 @@ const EventCard = styled.div`
   margin-bottom: 2.5rem;
   overflow: hidden;
   position: relative;
-  
+
   &::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     left: 0;
@@ -132,7 +132,7 @@ const EventHeader = styled.div`
   padding: 1.5rem 2rem;
   border-bottom: 1px solid #e5e7eb;
   background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  
+
   h2 {
     margin: 0;
     font-size: 1.75rem;
@@ -213,7 +213,8 @@ const ItemsTable = styled.table`
   width: 100%;
   border-collapse: collapse;
   margin-top: 1rem;
-  th, td {
+  th,
+  td {
     padding: 0.75rem 1rem;
     text-align: left;
     border-bottom: 1px solid #e5e7eb;
@@ -340,11 +341,13 @@ const BackButton = styled.button`
   }
 `;
 
-
 const OverlayBg = styled.div`
   position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(17,24,39,0.7);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(17, 24, 39, 0.7);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -357,7 +360,7 @@ const OverlayCard = styled.div`
   padding: 2rem;
   max-width: 400px;
   width: 100%;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -393,7 +396,7 @@ const DropdownSelect = styled.select`
   background-repeat: no-repeat;
   background-position: right 1rem center;
   background-size: 1em;
-  
+
   &:focus {
     outline: none;
     border-color: #d97706;
@@ -404,12 +407,18 @@ const DropdownSelect = styled.select`
 export default function EditView() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState('');
-  const [query, setQuery] = useState('');
+  const [err, setErr] = useState("");
+  const [query, setQuery] = useState("");
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [overlay, setOverlay] = useState({ open: false, event: null, status: '', msg: '', requestType: 'event' });
+  const [overlay, setOverlay] = useState({
+    open: false,
+    event: null,
+    status: "",
+    msg: "",
+    requestType: "event",
+  });
   const [requestLoading, setRequestLoading] = useState(false);
-  const [requestError, setRequestError] = useState('');
+  const [requestError, setRequestError] = useState("");
   const [refreshEvents, setRefreshEvents] = useState(0);
   const navigate = useNavigate();
 
@@ -417,66 +426,112 @@ export default function EditView() {
     let active = true;
     (async () => {
       setLoading(true);
-      setErr('');
+      setErr("");
       try {
         const payload = await listEvents();
         const list = Array.isArray(payload) ? payload : payload?.data || [];
         if (active) setEvents(list);
       } catch (e) {
-        if (active) setErr(e?.response?.data?.message || e?.message || 'Failed to load events');
+        if (active)
+          setErr(
+            e?.response?.data?.message || e?.message || "Failed to load events"
+          );
       } finally {
         if (active) setLoading(false);
       }
     })();
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [navigate, refreshEvents]);
 
   const filteredEvents = useMemo(() => {
     if (!query.trim()) return events;
     const q = query.toLowerCase();
-    return events.filter((ev) => 
-      (ev.name || '').toLowerCase().includes(q) ||
-      (ev.about || '').toLowerCase().includes(q)
+    return events.filter(
+      (ev) =>
+        (ev.name || "").toLowerCase().includes(q) ||
+        (ev.about || "").toLowerCase().includes(q)
     );
   }, [events, query]);
 
-  if (loading) return <PageWrapper><Container>Loading events...</Container></PageWrapper>;
-  if (err) return <PageWrapper><Container>Error: {err}</Container></PageWrapper>;
+  if (loading)
+    return (
+      <PageWrapper>
+        <Container>Loading events...</Container>
+      </PageWrapper>
+    );
+  if (err)
+    return (
+      <PageWrapper>
+        <Container>Error: {err}</Container>
+      </PageWrapper>
+    );
 
   const handlePreviewClick = (event) => {
     // Check annexure existence and length
-    const annexureLength = Array.isArray(event.annexure) ? event.annexure.length : 0;
-    if (event.edit_req_status === 'idle' || event.edit_req_status === 'rejected') {
+    const annexureLength = Array.isArray(event.annexure)
+      ? event.annexure.length
+      : 0;
+    if (
+      event.edit_req_status === "idle" ||
+      event.edit_req_status === "rejected"
+    ) {
       // If no annexure, only show event request and add annexure button
-      setOverlay({ open: true, event, status: 'idle', msg: '', requestType: 'event', annexureLength });
-    } else if (event.edit_req_status === 'approve-annexure') {
+      setOverlay({
+        open: true,
+        event,
+        status: "idle",
+        msg: "",
+        requestType: "event",
+        annexureLength,
+      });
+    } else if (event.edit_req_status === "approve-annexure") {
       navigate(`/annexure/${event._id}`);
-    }else if (event.edit_req_status === 'approved') {
+    } else if (event.edit_req_status === "approved") {
       navigate(`/edit/${event._id}`);
-    } else if (event.edit_req_status === 'requested' || event.edit_req_status === 'request-annexure') {
-      setOverlay({ open: true, event, status: 'Requested', msg: '', requestType: 'event', annexureLength });
+    } else if (
+      event.edit_req_status === "requested" ||
+      event.edit_req_status === "request-annexure"
+    ) {
+      setOverlay({
+        open: true,
+        event,
+        status: "Requested",
+        msg: "",
+        requestType: "event",
+        annexureLength,
+      });
     }
   };
 
   // Call this to close overlay and refresh events
   const closeOverlayAndRefresh = () => {
-    setOverlay({ open: false, event: null, status: '', msg: '', requestType: 'event' });
-    setRefreshEvents(r => r + 1);
+    setOverlay({
+      open: false,
+      event: null,
+      status: "",
+      msg: "",
+      requestType: "event",
+    });
+    setRefreshEvents((r) => r + 1);
   };
 
   const handleRequestEdit = async () => {
     setRequestLoading(true);
-    setRequestError('');
+    setRequestError("");
     try {
-      console.log('Requesting edit access with:', { overlay });
+      console.log("Requesting edit access with:", { overlay });
       await requestEditAccess({
         eventId: overlay.event._id,
         msg: overlay.msg,
-        requestType: overlay.requestType
+        requestType: overlay.requestType,
       });
       closeOverlayAndRefresh();
     } catch (err) {
-      setRequestError(err?.response?.data?.message || err?.message || 'Failed to send request');
+      setRequestError(
+        err?.response?.data?.message || err?.message || "Failed to send request"
+      );
     } finally {
       setRequestLoading(false);
     }
@@ -485,7 +540,7 @@ export default function EditView() {
   return (
     <div>
       <Container>
-        <BackButton onClick={() => navigate('/home')}>← Back</BackButton>
+        <BackButton onClick={() => navigate("/home")}>← Back</BackButton>
         <Header>
           <h1>Edit Events</h1>
           <p>Click on the Events to edit that particular event</p>
@@ -497,65 +552,84 @@ export default function EditView() {
             placeholder="Search events by name or description..."
           />
           <span>{filteredEvents.length} event(s) found</span>
-          <RefreshButton onClick={() => setRefreshEvents(r => r + 1)} title="Refresh Events">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 11.664 0l3.18-3.183m-3.181-4.992-3.182-3.182a8.25 8.25 0 0 0-11.664 0l-3.18 3.183" />
+          <RefreshButton
+            onClick={() => setRefreshEvents((r) => r + 1)}
+            title="Refresh Events"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 11.664 0l3.18-3.183m-3.181-4.992-3.182-3.182a8.25 8.25 0 0 0-11.664 0l-3.18 3.183"
+              />
             </svg>
           </RefreshButton>
         </SearchBar>
         {filteredEvents.length > 0 ? (
           <EventsGrid>
-  {filteredEvents.map(event => (
-    <PreviewCard
-      key={event._id}
-      onClick={e => {
-        e.stopPropagation();
-        handlePreviewClick(event);
-      }}
-      style={{ position: 'relative' }}
-    >
-      {/* Status badge */}
-      {(event.edit_req_status === 'requested' || event.edit_req_status === 'rejected' || event.edit_req_status === 'request-annexure') && (
-        <span
-          style={{
-            position: 'absolute',
-            top: 12,
-            right: 16,
-            background: '#fbbf24',
-            color: '#92400e',
-            borderRadius: 8,
-            padding: '0.25rem 0.75rem',
-            fontWeight: 600,
-            fontSize: '0.50rem',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
-          }}
-        >
-          {(event.edit_req_status === 'requested' || event.edit_req_status === 'request-annexure' )?'Requested':'Declined'}
-        </span>
-      )}
-      {(event.edit_req_status === 'approved' ||event.edit_req_status === 'approve-annexure'  )&& (
-        <span
-          style={{
-            position: 'absolute',
-            top: 12,
-            right: 16,
-            background: '#34d399',
-            color: '#065f46',
-            borderRadius: 8,
-            padding: '0.25rem 0.75rem',
-            fontWeight: 600,
-            fontSize: '0.50rem',
-            boxShadow: '0 1px 4px rgba(0,0,0,0.08)'
-          }}
-        >
-          Approved
-        </span>
-      )}
-      <h2>{event.name || 'Untitled Event'}</h2>
-      <p>{event.about || 'No description provided.'}</p>
-    </PreviewCard>
-  ))}
-</EventsGrid>
+            {filteredEvents.map((event) => (
+              <PreviewCard
+                key={event._id}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handlePreviewClick(event);
+                }}
+                style={{ position: "relative" }}
+              >
+                {/* Status badge */}
+                {(event.edit_req_status === "requested" ||
+                  event.edit_req_status === "rejected" ||
+                  event.edit_req_status === "request-annexure") && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: 12,
+                      right: 16,
+                      background: "#fbbf24",
+                      color: "#92400e",
+                      borderRadius: 8,
+                      padding: "0.25rem 0.75rem",
+                      fontWeight: 600,
+                      fontSize: "0.50rem",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                    }}
+                  >
+                    {event.edit_req_status === "requested" ||
+                    event.edit_req_status === "request-annexure"
+                      ? "Requested"
+                      : "Declined"}
+                  </span>
+                )}
+                {(event.edit_req_status === "approved" ||
+                  event.edit_req_status === "approve-annexure") && (
+                  <span
+                    style={{
+                      position: "absolute",
+                      top: 12,
+                      right: 16,
+                      background: "#34d399",
+                      color: "#065f46",
+                      borderRadius: 8,
+                      padding: "0.25rem 0.75rem",
+                      fontWeight: 600,
+                      fontSize: "0.50rem",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.08)",
+                    }}
+                  >
+                    Approved
+                  </span>
+                )}
+                <h2>{event.name || "Untitled Event"}</h2>
+                <p>{event.about || "No description provided."}</p>
+              </PreviewCard>
+            ))}
+          </EventsGrid>
         ) : (
           <p>No events found.</p>
         )}
@@ -565,16 +639,30 @@ export default function EditView() {
       {overlay.open && (
         <OverlayBg>
           <OverlayCard>
-            {overlay.status === 'idle' && (
+            {overlay.status === "idle" && (
               <>
-                <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#b45309' }}>
+                <div
+                  style={{
+                    fontWeight: 600,
+                    fontSize: "1.1rem",
+                    color: "#b45309",
+                  }}
+                >
                   Request edit access to the ERM Team
                 </div>
                 {/* If annexure is empty, only show event request and add annexure button */}
                 {overlay.annexureLength === 0 ? (
                   <>
                     <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#4b5563', fontSize: '0.95rem' }}>
+                      <label
+                        style={{
+                          display: "block",
+                          marginBottom: "0.5rem",
+                          fontWeight: 500,
+                          color: "#4b5563",
+                          fontSize: "0.95rem",
+                        }}
+                      >
                         Request Type
                       </label>
                       <DropdownSelect value="event" disabled>
@@ -582,30 +670,52 @@ export default function EditView() {
                       </DropdownSelect>
                     </div>
                     <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#4b5563', fontSize: '0.95rem' }}>
+                      <label
+                        style={{
+                          display: "block",
+                          marginBottom: "0.5rem",
+                          fontWeight: 500,
+                          color: "#4b5563",
+                          fontSize: "0.95rem",
+                        }}
+                      >
                         Message
                       </label>
                       <OverlayInput
                         placeholder="Enter your request message..."
                         value={overlay.msg}
-                        onChange={e => setOverlay(o => ({ ...o, msg: e.target.value }))}
+                        onChange={(e) =>
+                          setOverlay((o) => ({ ...o, msg: e.target.value }))
+                        }
                         disabled={requestLoading}
                       />
                     </div>
-                    {requestError && <div style={{ color: '#dc2626', fontSize: '0.95rem' }}>{requestError}</div>}
+                    {requestError && (
+                      <div style={{ color: "#dc2626", fontSize: "0.95rem" }}>
+                        {requestError}
+                      </div>
+                    )}
                     <OverlayActions>
                       <button
                         type="button"
                         style={{
-                          background: '#e5e7eb',
-                          color: '#374151',
-                          border: 'none',
+                          background: "#e5e7eb",
+                          color: "#374151",
+                          border: "none",
                           borderRadius: 8,
-                          padding: '0.5rem 1.25rem',
+                          padding: "0.5rem 1.25rem",
                           fontWeight: 600,
-                          cursor: 'pointer'
+                          cursor: "pointer",
                         }}
-                        onClick={() => setOverlay({ open: false, event: null, status: '', msg: '', requestType: 'event' })}
+                        onClick={() =>
+                          setOverlay({
+                            open: false,
+                            event: null,
+                            status: "",
+                            msg: "",
+                            requestType: "event",
+                          })
+                        }
                         disabled={requestLoading}
                       >
                         Cancel
@@ -613,31 +723,33 @@ export default function EditView() {
                       <button
                         type="button"
                         style={{
-                          background: '#d97706',
-                          color: 'white',
-                          border: 'none',
+                          background: "#d97706",
+                          color: "white",
+                          border: "none",
                           borderRadius: 8,
-                          padding: '0.5rem 1.25rem',
+                          padding: "0.5rem 1.25rem",
                           fontWeight: 600,
-                          cursor: 'pointer'
+                          cursor: "pointer",
                         }}
                         onClick={handleRequestEdit}
                         disabled={requestLoading || !overlay.msg.trim()}
                       >
-                        {requestLoading ? 'Requesting...' : 'Request'}
+                        {requestLoading ? "Requesting..." : "Request"}
                       </button>
                       <button
                         type="button"
                         style={{
-                          background: '#2563eb',
-                          color: 'white',
-                          border: 'none',
+                          background: "#2563eb",
+                          color: "white",
+                          border: "none",
                           borderRadius: 8,
-                          padding: '0.5rem 1.25rem',
+                          padding: "0.5rem 1.25rem",
                           fontWeight: 600,
-                          cursor: 'pointer'
+                          cursor: "pointer",
                         }}
-                        onClick={() => navigate(`/annexure/${overlay.event._id}`)}
+                        onClick={() =>
+                          navigate(`/annexure/${overlay.event._id}`)
+                        }
                         disabled={requestLoading}
                       >
                         Add Annexure
@@ -647,43 +759,80 @@ export default function EditView() {
                 ) : (
                   <>
                     <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#4b5563', fontSize: '0.95rem' }}>
+                      <label
+                        style={{
+                          display: "block",
+                          marginBottom: "0.5rem",
+                          fontWeight: 500,
+                          color: "#4b5563",
+                          fontSize: "0.95rem",
+                        }}
+                      >
                         Request Type
                       </label>
                       <DropdownSelect
                         value={overlay.requestType}
-                        onChange={e => setOverlay(o => ({ ...o, requestType: e.target.value }))}
+                        onChange={(e) =>
+                          setOverlay((o) => ({
+                            ...o,
+                            requestType: e.target.value,
+                          }))
+                        }
                         disabled={requestLoading}
                       >
                         <option value="event">Request to edit event</option>
-                        <option value="annexure">Request to edit Annexure</option>
+                        <option value="annexure">
+                          Request to edit Annexure
+                        </option>
                       </DropdownSelect>
                     </div>
                     <div>
-                      <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: 500, color: '#4b5563', fontSize: '0.95rem' }}>
+                      <label
+                        style={{
+                          display: "block",
+                          marginBottom: "0.5rem",
+                          fontWeight: 500,
+                          color: "#4b5563",
+                          fontSize: "0.95rem",
+                        }}
+                      >
                         Message
                       </label>
                       <OverlayInput
                         placeholder="Enter your request message..."
                         value={overlay.msg}
-                        onChange={e => setOverlay(o => ({ ...o, msg: e.target.value }))}
+                        onChange={(e) =>
+                          setOverlay((o) => ({ ...o, msg: e.target.value }))
+                        }
                         disabled={requestLoading}
                       />
                     </div>
-                    {requestError && <div style={{ color: '#dc2626', fontSize: '0.95rem' }}>{requestError}</div>}
+                    {requestError && (
+                      <div style={{ color: "#dc2626", fontSize: "0.95rem" }}>
+                        {requestError}
+                      </div>
+                    )}
                     <OverlayActions>
                       <button
                         type="button"
                         style={{
-                          background: '#e5e7eb',
-                          color: '#374151',
-                          border: 'none',
+                          background: "#e5e7eb",
+                          color: "#374151",
+                          border: "none",
                           borderRadius: 8,
-                          padding: '0.5rem 1.25rem',
+                          padding: "0.5rem 1.25rem",
                           fontWeight: 600,
-                          cursor: 'pointer'
+                          cursor: "pointer",
                         }}
-                        onClick={() => setOverlay({ open: false, event: null, status: '', msg: '', requestType: 'event' })}
+                        onClick={() =>
+                          setOverlay({
+                            open: false,
+                            event: null,
+                            status: "",
+                            msg: "",
+                            requestType: "event",
+                          })
+                        }
                         disabled={requestLoading}
                       >
                         Cancel
@@ -691,58 +840,79 @@ export default function EditView() {
                       <button
                         type="button"
                         style={{
-                          background: '#d97706',
-                          color: 'white',
-                          border: 'none',
+                          background: "#d97706",
+                          color: "white",
+                          border: "none",
                           borderRadius: 8,
-                          padding: '0.5rem 1.25rem',
+                          padding: "0.5rem 1.25rem",
                           fontWeight: 600,
-                          cursor: 'pointer'
+                          cursor: "pointer",
                         }}
                         onClick={handleRequestEdit}
                         disabled={requestLoading || !overlay.msg.trim()}
                       >
-                        {requestLoading ? 'Requesting...' : 'Request'}
+                        {requestLoading ? "Requesting..." : "Request"}
                       </button>
                     </OverlayActions>
                   </>
                 )}
               </>
             )}
-            
-            {overlay.status === 'Requested' && (
+
+            {overlay.status === "Requested" && (
               <>
-                <div style={{ fontWeight: 600, fontSize: '1.1rem', color: '#b45309' }}>
-                  Already requested to edit.<br />
+                <div
+                  style={{
+                    fontWeight: 600,
+                    fontSize: "1.1rem",
+                    color: "#b45309",
+                  }}
+                >
+                  Already requested to edit.
+                  <br />
                   Waiting for approval from ERM team to edit the event details.
                 </div>
                 {overlay.annexureLength === 0 ? (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: '1rem' }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: "1rem",
+                    }}
+                  >
                     <button
                       type="button"
                       style={{
-                        background: '#e5e7eb',
-                        color: '#374151',
-                        border: 'none',
+                        background: "#e5e7eb",
+                        color: "#374151",
+                        border: "none",
                         borderRadius: 8,
-                        padding: '0.5rem 1.25rem',
+                        padding: "0.5rem 1.25rem",
                         fontWeight: 600,
-                        cursor: 'pointer'
+                        cursor: "pointer",
                       }}
-                      onClick={() => setOverlay({ open: false, event: null, status: '', msg: '', requestType: 'event' })}
+                      onClick={() =>
+                        setOverlay({
+                          open: false,
+                          event: null,
+                          status: "",
+                          msg: "",
+                          requestType: "event",
+                        })
+                      }
                     >
                       Close
                     </button>
                     <button
                       type="button"
                       style={{
-                        background: '#2563eb',
-                        color: 'white',
-                        border: 'none',
+                        background: "#2563eb",
+                        color: "white",
+                        border: "none",
                         borderRadius: 8,
-                        padding: '0.5rem 1.25rem',
+                        padding: "0.5rem 1.25rem",
                         fontWeight: 600,
-                        cursor: 'pointer'
+                        cursor: "pointer",
                       }}
                       onClick={() => navigate(`/annexure/${overlay.event._id}`)}
                       disabled={requestLoading}
@@ -755,20 +925,29 @@ export default function EditView() {
                     <button
                       type="button"
                       style={{
-                        background: '#e5e7eb',
-                        color: '#374151',
-                        border: 'none',
+                        background: "#e5e7eb",
+                        color: "#374151",
+                        border: "none",
                         borderRadius: 8,
-                        padding: '0.5rem 1.25rem',
+                        padding: "0.5rem 1.25rem",
                         fontWeight: 600,
-                        cursor: 'pointer',
-                        marginLeft: 'auto'
+                        cursor: "pointer",
+                        marginLeft: "auto",
                       }}
-                      onClick={() => setOverlay({ open: false, event: null, status: '', msg: '', requestType: 'event' })}
+                      onClick={() =>
+                        setOverlay({
+                          open: false,
+                          event: null,
+                          status: "",
+                          msg: "",
+                          requestType: "event",
+                        })
+                      }
                     >
                       Close
                     </button>
-                  </OverlayActions> )}
+                  </OverlayActions>
+                )}
               </>
             )}
           </OverlayCard>
