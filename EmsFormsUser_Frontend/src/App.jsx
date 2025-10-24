@@ -25,6 +25,8 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import EditView from "./components/EditView";
 import Attendance from "./components/Attendance";
 // Wrapper component for protected routes
+
+//lol dharun
 function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAuth();
 
