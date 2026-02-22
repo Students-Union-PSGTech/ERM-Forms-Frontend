@@ -12,7 +12,7 @@ function Stocks() {
   const particlesOptions = {
     background: {
       color: {
-        value: "linear-gradient(135deg, #FF9800 0%, #FFD600 100%)",
+        value: "linear-gradient(135deg, #4c1d95 0%, #000000 100%)",
       },
     },
     fpsLimit: 120,
@@ -125,7 +125,7 @@ function Stocks() {
   };
 
   return (
-    <div className="min-h-screen relative flex flex-col items-center justify-start bg-gradient-to-br from-accent-orange via-accent-yellow to-yellow-400 overflow-hidden">
+    <div className="min-h-screen relative bg-gradient-to-br from-violet-900 via-purple-900 to-black overflow-hidden">
       <Particles
         id="tsparticles"
         init={particlesInit}

@@ -13,7 +13,7 @@ const EventCards = () => {
   const particlesOptions = {
     background: {
       color: {
-        value: "linear-gradient(135deg, #FF9800 0%, #FFD600 100%)",
+        value: "linear-gradient(135deg, #4c1d95 0%, #000000 100%)",
       },
     },
     fpsLimit: 120,
@@ -63,12 +63,12 @@ const EventCards = () => {
 
   const filteredEvents = events.filter(
     (event) =>
-      event.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      event.association_name.toLowerCase().includes(searchTerm.toLowerCase())
+      (event.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (event.club_name || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const eventItems = filteredEvents.map((event) => {
-    const association = event?.association_name || "Unknown Association";
+    const association = event?.club_name || "Unknown Club";
     const twoDays = event?.form?.two_days;
     const dayInfo = twoDays
       ? /yes/i.test(twoDays)
@@ -77,19 +77,18 @@ const EventCards = () => {
       : "Schedule TBA";
 
     const convenorNames = [
-      event?.details?.convenor1?.name,
-      event?.details?.convenor2?.name,
+      event?.details?.convenor1_name,
+      event?.details?.convenor2_name,
     ].filter(Boolean);
 
     const status = event?.status || event?.form?.status || "Pending";
-
-    const updatedAt = event?.updatedAt || event?.createdAt || null;
+    const updatedAt = event?.updatedAt || event?.createdAt || event?.created_at || null;
 
     return {
       id: event?._id,
-      title: event?.name || "Untitled Event",
+      title: event?.name || event?.event_name || event?.workshop?.name || event?.presentation?.event_description?.substring(0, 50) || "Untitled Event",
       tagline: event?.tagline || "",
-      about: event?.about || "",
+      about: event?.about || event?.workshop?.description || event?.presentation?.event_description || "",
       association,
       dayInfo,
       convenors: convenorNames,
@@ -100,7 +99,7 @@ const EventCards = () => {
   });
 
   return (
-  <div className="min-h-screen relative flex flex-col items-center justify-start bg-gradient-to-br from-accent-orange via-accent-yellow to-yellow-400 overflow-hidden">
+  <div className="min-h-screen relative flex flex-col items-center justify-start bg-gradient-to-br from-violet-900 via-purple-900 to-black overflow-hidden">
       {/* Particles Background */}
       <Particles
         id="tsparticles"

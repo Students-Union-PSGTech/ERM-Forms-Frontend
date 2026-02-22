@@ -13,7 +13,7 @@ const InfoDeep = () => {
   const particlesOptions = {
     background: {
       color: {
-        value: "linear-gradient(135deg, #FF9800 0%, #FFD600 100%)",
+        value: "linear-gradient(135deg, #4c1d95 0%, #000000 100%)",
       },
     },
     fpsLimit: 120,
@@ -194,7 +194,7 @@ const InfoDeep = () => {
   };
 
   const handleDeleteEvent = async () => {
-    const SECRET_KEY = "Event Deletion Secret Key - Intrams 2025";
+    const SECRET_KEY = "Event Deletion Secret Key - Kriya 2026";
     if (deleteSecret.trim() !== SECRET_KEY) {
       setDeleteError('Invalid secret key. Please try again.');
       setDeleteSuccess('');
@@ -232,7 +232,7 @@ const InfoDeep = () => {
 
   if (!event) {
     return (
-      <div className="min-h-screen relative flex items-center justify-center bg-gradient-to-br from-accent-orange via-accent-yellow to-yellow-400 overflow-hidden">
+      <div className="min-h-screen relative flex items-center justify-center bg-gradient-to-br from-violet-900 via-purple-900 to-black overflow-hidden">
         <Particles
           id="tsparticles"
           init={particlesInit}
@@ -253,7 +253,7 @@ const InfoDeep = () => {
   }
 
   return (
-    <div className="min-h-screen relative flex flex-col items-center justify-start bg-gradient-to-br from-accent-orange via-accent-yellow to-yellow-400 overflow-hidden">
+    <div className="min-h-screen relative flex flex-col items-center justify-start bg-gradient-to-br from-violet-900 via-purple-900 to-black overflow-hidden">
       <Particles
         id="tsparticles"
         init={particlesInit}

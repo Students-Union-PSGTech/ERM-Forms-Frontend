@@ -22,7 +22,7 @@ const Navbar = () => {
     };
 
     return (
-        <nav className="sticky top-0 z-50 w-full bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg">
+        <nav className="sticky top-0 z-50 w-full bg-gradient-to-r from-violet-900 to-black shadow-lg">
             <div className="max-w-7xl mx-auto px-4 flex justify-between items-center h-16">
                 {/* Logo/Brand */}
                 <div className="flex items-center">

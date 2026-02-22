@@ -27,7 +27,7 @@ const RolePdf = () => {
   const particlesOptions = useMemo(() => ({
     background: {
       color: {
-        value: 'linear-gradient(135deg, #FF9800 0%, #FFD600 100%)',
+        value: "linear-gradient(135deg, #4c1d95 0%, #000000 100%)",
       },
     },
     fpsLimit: 120,
@@ -197,7 +197,7 @@ const RolePdf = () => {
   };
 
   return (
-    <div className="min-h-screen relative bg-gradient-to-br from-accent-orange via-accent-yellow to-yellow-400 overflow-hidden">
+    <div className="min-h-screen relative bg-gradient-to-br from-violet-900 via-purple-900 to-black overflow-hidden">
       <Particles id="role-pdf-particles" init={particlesInit} options={particlesOptions} className="absolute inset-0 z-0" />
 
       <div className="relative z-10 w-full max-w-4xl mx-auto px-4 pt-28 pb-16 sm:pt-24">

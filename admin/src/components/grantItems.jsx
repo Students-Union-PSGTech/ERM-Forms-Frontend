@@ -25,7 +25,7 @@ function GrantItems() {
   const particlesOptions = {
     background: {
       color: {
-        value: "linear-gradient(135deg, #FF9800 0%, #FFD600 100%)",
+        value: "linear-gradient(135deg, #4c1d95 0%, #000000 100%)",
       },
     },
     fpsLimit: 120,
@@ -76,7 +76,12 @@ function GrantItems() {
       const response = await adminAPI.getAssociations();
       console.log(response.data)
       if (response.data) {
-        setAssociations(response.data.data);
+        // Map clubName to association_name for backward compatibility
+        const mappedData = response.data.data.map(club => ({
+          ...club,
+          association_name: club.clubName || club.association_name,
+        }));
+        setAssociations(mappedData);
       } else {
         setError('Failed to fetch associations');
       }
@@ -135,7 +140,7 @@ function GrantItems() {
   });
 
   return (
-    <div className="min-h-screen relative flex flex-col items-center justify-start bg-gradient-to-br from-accent-orange via-accent-yellow to-yellow-400 overflow-hidden">
+    <div className="min-h-screen relative bg-gradient-to-br from-violet-900 via-purple-900 to-black overflow-hidden">
       <Particles
         id="tsparticles"
         init={particlesInit}
@@ -267,7 +272,7 @@ function GrantItems() {
                 <Calendar className="w-6 h-6 text-accent-orange" />
                 <div>
                   <h2 className="text-xl font-semibold text-gray-800">
-                    {selectedAssociation?.name} Events
+                    {selectedAssociation?.association_name || selectedAssociation?.clubName || 'Association'} Events
                   </h2>
                   <p className="text-sm text-gray-600">
                     Select an event to grant items

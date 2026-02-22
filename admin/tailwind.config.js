@@ -15,8 +15,8 @@ export default {
         'navbar-active': '#3498db',
         'logout-btn': '#e74c3c',
         'logout-hover': '#c0392b',
-        'accent-orange': '#f65516ff', // Orange
-        'accent-yellow': '#ce411eff', // Yellow
+        'accent-orange': '#7c3aed', // Violet-600
+        'accent-yellow': '#4c1d95', // Violet-900
       },
       animation: {
         'logo-spin': 'spin 20s linear infinite',

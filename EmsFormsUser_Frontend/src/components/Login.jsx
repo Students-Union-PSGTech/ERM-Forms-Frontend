@@ -63,12 +63,12 @@ const LoginPage = () => {
             <div className="logo-glow">
               <img
                 src={intramsLogo}
-                alt="INTRAMS 2K25"
+                alt="Kriya 2026"
                 className="event-logo"
               />
             </div>
             <h1 className="event-title">IGNITE THE INFINITE</h1>
-            <p className="event-subtitle">INTRAMS 2025 - Club Portal</p>
+            <p className="event-subtitle">Kriya 2026 - Club Portal</p>
 
             
             <div className="color-strip">

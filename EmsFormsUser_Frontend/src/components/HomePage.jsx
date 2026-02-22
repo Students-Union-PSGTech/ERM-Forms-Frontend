@@ -15,7 +15,7 @@ const HomePage = () => {
   return (
     <div className="home-container">
       <div className="logo-container">
-        <img src={intramsLogo} alt="INTRAMS 2025" className="intrams-logo" />
+        <img src={intramsLogo} alt="Kriya 2026" className="intrams-logo" />
       </div>
       <button className="logout-button" onClick={handleLogout}>
         Logout
@@ -32,7 +32,7 @@ const HomePage = () => {
       <main className="home-main">
         <div className="content-wrapper">
           <div className="header-section">
-            <h1>Event Portal - Intrams 2025</h1>
+            <h1>Event Portal - Kriya 2026</h1>
             <h2>Welcome, {club_name}</h2>
             <p>PSG College of Technology, Coimbatore</p>
           </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Particles from "react-tsparticles";
 import { loadSlim } from "tsparticles-slim";
 import { adminAPI } from "../api";
-import { Edit, Trash2, Plus, X, Eye, EyeOff, Search } from "lucide-react";
+import { Edit, Trash2, Plus, X, Eye, EyeOff, Search, ChevronRight } from "lucide-react";
 
 function Add() {
   const particlesInit = React.useCallback(async (engine) => {
@@ -12,7 +12,7 @@ function Add() {
   const particlesOptions = {
     background: {
       color: {
-        value: "linear-gradient(135deg, #FF9800 0%, #FFD600 100%)",
+        value: "linear-gradient(135deg, #4c1d95 0%, #000000 100%)",
       },
     },
     fpsLimit: 120,
@@ -64,8 +64,8 @@ function Add() {
 
   // Filter associations based on search term
   const filteredAssociations = associations.filter((association) =>
-    association.association_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    association.username.toLowerCase().includes(searchTerm.toLowerCase())
+    (association.clubName || association.association_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (association.username || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Fetch associations on mount
@@ -77,9 +77,12 @@ function Add() {
     try {
       setLoading(true);
       const response = await adminAPI.getAssociations();
-      setAssociations(response.data.data);
-      console.log(response.data)
-      console.log(associations)
+      // Map clubName to association_name for backward compatibility
+      const mappedData = response.data.data.map(club => ({
+        ...club,
+        association_name: club.clubName
+      }));
+      setAssociations(mappedData);
       setError(null);
     } catch (err) {
       setError(err.message);
@@ -96,7 +99,12 @@ function Add() {
     }
 
     try {
-      await adminAPI.createAssociation(formData);
+      // Send as clubName to match new backend schema
+      await adminAPI.createAssociation({
+        username: formData.username,
+        password: formData.password,
+        clubName: formData.association_name
+      });
       setMessage("✅ Association created successfully!");
       setFormData({ username: "", password: "", association_name: "" });
       fetchAssociations();
@@ -109,8 +117,8 @@ function Add() {
     setEditingAssociation(association);
     setEditFormData({
       username: association.username,
-      association_name: association.association_name,
-      password: "" // Don't pre-fill password for security
+      association_name: association.clubName || association.association_name,
+      password: ""
     });
     setShowEditModal(true);
   };
@@ -125,10 +133,9 @@ function Add() {
     try {
       const updateData = {
         username: editFormData.username,
-        association_name: editFormData.association_name
+        clubName: editFormData.association_name
       };
       
-      // Only include password if it's provided
       if (editFormData.password.trim()) {
         updateData.password = editFormData.password;
       }
@@ -158,7 +165,7 @@ function Add() {
   };
 
   return (
-    <div className="min-h-screen relative bg-gradient-to-br from-accent-orange via-accent-yellow to-yellow-400 overflow-hidden">
+    <div className="min-h-screen relative bg-gradient-to-br from-violet-900 via-purple-900 to-black overflow-hidden">
       {/* Particles Background */}
       <Particles
         id="tsparticles"
@@ -225,7 +232,9 @@ function Add() {
                     <div key={association._id} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex-1">
-                          <h3 className="font-semibold text-gray-800">{association.association_name}</h3>
+                          <h3 className="font-semibold text-gray-800">
+                            {association.clubName || association.association_name}
+                          </h3>
                           <p className="text-sm text-gray-600">@{association.username}</p>
                         </div>
                         <div className="flex gap-2 ml-4">
