@@ -387,6 +387,12 @@ const EventDetailModal = ({ event, onClose }) => {
   if (!event) return null;
 
   const [rollNo, setRollNo] = useState("");
+  const [attendees, setAttendees] = useState([]);
+  const [attendeesLoading, setAttendeesLoading] = useState(false);
+  const [attendeesError, setAttendeesError] = useState("");
+  const [latestRegLoading, setLatestRegLoading] = useState(false);
+  const [latestRegStatus, setLatestRegStatus] = useState(null);
+  const [latestRegError, setLatestRegError] = useState("");
 
   const markattendance = async () => {
     try {
@@ -421,6 +427,55 @@ const EventDetailModal = ({ event, onClose }) => {
     }
   };
 
+  const fetchLatestRegistrations = async () => {
+    if (!event || !event.name) return;
+    setLatestRegLoading(true);
+    setLatestRegError('');
+    setLatestRegStatus(null);
+    try {
+      const url = `https://ghcc.psgtech.ac.in/backend/cms/registrations/eventName/${encodeURIComponent(
+        event.name
+      )}`;
+      const resp = await axios.get(url, { headers: { 'Content-Type': 'application/json' } });
+      setLatestRegStatus(resp.status);
+      console.log('Latest registrations fetched:', resp.data);
+    } catch (err) {
+      // If server responded with a status code, show it; otherwise show message
+      const status = err?.response?.status;
+      if (status) setLatestRegError(`Status ${status}`);
+      else setLatestRegError(err.message || 'Failed to fetch registrations');
+    } finally {
+      setLatestRegLoading(false);
+    }
+  };
+
+  // Fetch attendees for this event when modal opens
+  useEffect(() => {
+    let active = true;
+    const fetchAttendees = async () => {
+      if (!event || !event.name) return;
+      setAttendeesLoading(true);
+      setAttendeesError("");
+      try {
+        const url = `https://ghcc.psgtech.ac.in/backend/cms/attendance/attendees/${encodeURIComponent(
+          event.name
+        )}`;
+        const resp = await axios.get(url, { headers: { 'Content-Type': 'application/json' } });
+        if (active) setAttendees(Array.isArray(resp.data) ? resp.data : []);
+      } catch (err) {
+        if (active) setAttendeesError(err.response?.data?.message || err.message || 'Failed to load attendees');
+      } finally {
+        if (active) setAttendeesLoading(false);
+      }
+    };
+
+    fetchAttendees();
+
+    return () => {
+      active = false;
+    };
+  }, [event]);
+
   return (
     <ModalOverlay onClick={onClose}>
       <ModalContent onClick={(e) => e.stopPropagation()}>
@@ -430,7 +485,7 @@ const EventDetailModal = ({ event, onClose }) => {
           <p>{event.tagline || "No tagline provided"}</p>
         </EventHeader>
         <Section>
-          <div style={{ display: "flex", gap: "1rem", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: "1rem", alignItems: "center", marginBottom: 12 }}>
             <input
               type="text"
               value={rollNo}
@@ -451,6 +506,62 @@ const EventDetailModal = ({ event, onClose }) => {
             >
               Mark Attendance
             </button>
+            <button
+              onClick={fetchLatestRegistrations}
+              style={{
+                padding: "0.5rem 1rem",
+                background: "#2563eb",
+                color: "white",
+                border: "none",
+                borderRadius: "4px",
+                cursor: "pointer",
+              }}
+            >
+              {latestRegLoading ? 'Fetching...' : 'Fetch Latest Registrations'}
+            </button>
+          </div>
+
+          <div>
+            <SectionTitle>Registered Attendees</SectionTitle>
+            {/* show only status code or error for latest registrations fetch */}
+            {(latestRegStatus || latestRegError) && (
+              <div style={{ marginTop: 8 }}>
+                {latestRegStatus ? (
+                  <span style={{ color: '#065f46', fontWeight: 600 }}>Latest registrations status: {latestRegStatus}</span>
+                ) : (
+                  <span style={{ color: 'red', fontWeight: 600 }}>Latest registrations error: {latestRegError}</span>
+                )}
+              </div>
+            )}
+            {attendeesLoading ? (
+              <p style={{ color: '#6b7280' }}>Loading attendees...</p>
+            ) : attendeesError ? (
+              <p style={{ color: 'red' }}>{attendeesError}</p>
+            ) : attendees.length === 0 ? (
+              <p style={{ color: '#6b7280' }}>No registered attendees found.</p>
+            ) : (
+              <div style={{ marginTop: 12 }}>
+                <ItemsTable>
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Roll No</th>
+                      <th>Department</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {attendees.map((p) => (
+                      <tr key={p._id}>
+                        <td>{p.name}</td>
+                        <td>{p.rollno}</td>
+                        <td>{p.department}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </ItemsTable>
+              </div>
+            )}
           </div>
         </Section>
       </ModalContent>
