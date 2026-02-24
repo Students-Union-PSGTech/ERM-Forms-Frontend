@@ -1,23 +1,19 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { adminAPI } from '../api';
-import { useNavigate } from 'react-router-dom';
 
 const AuthContext = createContext();
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within an AuthProvider');
   return context;
 };
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading]             = useState(true);
+  const [user, setUser]                       = useState(null);
 
-  // Check authentication status on app load
   useEffect(() => {
     checkAuthStatus();
   }, []);
@@ -26,82 +22,69 @@ export const AuthProvider = ({ children }) => {
     try {
       setIsLoading(true);
       const response = await adminAPI.checkStatus();
-      if (response.status === 200) {
+      // Expected shape: { success: true, user: { id, username, email, role } }
+      const data = response.data;
+      console.log('[AuthContext] /api/admin/status response:', data);
+
+      if (data?.success === true && data?.user) {
+        const apiUser = data.user;
+        const role    = apiUser.role || 'member';
+        console.log('[AuthContext] role from server:', role);
+        localStorage.setItem('role', role);
         setIsAuthenticated(true);
-        setUser({ role: 'admin' }); // You can modify this based on your needs
+        setUser({ id: apiUser.id, username: apiUser.username, email: apiUser.email, role });
       } else {
+        console.warn('[AuthContext] Unexpected response shape:', data);
         setIsAuthenticated(false);
         setUser(null);
+        localStorage.removeItem('role');
       }
-    } catch (error) {
+    } catch (err) {
+      console.error('[AuthContext] checkStatus failed:', err);
       setIsAuthenticated(false);
       setUser(null);
+      localStorage.removeItem('role');
     } finally {
       setIsLoading(false);
     }
   };
 
-
   const logout = async () => {
-    try {
-      // Call the backend logout endpoint to clear cookies/session
-      await adminAPI.logout();
-    } catch (error) {
-      // Even if API call fails, we still clear local state
-      console.error('Logout API error:', error);
-    } finally {
-      // Always clear local authentication state
-      localStorage.removeItem('role');
+    try   { await adminAPI.logout(); }
+    catch (e) { console.error('Logout error:', e); }
+    finally {
       setIsAuthenticated(false);
       setUser(null);
+      localStorage.removeItem('role');
     }
   };
 
-  const forgotPassword = async () => {
+  const forgotPassword = async (email) => {
     try {
-      const response = await adminAPI.forgotPassword();
-      if (response.status === 200) {
-        return { success: true };
-      }
-    } catch (error) {
-      console.error('Forgot password error:', error);
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Failed to send OTP' 
-      };
+      await adminAPI.forgotPassword(email);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.response?.data?.message || 'Failed to send reset email' };
     }
   };
 
   const resetPassword = async (data) => {
     try {
-      const response = await adminAPI.resetPassword(data);
-      if (response.status === 200) {
-        return { success: true };
-      }
-    } catch (error) {
-      console.error('Reset password error:', error);
-      return { 
-        success: false, 
-        error: error.response?.data?.message || 'Password reset failed' 
-      };
+      await adminAPI.resetPassword(data);
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: err.response?.data?.message || 'Password reset failed' };
     }
   };
 
-  const value = {
-    isAuthenticated,
-    isLoading,
-    user,
-    logout,
-    forgotPassword,
-    resetPassword,
-    checkAuthStatus,
-    setIsAuthenticated,
-    setIsLoading,
-    setUser
-  };
-
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{
+      isAuthenticated, isLoading, user,
+      logout, forgotPassword, resetPassword,
+      checkAuthStatus,
+      // kept for legacy callers in login.jsx
+      setIsAuthenticated, setIsLoading, setUser,
+    }}>
       {children}
     </AuthContext.Provider>
   );

@@ -2,10 +2,28 @@ import React, { useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { adminAPI } from '../api';
-import { LogOut, Code, BarChart3, Menu, X, Package, TrendingUp, FileText, Download, Loader2, Users } from 'lucide-react';
+import { LogOut, Code, BarChart3, Menu, X, Package, TrendingUp, FileText, Download, Loader2, Users, Gift, History, ShieldCheck } from 'lucide-react';
+
+function NavItem({ to, icon: Icon, label, mobile }) {
+  return (
+    <NavLink
+      to={to}
+      className={({ isActive }) =>
+        `flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-medium transition-all ${
+          isActive
+            ? 'bg-white/30 text-white font-semibold'
+            : 'text-white/80 hover:bg-white/20 hover:text-white'
+        }`
+      }
+    >
+      <Icon className="w-5 h-5 flex-shrink-0" />
+      <span>{label}</span>
+    </NavLink>
+  );
+}
 
 export default function Layout({ children }) {
-  const { logout, user } = useAuth();
+  const { logout, user, isLoading } = useAuth();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [desktopSidebarOpen, setDesktopSidebarOpen] = useState(true);
@@ -18,9 +36,7 @@ export default function Layout({ children }) {
 
   useEffect(() => {
     return () => {
-      if (summaryPdfUrl) {
-        URL.revokeObjectURL(summaryPdfUrl);
-      }
+      if (summaryPdfUrl) URL.revokeObjectURL(summaryPdfUrl);
     };
   }, [summaryPdfUrl]);
 
@@ -29,41 +45,55 @@ export default function Layout({ children }) {
     navigate('/login');
   };
 
-  console.log('Current user in Layout:', user);
-  
-  // Get user role from localStorage
-  const userRole = localStorage.getItem('role') || user?.role || 'member';
-  
-  // Role-based nav items
-    const navItems = [
-      ...(userRole !== 'procurement'
-      ? [
-    { to: '/cards', icon: BarChart3, label: 'Dashboard' },
-    { to: '/add', icon: Code, label: 'Add User' },
-    { to: '/items', icon: Package, label: 'Items' },
-    { to: '/stats', icon: TrendingUp, label: 'Statistics' },
-    { to: '/edit-access', icon: Code, label: 'Edit Access' },
-    { to: '/role-pdf', icon: Users, label: 'Role PDFs' },
-        ]
-      : []),
-    ...(userRole !== 'member'
-      ? [
-          { to: '/stocks', icon: Users, label: 'Stocks' },
-          { to: '/grant-items', icon: Package, label: 'Grant Items' },
-          { to: '/grant-logs', icon: Package, label: 'Past Grants' },
-        ]
-      : []),
-    ...(userRole === 'admin'
-      ? [
-          { to: '/logs', icon: FileText, label: 'Server Logs' },
-        ]
-      : [])
-    
+  // Wait for auth to resolve before deriving role — prevents flash of wrong nav
+  const userRole = user?.role ?? localStorage.getItem('role') ?? 'member';
+
+  // Don't render nav with wrong role while auth is still loading
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-gray-50">
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-accent-orange" />
+      </div>
+    );
+  }
+
+  console.log('[Layout] userRole:', userRole, '| user:', user);
+
+  // ─── Nav items per role ───────────────────────────────────────────────────
+  const adminItems = [
+    { to: '/cards',       icon: BarChart3,   label: 'Dashboard'    },
+    { to: '/add',         icon: Code,        label: 'Add User'     },
+    { to: '/items',       icon: Package,     label: 'Items'        },
+    { to: '/stocks',      icon: Package,     label: 'Stocks'       },
+    { to: '/stats',       icon: TrendingUp,  label: 'Statistics'   },
+    { to: '/grant-items', icon: Gift,        label: 'Grant Items'  },
+    { to: '/grant-logs',  icon: History,     label: 'Past Grants'  },
+    { to: '/edit-access', icon: ShieldCheck, label: 'Edit Access'  },
+    { to: '/role-pdf',    icon: Users,       label: 'Role PDFs'    },
+    { to: '/logs',        icon: FileText,    label: 'Server Logs'  },
   ];
 
-  const openSummaryModal = () => {
-    setSummaryModalOpen(true);
-  };
+  const memberItems = [
+    { to: '/cards',       icon: BarChart3,   label: 'Dashboard'    },
+    { to: '/edit-access', icon: ShieldCheck, label: 'Edit Access'  },
+    { to: '/role-pdf',    icon: Users,       label: 'Role PDFs'    },
+  ];
+
+  const procurementItems = [
+    { to: '/grant-items', icon: Gift,        label: 'Grant Items'  },
+    { to: '/grant-logs',  icon: History,     label: 'Past Grants'  },
+    { to: '/stocks',      icon: Package,     label: 'Stocks'       },
+  ];
+
+  const navItems =
+    userRole === 'admin'
+      ? adminItems
+      : userRole === 'procurement'
+      ? procurementItems
+      : memberItems;
+  // ─────────────────────────────────────────────────────────────────────────
+
+  const openSummaryModal = () => setSummaryModalOpen(true);
 
   const closeSummaryModal = () => {
     setSummaryModalOpen(false);
@@ -78,36 +108,26 @@ export default function Layout({ children }) {
     if (summaryLoading) return;
     setSummaryError('');
     setSummaryLoading(true);
-
     if (summaryPdfUrl) {
       URL.revokeObjectURL(summaryPdfUrl);
       setSummaryPdfUrl(null);
     }
-
     try {
       const response = await adminAPI.getEventsSummaryPDF();
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
-
-      setSummaryFileName('event_summary');
-
       setSummaryPdfBlob(blob);
       setSummaryPdfUrl(url);
-      setSidebarOpen(false);
       openSummaryModal();
     } catch (err) {
-      setSummaryError(err.response?.data?.message || err.message || 'Failed to load summary PDF');
+      setSummaryError(err?.response?.data?.message || 'Failed to load summary PDF.');
     } finally {
       setSummaryLoading(false);
     }
   };
 
-  const handleDownloadSummary = () => {
-    if (!summaryPdfBlob) {
-      handleEventSummary();
-      return;
-    }
-
+  const handleSummaryDownload = () => {
+    if (!summaryPdfBlob) return;
     const url = URL.createObjectURL(summaryPdfBlob);
     const link = document.createElement('a');
     link.href = url;
@@ -118,29 +138,63 @@ export default function Layout({ children }) {
     URL.revokeObjectURL(url);
   };
 
-  const NavItem = ({ to, icon: Icon, label, mobile = false }) => (
-    <NavLink
-      to={to}
-      className={({ isActive }) =>
-        `flex items-center px-4 py-2.5 rounded-lg text-sm transition-all ${
-          isActive
-            ? 'bg-accent-yellow text-white shadow-sm'
-            : 'text-gray-200 hover:bg-accent-orange hover:text-white'
-        } ${mobile ? 'w-full' : ''}`
-      }
-      onClick={() => setSidebarOpen(false)}
-    >
-      <Icon className="w-5 h-5 mr-3" />
-      {label}
-    </NavLink>
+  const SidebarContent = ({ mobile = false }) => (
+    <div className="flex flex-col h-full pt-4">
+      <div className="flex flex-col flex-grow px-4 py-4 bg-accent-yellow/10 backdrop-blur-sm rounded-lg mx-2">
+        {/* Role badge */}
+        <div className="mb-4 px-3 py-1.5 rounded-lg bg-white/10 text-center">
+          <span className="text-xs font-semibold text-white/70 uppercase tracking-wider">
+            {userRole}
+          </span>
+        </div>
+
+        <nav className="space-y-1">
+          {navItems.map((item) => (
+            <NavItem key={item.to} {...item} mobile={mobile} />
+          ))}
+
+          {/* Event Summary button — admin & member only */}
+          {userRole !== 'procurement' && (
+            <button
+              onClick={handleEventSummary}
+              disabled={summaryLoading}
+              className="flex items-center justify-center gap-2 px-4 py-2.5 mt-3 w-full rounded-lg text-sm font-medium transition-all bg-white/10 text-white hover:bg-white/20 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {summaryLoading ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <FileText className="w-5 h-5" />
+              )}
+              Event Summary
+            </button>
+          )}
+        </nav>
+
+        {summaryError && (
+          <div className="mt-3 px-3 py-2 text-xs text-white bg-white/10 border border-white/20 rounded-lg">
+            {summaryError}
+          </div>
+        )}
+
+        <div className="mt-auto pt-4">
+          <button
+            onClick={handleLogout}
+            className="flex items-center w-full px-4 py-2.5 bg-white/10 backdrop-blur-sm text-gray-200 hover:bg-accent-yellow hover:text-white rounded-lg text-sm transition-all"
+          >
+            <LogOut className="w-5 h-5 mr-3" />
+            Logout
+          </button>
+        </div>
+      </div>
+    </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-100 flex">
+    <div className="flex min-h-screen">
       {/* Desktop Sidebar */}
-      <div className={`hidden lg:flex lg:flex-col lg:w-60 lg:fixed lg:inset-y-0  transition-all duration-300 ease-in-out`}>
-        <div className="flex flex-col flex-grow bg-accent-orange shadow-xl">
-          <div className="flex items-center px-6 py-4 bg-gradient-to-r from-accent-orange to-accent-yellow">
+      {desktopSidebarOpen && (
+        <div className="hidden lg:flex flex-col fixed inset-y-0 left-0 z-30 w-60 bg-accent-orange shadow-xl">
+          <div className="flex items-center justify-between px-4 py-4 bg-gradient-to-r from-accent-orange to-accent-yellow">
             <button
               onClick={() => setDesktopSidebarOpen(!desktopSidebarOpen)}
               className="p-2 rounded-md bg-accent-orange backdrop-blur-sm hover:bg-accent-orange text-white mr-3"
@@ -149,60 +203,11 @@ export default function Layout({ children }) {
             </button>
             <h1 className="text-lg font-semibold text-white">ERM Forms</h1>
           </div>
-
-          <div className="flex flex-col flex-grow px-4 py-4 bg-accent-yellow/10 backdrop-blur-sm rounded-lg mx-2">
-            <nav className="space-y-1">
-              {navItems.map((item) => (
-                <NavItem key={item.to} {...item} />
-              ))}
-              <button
-                onClick={handleEventSummary}
-                disabled={summaryLoading}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 mt-3 rounded-lg text-sm font-medium transition-all bg-white/10 text-white hover:bg-white/20 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {summaryLoading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <FileText className="w-5 h-5" />
-                )}
-                Event Summary
-              </button>
-            </nav>
-
-            {summaryError && (
-              <div className="mt-3 px-3 py-2 text-xs text-white bg-white/10 border border-white/20 rounded-lg">
-                {summaryError}
-              </div>
-            )}
-
-            <div className="mt-auto pt-4">
-              <button
-                onClick={handleLogout}
-                className="flex items-center w-full px-4 py-2.5 bg-white/10 backdrop-blur-sm text-gray-200 hover:bg-accent-yellow hover:text-white rounded-lg text-sm transition-all"
-              >
-                <LogOut className="w-5 h-5 mr-3" />
-                Logout
-              </button>
-            </div>
-          </div>
+          <SidebarContent />
         </div>
-      </div>
+      )}
 
-      <div className="lg:hidden fixed top-0 left-0 right-0 bg-accent-orange shadow-md z-20">
-        <div className="flex items-center px-6 py-4 bg-gradient-to-r from-accent-orange to-accent-yellow">
-          <div className="flex items-center">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-md bg-accent-orange backdrop-blur-sm hover:bg-accent-orange text-white mr-3"
-            >
-              {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-            <h1 className="text-lg font-semibold text-white">ERM Forms</h1>
-          </div>
-        </div>
-      </div>
-
-      {/* Mobile Sidebar Overlay */}
+      {/* Mobile overlay */}
       {sidebarOpen && (
         <div
           className="lg:hidden fixed inset-0 z-10 bg-black bg-opacity-40"
@@ -222,41 +227,20 @@ export default function Layout({ children }) {
         >
           <X className="w-6 h-6" />
         </button>
-        <div className="flex flex-col h-full pt-14">
-          <div className="flex flex-col flex-grow px-4 py-4 bg-accent-yellow/10 backdrop-blur-sm rounded-lg mx-2">
-            <nav className="space-y-1">
-              {navItems.map((item) => (
-                <NavItem key={item.to} {...item} mobile />
-              ))}
-              <button
-                onClick={handleEventSummary}
-                disabled={summaryLoading}
-                className="flex items-center justify-center gap-2 px-4 py-2.5 mt-3 rounded-lg text-sm font-medium transition-all bg-white/10 text-white hover:bg-white/20 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {summaryLoading ? (
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                ) : (
-                  <FileText className="w-5 h-5" />
-                )}
-                Event Summary
-              </button>
-            </nav>
+        <SidebarContent mobile />
+      </div>
 
-            {summaryError && (
-              <div className="mt-3 px-3 py-2 text-xs text-white bg-white/10 border border-white/20 rounded-lg">
-                {summaryError}
-              </div>
-            )}
-
-            <div className="mt-auto pt-4">
-              <button
-                onClick={handleLogout}
-                className="flex items-center w-full px-4 py-2.5 bg-white/10 backdrop-blur-sm text-gray-200 hover:bg-accent-yellow hover:text-white rounded-lg text-sm transition-all"
-              >
-                <LogOut className="w-5 h-5 mr-3" />
-                Logout
-              </button>
-            </div>
+      {/* Mobile Top Bar */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-accent-orange shadow-md z-20">
+        <div className="flex items-center px-6 py-4 bg-gradient-to-r from-accent-orange to-accent-yellow">
+          <div className="flex items-center">
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="p-2 rounded-md bg-accent-orange backdrop-blur-sm hover:bg-accent-orange text-white mr-3"
+            >
+              {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+            <h1 className="text-lg font-semibold text-white">ERM Forms</h1>
           </div>
         </div>
       </div>
@@ -274,6 +258,7 @@ export default function Layout({ children }) {
         <main className="flex-1">{children}</main>
       </div>
 
+      {/* Summary PDF Modal */}
       {summaryModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl shadow-2xl border border-gray-200 w-full max-w-6xl h-[90vh] flex flex-col">
@@ -284,9 +269,8 @@ export default function Layout({ children }) {
               </h2>
               <div className="flex gap-2">
                 <button
-                  onClick={handleDownloadSummary}
+                  onClick={handleSummaryDownload}
                   className="flex items-center gap-2 px-4 py-2 bg-accent-orange text-white rounded-lg hover:bg-accent-yellow transition-colors"
-                  disabled={summaryLoading}
                 >
                   <Download className="w-4 h-4" />
                   Download
@@ -306,19 +290,11 @@ export default function Layout({ children }) {
                   className="w-full h-full border rounded-lg"
                   title="Event Summary PDF"
                   frameBorder="0"
-                  allowFullScreen
                   style={{ minHeight: '500px' }}
                 />
               ) : (
-                <div className="flex items-center justify-center h-full">
-                  {summaryLoading ? (
-                    <div className="flex flex-col items-center gap-3 text-gray-500">
-                      <Loader2 className="w-8 h-8 animate-spin" />
-                      <p>Loading summary PDF...</p>
-                    </div>
-                  ) : (
-                    <p className="text-gray-500">No PDF to display.</p>
-                  )}
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  No PDF available.
                 </div>
               )}
             </div>
